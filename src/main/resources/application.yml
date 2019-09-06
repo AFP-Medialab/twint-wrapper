@@ -1,0 +1,7 @@
+server:
+  servlet:
+    context-path: /twitter-gateway
+logging:
+  level:
+    root: INFO
+    
