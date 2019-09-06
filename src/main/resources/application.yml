@@ -4,4 +4,8 @@ server:
 logging:
   level:
     root: INFO
+
+application:
+  home:
+    msg: Service is Up
     
