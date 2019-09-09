@@ -5,6 +5,7 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -15,21 +16,25 @@ import com.afp.medialab.weverify.social.model.CollectRequest;
 import com.afp.medialab.weverify.social.model.CollectResponse;
 import com.afp.medialab.weverify.social.model.Status;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+
 @RestController
+@Api(value = "Twitter scraping API")
 public class TwitterGatewayServiceController {
-	
+
 	private static Logger Logger = LoggerFactory.getLogger(TwitterGatewayServiceController.class);
-	
+
 	@Value("${application.home.msg}")
 	private String homeMsg;
-	
-	
-	@RequestMapping("/")
+
+	@RequestMapping(path = "/", method = RequestMethod.GET)
 	public @ResponseBody String home() {
 		return homeMsg;
 	}
 
-	@RequestMapping(path = "/collect", method = RequestMethod.POST, consumes = "application/json", produces = "application/json")
+	@ApiOperation(value = "Trigger a Twitter Scraping")
+	@RequestMapping(path = "/collect", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
 	public @ResponseBody CollectResponse collect(@RequestBody CollectRequest collectRequest) {
 		Logger.info(collectRequest.getSearch());
 		Logger.info(collectRequest.getFrom().toString());
