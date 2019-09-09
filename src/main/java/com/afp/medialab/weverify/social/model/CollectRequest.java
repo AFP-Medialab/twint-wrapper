@@ -7,6 +7,12 @@ public class CollectRequest {
 	private String search;
 	private Date from, until;
 
+	public CollectRequest(String search, Date from, Date until) {
+		this.search = search;
+		this.from = from;
+		this.until = until;
+	}
+
 	public String getSearch() {
 		return search;
 	}
