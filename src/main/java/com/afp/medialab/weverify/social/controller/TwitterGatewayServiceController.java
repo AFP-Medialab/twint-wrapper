@@ -45,11 +45,11 @@ public class TwitterGatewayServiceController {
 
 	}
 
+	@ApiOperation(value = "Trigger a status check")
 	@RequestMapping(path = "/status", method = RequestMethod.POST, consumes = "application/json", produces = "application/json")
-	public @ResponseBody StatusResponse statusResponse(@RequestBody StatusRequest statusRequest) {
-		Logger.info(statusRequest.getSearch());
+	public @ResponseBody StatusResponse status(@RequestBody StatusRequest statusRequest) {
+		Logger.info(statusRequest.getSession());
 		String session = UUID.randomUUID().toString();
 		return new StatusResponse(session, new Date(), new Date(), Status.Done, new CollectRequest(session, new Date(), new Date()));
-
 	}
 }

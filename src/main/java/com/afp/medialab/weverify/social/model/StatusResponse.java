@@ -17,9 +17,9 @@ public class StatusResponse {
         this.query = query;
     }
 
-    public String getSearch() { return session; }
+    public String getSession() { return session; }
 
-    public void setSearch(String search) {
+    public void setSession(String search) {
         this.session = search;
     }
 

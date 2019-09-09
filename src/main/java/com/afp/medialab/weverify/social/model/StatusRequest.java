@@ -2,13 +2,13 @@ package com.afp.medialab.weverify.social.model;
 
 
 public class StatusRequest {
-    private String search;
+    private String session;
 
-    public String getSearch() {
-        return search;
+    public String getSession() {
+        return session;
     }
 
-    public void setSearch(String search) {
-        this.search = search;
+    public void setSession(String session) {
+        this.session = session;
     }
 }
