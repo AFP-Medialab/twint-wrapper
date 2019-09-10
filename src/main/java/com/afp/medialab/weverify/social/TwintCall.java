@@ -7,6 +7,7 @@ import com.afp.medialab.weverify.social.model.Status;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Configuration;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -14,34 +15,17 @@ import java.io.InputStreamReader;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+@Configuration
 public class TwintCall {
-   private CollectRequest request;
-   private String name;
 
    @Autowired
    private CollectService collectService;
 
    private static Logger Logger = LoggerFactory.getLogger(TwintCall.class);
 
-   public TwintCall(String hashtag, Date since, Date until, String name)
-   {
-
-      request = new CollectRequest(hashtag, since, until);
-
-      collectService.SaveCollectInfo(name, request, null, null, Status.NotStarted);
-
-      this.name = name;
-   }
-   public TwintCall(CollectRequest request, String name)
+   public Status collect(CollectRequest request, String name)
    {
       collectService.SaveCollectInfo(name, request, null, null, Status.NotStarted);
-
-      this.request = request;
-      this.name = name;
-   }
-
-   public Status collect()
-   {
       collectService.UpdateCollectStatus(name, Status.Running);
 
       try {
