@@ -4,6 +4,7 @@ import java.util.Date;
 import java.util.UUID;
 
 import com.afp.medialab.weverify.social.TwintCall;
+import com.afp.medialab.weverify.social.TwintThread;
 import com.afp.medialab.weverify.social.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,7 +47,7 @@ public class TwitterGatewayServiceController {
 		if (collectRequest.getFrom() != null)
 			Logger.info(collectRequest.getUntil().toString());
 		String session = UUID.randomUUID().toString();
-		Status s = tc.collect(collectRequest, session);
+		Status s = tc.collect(new TwintThread(collectRequest, session));
 		return new CollectResponse(session, s);
 	}
 
