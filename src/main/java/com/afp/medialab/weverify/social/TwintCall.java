@@ -33,45 +33,53 @@ public class TwintCall {
          String fromStr = format.format(request.getFrom());
          String untilStr = format.format(request.getUntil());
 
-         ProcessBuilder pb =
-                 new ProcessBuilder("/bin/bash", "-c",
-                         "docker run --rm --network twint_esnet -i medialab.registry.afp.com/twint:2.1.1 \"twint -s '" + request.getSearch() +
-                         "' --stats --since " + fromStr + " --until " + untilStr  +
-                         " -l fr --essid sess-" + name + " -es elasticsearch:9200\"");
+         Thread process = new Thread() {
+            public void run() {
+               ProcessBuilder pb =
+                       new ProcessBuilder("/bin/bash", "-c",
+                               "docker run --rm --network twint_esnet -i medialab.registry.afp.com/twint:2.1.1 \"twint -s '" + request.getSearch() +
+                                       "' --stats --since " + fromStr + " --until " + untilStr +
+                                       " -l fr --essid sess-" + name + " -es elasticsearch:9200\"");
 
-         Logger.debug(pb.command().toString());
+               Process p = null;
+               try {
+                  p = pb.start();
 
-         Process p = pb.start();
-         BufferedReader stdInput = new BufferedReader(new
-                 InputStreamReader(p.getInputStream()));
+                  BufferedReader stdInput = new BufferedReader(new
+                          InputStreamReader(p.getInputStream()));
 
-         BufferedReader stdError = new BufferedReader(new
-                 InputStreamReader(p.getErrorStream()));
-         String s = "";
-        // Logger.info("Here is the standard error of the command (if any):\n");
-         while ((s = stdError.readLine()) != null) {
+                  BufferedReader stdError = new BufferedReader(new
+                          InputStreamReader(p.getErrorStream()));
 
-            Logger.error(s);
-         }
+                  String s = "";
 
-         // read the output from the command
-        // Logger.info("Here is the standard output of the command:\n");
-         while ((s = stdInput.readLine()) != null) {
-            Logger.info(s);
-         }
+                  while ((s = stdError.readLine()) != null) {
+                     Logger.error(s);
+                  }
 
-         // read any errors from the attempted command
+                  while ((s = stdInput.readLine()) != null) {
+                     Logger.info(s);
+                  }
 
-         collectService.UpdateCollectStatus(name, Status.Done);
+                  stdInput.close();
+                  stdError.close();
 
-         stdInput.close();
-         stdError.close();
+               } catch (IOException e) {
+                  e.printStackTrace();
+                  collectService.UpdateCollectStatus(name,Status.Error);
+               }
+            }
+         };
+            // read any errors from the attempted command
 
+         process.start();
+         collectService.UpdateCollectStatus(name,Status.Done);
 
          return Status.Done;
 
          } catch (Exception e) {
          Logger.error(e.getMessage());
+         collectService.UpdateCollectStatus(name,Status.Error);
          e.printStackTrace();
          return Status.Error;
       }
