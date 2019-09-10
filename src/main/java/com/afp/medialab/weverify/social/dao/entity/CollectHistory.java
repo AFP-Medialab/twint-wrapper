@@ -1,21 +1,26 @@
 package com.afp.medialab.weverify.social.dao.entity;
 
-import com.afp.medialab.weverify.social.model.Status;
-import com.mysql.cj.Session;
-
-import javax.persistence.Id;
+import java.io.Serializable;
+import java.util.Date;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
-import java.util.Date;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+
+import com.afp.medialab.weverify.social.model.Status;
 
 @Entity
-public class CollectHistory {
+public class CollectHistory implements Serializable{
 
-    @Id
-    @GeneratedValue
-    @Column(name = "id")
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	@Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", nullable = false, updatable = false)
     private Integer id;
     @Column(name = "session")
     private String session;
