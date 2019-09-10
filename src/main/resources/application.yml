@@ -8,4 +8,14 @@ logging:
 application:
   home:
     msg: Service is Up
-    
+
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/mysqlDB?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC
+    username: dev1
+    password: dev1
+    #driver-class-name: com.mysql.jdbc.Driver
+  jpa:
+    hibernate.ddl-auto : create-drop
+    generate-ddl: true
+    show-sql: true
