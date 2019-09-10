@@ -3,12 +3,9 @@ package com.afp.medialab.weverify.social.controller;
 import java.util.Date;
 import java.util.UUID;
 
-import com.afp.medialab.weverify.social.dao.entity.CollectTable;
-import com.afp.medialab.weverify.social.dao.repository.CollectInterface;
 import com.afp.medialab.weverify.social.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
