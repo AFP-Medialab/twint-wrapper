@@ -1,10 +1,12 @@
 package com.afp.medialab.weverify.social;
 
+import com.afp.medialab.weverify.social.dao.service.CollectService;
 import com.afp.medialab.weverify.social.model.CollectRequest;
 import com.afp.medialab.weverify.social.model.CollectResponse;
 import com.afp.medialab.weverify.social.model.Status;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -13,28 +15,35 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public class TwintCall {
-   Status status;
    CollectRequest request;
    String name;
+
+   @Autowired
+   CollectService collectService;
 
    private static Logger Logger = LoggerFactory.getLogger(TwintCall.class);
 
    public TwintCall(String hashtag, Date since, Date until, String name)
    {
-      this.status = Status.NotStarted;
+
       request = new CollectRequest(hashtag, since, until);
+
+      collectService.SaveCollectInfo(Integer.parseInt(name), request, null, null, Status.NotStarted);
+
       this.name = name;
    }
    public TwintCall(CollectRequest request, String name)
    {
-      this.status = Status.NotStarted;
+
+      collectService.SaveCollectInfo(Integer.parseInt(name), request, null, null, Status.NotStarted);
+
       this.request = request;
       this.name = name;
    }
 
    public CollectResponse collect()
    {
-      status = Status.Running;
+      collectService.UpdateCollectStatus(Integer.parseInt(name), Status.Running);
 
       try {
          SimpleDateFormat format =  new SimpleDateFormat("yyyy-MM-dd");
@@ -70,13 +79,14 @@ public class TwintCall {
 
          // read any errors from the attempted command
 
-          status = Status.Done;
+         collectService.UpdateCollectStatus(Integer.parseInt(name), Status.Done);
 
          stdInput.close();
          stdError.close();
 
          System.exit(0);
          } catch (Exception e) {
+         Logger.error(e.getMessage());
          e.printStackTrace();
       }
       return null;
