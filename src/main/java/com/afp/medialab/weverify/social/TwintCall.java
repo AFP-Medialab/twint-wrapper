@@ -3,6 +3,8 @@ package com.afp.medialab.weverify.social;
 import com.afp.medialab.weverify.social.model.CollectRequest;
 import com.afp.medialab.weverify.social.model.CollectResponse;
 import com.afp.medialab.weverify.social.model.Status;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -13,7 +15,9 @@ import java.util.Date;
 public class TwintCall {
    Status status;
    CollectRequest request;
-   String name = "test";
+   String name;
+
+   private static Logger Logger = LoggerFactory.getLogger(TwintCall.class);
 
    public TwintCall(String hashtag, Date since, Date until, String name)
    {
@@ -38,10 +42,13 @@ public class TwintCall {
          String untilStr = format.format(request.getUntil());
 
          ProcessBuilder pb =
-                 new ProcessBuilder("/bin/bash", "-c", "docker run --rm --network twint_esnet -i medialab.registry.afp.com/twint:2.1.1 \"twint -s '#" + request.getSearch() +
+                 new ProcessBuilder("/bin/bash", "-c",
+                         "docker run --rm --network twint_esnet -i medialab.registry.afp.com/twint:2.1.1 \"twint -s '" + request.getSearch() +
                          "' --stats --since " + fromStr + " --until " + untilStr  +
                          " -l fr --essid sess-" + name + " -es elasticsearch:9200\"");
-         System.out.println(pb.command());
+
+         Logger.debug(pb.command().toString());
+
          Process p = pb.start();
          BufferedReader stdInput = new BufferedReader(new
                  InputStreamReader(p.getInputStream()));
@@ -49,22 +56,21 @@ public class TwintCall {
          BufferedReader stdError = new BufferedReader(new
                  InputStreamReader(p.getErrorStream()));
          String s = "";
-         System.out.println("Here is the standard error of the command (if any):\n");
+        // Logger.info("Here is the standard error of the command (if any):\n");
          while ((s = stdError.readLine()) != null) {
 
-            System.out.println(s);
+            Logger.error(s);
          }
 
-         System.out.println("**********\n");
          // read the output from the command
-         System.out.println("Here is the standard output of the command:\n");
+        // Logger.info("Here is the standard output of the command:\n");
          while ((s = stdInput.readLine()) != null) {
-            System.out.println(s);
+            Logger.info(s);
          }
 
          // read any errors from the attempted command
 
-            status = Status.Done;
+          status = Status.Done;
 
          stdInput.close();
          stdError.close();

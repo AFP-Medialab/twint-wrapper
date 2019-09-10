@@ -3,6 +3,7 @@ package com.afp.medialab.weverify.social.controller;
 import java.util.Date;
 import java.util.UUID;
 
+import com.afp.medialab.weverify.social.TwintCall;
 import com.afp.medialab.weverify.social.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,6 +42,8 @@ public class TwitterGatewayServiceController {
 		Logger.info(collectRequest.getFrom().toString());
 		Logger.info(collectRequest.getUntil().toString());
 		String session = UUID.randomUUID().toString();
+		TwintCall tc = new TwintCall(collectRequest, session);
+		tc.collect();
 		return new CollectResponse(session, Status.Done);
 
 	}
