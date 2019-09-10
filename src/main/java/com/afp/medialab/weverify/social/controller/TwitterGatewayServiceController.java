@@ -9,11 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.afp.medialab.weverify.social.model.CollectRequest;
 import com.afp.medialab.weverify.social.model.CollectResponse;
@@ -35,6 +31,7 @@ public class TwitterGatewayServiceController {
 		return homeMsg;
 	}
 
+
 	@ApiOperation(value = "Trigger a Twitter Scraping")
 	@RequestMapping(path = "/collect", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
 	public @ResponseBody CollectResponse collect(@RequestBody CollectRequest collectRequest) {
@@ -45,7 +42,6 @@ public class TwitterGatewayServiceController {
 		TwintCall tc = new TwintCall(collectRequest, session);
 		tc.collect();
 		return new CollectResponse(session, Status.Done);
-
 	}
 
 	@ApiOperation(value = "Trigger a status check")
