@@ -1,10 +1,16 @@
 package com.afp.medialab.weverify.social.controller;
 
+import java.io.IOException;
 import java.util.Date;
 import java.util.UUID;
 
 import com.afp.medialab.weverify.social.TwintCall;
+import com.afp.medialab.weverify.social.dao.entity.CollectHistory;
+import com.afp.medialab.weverify.social.dao.service.CollectService;
 import com.afp.medialab.weverify.social.model.*;
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +32,9 @@ public class TwitterGatewayServiceController {
 
 	@Autowired
 	private TwintCall tc;
+
+	@Autowired
+	private CollectService collectService;
 
 	@Value("${application.home.msg}")
 	private String homeMsg;
@@ -54,7 +63,23 @@ public class TwitterGatewayServiceController {
 	@RequestMapping(path = "/status", method = RequestMethod.POST, consumes = "application/json", produces = "application/json")
 	public @ResponseBody StatusResponse status(@RequestBody StatusRequest statusRequest) {
 		Logger.info(statusRequest.getSession());
-		String session = UUID.randomUUID().toString();
-		return new StatusResponse(session, new Date(), new Date(), Status.Done, new CollectRequest(session, new Date(), new Date()));
+
+		CollectHistory collectHistory = collectService.getCollectInfo(statusRequest.getSession());
+		if (collectHistory == null)
+			return new StatusResponse(statusRequest.getSession(), null, null, Status.Error, null);
+
+		ObjectMapper mapper = new ObjectMapper();
+		try {
+			CollectRequest collectRequest = mapper.readValue(collectHistory.getQuery(), CollectRequest.class);
+			return new StatusResponse(collectHistory.getSession(), collectHistory.getProcessStart(), collectHistory.getProcessEnd(),
+					collectHistory.getStatus(), collectRequest);
+		} catch (JsonParseException e) {
+			e.printStackTrace();
+		} catch (JsonMappingException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return new StatusResponse(collectHistory.getSession(), null, null, Status.Error, null);
 	}
 }
