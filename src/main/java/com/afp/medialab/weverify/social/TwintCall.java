@@ -28,14 +28,14 @@ public class TwintCall {
 
       request = new CollectRequest(hashtag, since, until);
 
-      collectService.SaveCollectInfo(Integer.parseInt(name), request, null, null, Status.NotStarted);
+      collectService.SaveCollectInfo(name, request, null, null, Status.NotStarted);
 
       this.name = name;
    }
    public TwintCall(CollectRequest request, String name)
    {
 
-      collectService.SaveCollectInfo(Integer.parseInt(name), request, null, null, Status.NotStarted);
+      collectService.SaveCollectInfo(name, request, null, null, Status.NotStarted);
 
       this.request = request;
       this.name = name;
@@ -43,7 +43,7 @@ public class TwintCall {
 
    public CollectResponse collect()
    {
-      collectService.UpdateCollectStatus(Integer.parseInt(name), Status.Running);
+      collectService.UpdateCollectStatus(name, Status.Running);
 
       try {
          SimpleDateFormat format =  new SimpleDateFormat("yyyy-MM-dd");
@@ -79,7 +79,7 @@ public class TwintCall {
 
          // read any errors from the attempted command
 
-         collectService.UpdateCollectStatus(Integer.parseInt(name), Status.Done);
+         collectService.UpdateCollectStatus(name, Status.Done);
 
          stdInput.close();
          stdError.close();

@@ -11,18 +11,17 @@ import java.util.Date;
 
 public interface CollectInterface extends JpaRepository<CollectHistory, Integer> {
 
-    CollectHistory findCollectHistoryById(Integer id);
+    CollectHistory findCollectHistoryBySession(String session);
 
     @Modifying
-    @Query("update CollectHistory collect set collect.status = :status where collect.id = :id")
-    void updateCollectStatus(@Param("id") Integer id, @Param("status") Status status);
+    @Query("update CollectHistory collect set collect.status = :status where collect.session = :session")
+    void updateCollectStatus(@Param("session") String session, @Param("status") Status status);
 
     @Modifying
-    @Query("update CollectHistory collect set collect.processStart = :processStart where collect.id = :id")
-    void updateCollectProcessStart(@Param("id") Integer id, @Param("processStart") Date processStart);
+    @Query("update CollectHistory collect set collect.processStart = :processStart where collect.session = :session")
+    void updateCollectProcessStart(@Param("session") String session, @Param("processStart") Date processStart);
 
     @Modifying
-    @Query("update CollectHistory collect set collect.processEnd = :processEnd where collect.id = :id")
-    void updateCollectProcessEnd(@Param("id") Integer id, @Param("processEnd") Date processEnd);
-
+    @Query("update CollectHistory collect set collect.processEnd = :processEnd where collect.session = :session")
+    void updateCollectProcessEnd(@Param("session") String session, @Param("processEnd") Date processEnd);
 }

@@ -15,36 +15,36 @@ public class CollectService {
     @Autowired
     CollectInterface collectInterface;
 
-    public void SaveCollectInfo(Integer id, CollectRequest collectRequest, Date processStart, Date processEnd, Status status)
+    public void SaveCollectInfo(String session, CollectRequest collectRequest, Date processStart, Date processEnd, Status status)
     {
         String query = "{\n" +
                             "\"search\" : " + collectRequest.getSearch() + ",\n" +
                             "\"from\" : " + collectRequest.getFrom() + ",\n" +
                             "\"until\" : " + collectRequest.getUntil() + "\n" +
                         "}";
-        CollectHistory collectHistory = new CollectHistory(id, query, processStart, processEnd, status);
+        CollectHistory collectHistory = new CollectHistory(session, query, processStart, processEnd, status);
         collectInterface.save(collectHistory);
     }
 
-    public Boolean UpdateCollectStatus(Integer id, Status status)
+    public Boolean UpdateCollectStatus(String session, Status status)
     {
-        CollectHistory collectHistory = collectInterface.findCollectHistoryById(id);
+        CollectHistory collectHistory = collectInterface.findCollectHistoryBySession(session);
         if (status == Status.Running && collectHistory.getStatus() == Status.NotStarted)
         {
-            collectInterface.updateCollectProcessStart(id, new Date());
-            collectInterface.updateCollectStatus(id, status);
+            collectInterface.updateCollectProcessStart(session, new Date());
+            collectInterface.updateCollectStatus(session, status);
             return true;
         }
         else if (status == Status.Done && collectHistory.getStatus() == Status.Running)
         {
-            collectInterface.updateCollectProcessEnd(id, new Date());
-            collectInterface.updateCollectStatus(id, status);
+            collectInterface.updateCollectProcessEnd(session, new Date());
+            collectInterface.updateCollectStatus(session, status);
             return true;
         }
         else if (status == status.Error && collectHistory.getStatus() != status.Error)
         {
-            collectInterface.updateCollectProcessEnd(id, new Date());
-            collectInterface.updateCollectStatus(id, status);
+            collectInterface.updateCollectProcessEnd(session, new Date());
+            collectInterface.updateCollectStatus(session, status);
             return true;
         }
         return false;
