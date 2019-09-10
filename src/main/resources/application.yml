@@ -11,7 +11,7 @@ application:
 
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/mysqlDB
+    url: jdbc:mysql://localhost:3306/RequestInformation
     username: dev1
     password: dev1
     #driver-class-name: com.mysql.jdbc.Driver

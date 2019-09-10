@@ -21,9 +21,9 @@ public class CollectHistory {
     private String session;
     @Column(name = "query", columnDefinition = "TEXT")
     private String query;
-    @Column(name = "processStart")
+    @Column(name = "processStart", nullable = true)
     private Date processStart;
-    @Column(name = "processEnd")
+    @Column(name = "processEnd", nullable = true)
     private Date processEnd;
     @Column(name = "Status")
     private Status status;
