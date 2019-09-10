@@ -11,7 +11,7 @@ application:
 
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/RequestInformation
+    url: jdbc:mysql://localhost:3308/twitter-gateway?serverTimeZone=CET
     username: dev1
     password: dev1
     #driver-class-name: com.mysql.jdbc.Driver
