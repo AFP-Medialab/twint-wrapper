@@ -4,15 +4,10 @@ import com.afp.medialab.weverify.social.dao.entity.CollectHistory;
 import com.afp.medialab.weverify.social.dao.repository.CollectInterface;
 import com.afp.medialab.weverify.social.model.CollectRequest;
 import com.afp.medialab.weverify.social.model.Status;
-import com.afp.medialab.weverify.social.model.StatusResponse;
-import javafx.scene.text.Text;
-import org.hibernate.boot.cfgxml.spi.CfgXmlAccessService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.Date;
-import java.util.zip.DataFormatException;
 
 @Service
 public class CollectService {
@@ -22,11 +17,11 @@ public class CollectService {
 
     public void SaveCollectInfo(Integer id, CollectRequest collectRequest, Date processStart, Date processEnd, Status status)
     {
-        Text query = new Text("{\n" +
-                                    "\"search\" : " + collectRequest.getSearch() + ",\n" +
-                                    "\"from\" : " + collectRequest.getFrom() + ",\n" +
-                                    "\"until\" : " + collectRequest.getUntil() + "\n" +
-                                "}");
+        String query = "{\n" +
+                            "\"search\" : " + collectRequest.getSearch() + ",\n" +
+                            "\"from\" : " + collectRequest.getFrom() + ",\n" +
+                            "\"until\" : " + collectRequest.getUntil() + "\n" +
+                        "}";
         CollectHistory collectHistory = new CollectHistory(id, query, processStart, processEnd, status);
         collectInterface.save(collectHistory);
     }

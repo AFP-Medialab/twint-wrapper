@@ -1,12 +1,10 @@
 package com.afp.medialab.weverify.social.dao.entity;
 
 import com.afp.medialab.weverify.social.model.Status;
-import javafx.scene.text.Text;
 import org.springframework.data.annotation.Id;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
 import java.util.Date;
 
 @Entity
@@ -15,8 +13,8 @@ public class CollectHistory {
     @Id
     @Column(name = "id")
     private Integer id;
-    @Column(name = "query")
-    private Text query;
+    @Column(name = "query", columnDefinition = "TEXT")
+    private String query;
     @Column(name = "processStart")
     private Date processStart;
     @Column(name = "processEnd")
@@ -24,7 +22,7 @@ public class CollectHistory {
     @Column(name = "Status")
     private Status status;
 
-    public CollectHistory(Integer id, Text query, Date processStart, Date processEnd, Status status) {
+    public CollectHistory(Integer id, String query, Date processStart, Date processEnd, Status status) {
         this.id = id;
         this.query = query;
         this.processStart = processStart;
@@ -40,11 +38,11 @@ public class CollectHistory {
         this.id = id;
     }
 
-    public Text getQuery() {
+    public String getQuery() {
         return query;
     }
 
-    public void setQuery(Text query) {
+    public void setQuery(String query) {
         this.query = query;
     }
 
