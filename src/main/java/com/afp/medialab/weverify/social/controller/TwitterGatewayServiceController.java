@@ -36,12 +36,15 @@ public class TwitterGatewayServiceController {
 	@RequestMapping(path = "/collect", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
 	public @ResponseBody CollectResponse collect(@RequestBody CollectRequest collectRequest) {
 		Logger.info(collectRequest.getSearch());
-		Logger.info(collectRequest.getFrom().toString());
-		Logger.info(collectRequest.getUntil().toString());
+		if (collectRequest.getFrom() != null)
+			Logger.info(collectRequest.getFrom().toString());
+
+		if (collectRequest.getFrom() != null)
+			Logger.info(collectRequest.getUntil().toString());
 		String session = UUID.randomUUID().toString();
 		TwintCall tc = new TwintCall(collectRequest, session);
-		tc.collect();
-		return new CollectResponse(session, Status.Done);
+		Status s = tc.collect();
+		return new CollectResponse(session, s);
 	}
 
 	@ApiOperation(value = "Trigger a status check")

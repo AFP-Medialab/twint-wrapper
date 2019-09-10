@@ -15,11 +15,11 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public class TwintCall {
-   CollectRequest request;
-   String name;
+   private CollectRequest request;
+   private String name;
 
    @Autowired
-   CollectService collectService;
+   private CollectService collectService;
 
    private static Logger Logger = LoggerFactory.getLogger(TwintCall.class);
 
@@ -34,14 +34,13 @@ public class TwintCall {
    }
    public TwintCall(CollectRequest request, String name)
    {
-
       collectService.SaveCollectInfo(name, request, null, null, Status.NotStarted);
 
       this.request = request;
       this.name = name;
    }
 
-   public CollectResponse collect()
+   public Status collect()
    {
       collectService.UpdateCollectStatus(name, Status.Running);
 
@@ -84,12 +83,14 @@ public class TwintCall {
          stdInput.close();
          stdError.close();
 
-         System.exit(0);
+
+         return Status.Done;
+
          } catch (Exception e) {
          Logger.error(e.getMessage());
          e.printStackTrace();
+         return Status.Error;
       }
-      return null;
    }
  /* */
 }
