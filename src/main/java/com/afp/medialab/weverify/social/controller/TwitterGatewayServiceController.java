@@ -50,12 +50,17 @@ public class TwitterGatewayServiceController {
 	public @ResponseBody CollectResponse collect(@RequestBody CollectRequest collectRequest) {
 		Logger.info(collectRequest.getSearch());
 		Logger.info(collectRequest.getFrom().toString());
-
 		Logger.info(collectRequest.getUntil().toString());
-
-		//if (collectRequest.getLang() != null)
-			Logger.info(collectRequest.getLang());
+		Logger.info(collectRequest.getLang());
 		Logger.info(collectRequest.getUser());
+
+		// Check if this request has already been donne, if it does return it
+		CollectResponse alreadyDonne = collectService.alreadyExists(collectRequest);
+		if (alreadyDonne != null) {
+			Logger.info("This request has already been donne sessionId: " + alreadyDonne.getSession());
+			return alreadyDonne;
+		}
+
 		String session = UUID.randomUUID().toString();
 		Status s = tc.collect(new TwintThread(collectRequest, session, collectService));
 		return new CollectResponse(session, s);
