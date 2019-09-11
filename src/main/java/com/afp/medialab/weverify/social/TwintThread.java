@@ -37,6 +37,7 @@ public class TwintThread implements Runnable {
 
     @Override
     public void run() {
+        collectService.UpdateCollectStatus(name, Status.Running);
         try {
             SimpleDateFormat format =  new SimpleDateFormat("yyyy-MM-dd");
             String fromStr = format.format(request.getFrom());
@@ -76,10 +77,11 @@ public class TwintThread implements Runnable {
                     }
 
 
+            collectService.UpdateCollectStatus(name, Status.Done);
 
         } catch (Exception e) {
             Logger.error(e.getMessage());
-            collectService.UpdateCollectStatus(name,Status.Error);
+            collectService.UpdateCollectStatus(name, Status.Error);
             e.printStackTrace();
         }
     }
