@@ -56,7 +56,7 @@ public class TwitterGatewayServiceController {
 		if (collectRequest.getFrom() != null)
 			Logger.info(collectRequest.getUntil().toString());
 		String session = UUID.randomUUID().toString();
-		Status s = tc.collect(new TwintThread(collectRequest, session));
+		Status s = tc.collect(new TwintThread(collectRequest, session, collectService));
 		return new CollectResponse(session, s);
 	}
 
