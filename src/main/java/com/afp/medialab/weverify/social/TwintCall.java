@@ -26,7 +26,8 @@ public class TwintCall {
       collectService.SaveCollectInfo(tt.getName(), tt.getRequest(), null, null, Status.NotStarted);
       collectService.UpdateCollectStatus(tt.getName(), Status.Running);
 
-      tt.run();
+      Thread t = new Thread(tt);
+      t.start();
       collectService.UpdateCollectStatus(tt.getName(),Status.Done);
       return Status.Done;
 

@@ -41,8 +41,6 @@ public class TwintThread implements Runnable {
             String fromStr = format.format(request.getFrom());
             String untilStr = format.format(request.getUntil());
 
-            Thread process = new Thread() {
-                public void run() {
                     ProcessBuilder pb =
                             new ProcessBuilder("/bin/bash", "-c",
                                     "docker run --rm --network twint_esnet -i medialab.registry.afp.com/twint:2.1.1 \"twint -s '" + request.getSearch() +
@@ -76,8 +74,7 @@ public class TwintThread implements Runnable {
                         e.printStackTrace();
                         collectService.UpdateCollectStatus(name, Status.Error);
                     }
-                }
-            };
+
 
 
         } catch (Exception e) {
