@@ -34,16 +34,16 @@ public class TwintThread implements Runnable {
         this.request = request;
         name = id;
     }
+
     @Override
     public void run() {
         try {
             SimpleDateFormat format =  new SimpleDateFormat("yyyy-MM-dd");
             String fromStr = format.format(request.getFrom());
             String untilStr = format.format(request.getUntil());
-
                     ProcessBuilder pb =
                             new ProcessBuilder("/bin/bash", "-c",
-                                    "docker run --rm --network twint_esnet -i medialab.registry.afp.com/twint:2.1.1 \"twint -s '" + request.getSearch() +
+                                            "PATH=/usr/bin:/usr/local/bin:/bin; docker run --rm --network twint_esnet -i medialab.registry.afp.com/twint:2.1.1 \"twint -s '" + request.getSearch() +
                                             "' --stats --since " + fromStr + " --until " + untilStr +
                                             " -l fr --essid sess-" + name + " -es elasticsearch:9200\"");
 
