@@ -26,6 +26,7 @@ public class CollectService {
                             "\"from\" : \"" + dateFormat.format(collectRequest.getFrom())+ "\",\n" +
                             "\"until\" : \"" + dateFormat.format(collectRequest.getUntil()) + "\"\n" +
                         "}";
+
         CollectHistory collectHistory = new CollectHistory(session, query, processStart, processEnd, status);
         collectInterface.save(collectHistory);
     }

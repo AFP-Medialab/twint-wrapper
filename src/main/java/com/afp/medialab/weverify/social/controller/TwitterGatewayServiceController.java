@@ -1,7 +1,6 @@
 package com.afp.medialab.weverify.social.controller;
 
 import java.io.IOException;
-import java.util.Date;
 import java.util.UUID;
 
 import com.afp.medialab.weverify.social.TwintCall;
@@ -50,11 +49,13 @@ public class TwitterGatewayServiceController {
 	@RequestMapping(path = "/collect", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
 	public @ResponseBody CollectResponse collect(@RequestBody CollectRequest collectRequest) {
 		Logger.info(collectRequest.getSearch());
-		if (collectRequest.getFrom() != null)
-			Logger.info(collectRequest.getFrom().toString());
+		Logger.info(collectRequest.getFrom().toString());
 
-		if (collectRequest.getFrom() != null)
-			Logger.info(collectRequest.getUntil().toString());
+		Logger.info(collectRequest.getUntil().toString());
+
+		//if (collectRequest.getLang() != null)
+			Logger.info(collectRequest.getLang());
+		Logger.info(collectRequest.getUser());
 		String session = UUID.randomUUID().toString();
 		Status s = tc.collect(new TwintThread(collectRequest, session, collectService));
 		return new CollectResponse(session, s);
