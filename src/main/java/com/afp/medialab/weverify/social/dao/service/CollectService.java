@@ -8,6 +8,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Configurable;
 import org.springframework.stereotype.Service;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 
 @Service
@@ -18,10 +20,11 @@ public class CollectService {
 
     public void SaveCollectInfo(String session, CollectRequest collectRequest, Date processStart, Date processEnd, Status status)
     {
+        DateFormat dateFormat = new SimpleDateFormat("yyyy-mm-dd");
         String query = "{\n" +
-                            "\"search\" : " + collectRequest.getSearch() + ",\n" +
-                            "\"from\" : " + collectRequest.getFrom() + ",\n" +
-                            "\"until\" : " + collectRequest.getUntil() + "\n" +
+                            "\"search\" : \"" + collectRequest.getSearch() + "\",\n" +
+                            "\"from\" : \"" + dateFormat.format(collectRequest.getFrom())+ "\",\n" +
+                            "\"until\" : \"" + dateFormat.format(collectRequest.getUntil()) + "\"\n" +
                         "}";
         CollectHistory collectHistory = new CollectHistory(session, query, processStart, processEnd, status);
         collectInterface.save(collectHistory);
@@ -49,5 +52,9 @@ public class CollectService {
             return true;
         }
         return false;
+    }
+
+    public CollectHistory getCollectInfo(String session) {
+        return collectInterface.findCollectHistoryBySession(session);
     }
 }

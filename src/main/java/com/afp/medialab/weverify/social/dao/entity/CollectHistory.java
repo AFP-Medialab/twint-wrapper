@@ -10,6 +10,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 
 import com.afp.medialab.weverify.social.model.Status;
+import com.fasterxml.jackson.annotation.JsonFormat;
 
 @Entity
 public class CollectHistory implements Serializable{
@@ -33,6 +34,8 @@ public class CollectHistory implements Serializable{
     @Column(name = "Status")
     private Status status;
 
+    public CollectHistory(){}
+
     public CollectHistory(String session, String query, Date processStart, Date processEnd, Status status) {
         this.session = session;
         this.query = query;
@@ -41,12 +44,24 @@ public class CollectHistory implements Serializable{
         this.status = status;
     }
 
+    public static long getSerialVersionUID() {
+        return serialVersionUID;
+    }
+
     public Integer getId() {
         return id;
     }
 
     public void setId(Integer id) {
         this.id = id;
+    }
+
+    public String getSession() {
+        return session;
+    }
+
+    public void setSession(String session) {
+        this.session = session;
     }
 
     public String getQuery() {
