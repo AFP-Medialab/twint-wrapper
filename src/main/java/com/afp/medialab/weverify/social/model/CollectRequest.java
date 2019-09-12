@@ -1,11 +1,10 @@
 package com.afp.medialab.weverify.social.model;
 
+//import com.afp.medialab.weverify.social.exceptions.BadRequestException;
+import com.afp.medialab.weverify.social.constrains.MediaConstrain;
+import com.afp.medialab.weverify.social.constrains.RetweetHandlingConstrain;
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
-import java.io.IOException;
 import java.util.Date;
 
 public class CollectRequest {
@@ -16,15 +15,18 @@ public class CollectRequest {
 	@JsonFormat(pattern="yyyy-MM-dd")
 	private Date from, until;
 
+	@MediaConstrain
+	private String media;
+
+	private Boolean verified = false;
+
+	@RetweetHandlingConstrain
+	private String retweetsHandling;
+
+
+
 	public CollectRequest(){}
 
-	public CollectRequest(String search, String lang, String user, Date from, Date until) {
-		this.search = search;
-		this.lang = lang;
-		this.user = user;
-		this.from = from;
-		this.until = until;
-	}
 
 	public String getSearch() {
 		return search;
@@ -61,4 +63,25 @@ public class CollectRequest {
 	public void setUser(String user) {
 		this.user = user;
 	}
+
+	public String getMedia() {
+		return media;
+	}
+
+	public String getRetweetsHandling() {
+		return retweetsHandling;
+	}
+
+	public void setMedia(String media) {
+		this.media = media;
+	}
+
+	public boolean isVerified() {
+		return verified;
+	}
+
+	public void setVerified(boolean verified) {
+		this.verified = verified;
+	}
+
 }

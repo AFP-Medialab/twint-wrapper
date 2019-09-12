@@ -42,7 +42,7 @@ public class CollectService {
         CollectHistory collectHistory = collectInterface.findCollectHistoryByQuery(CollectRequestToString(collectRequest));
         if (collectHistory == null)
             return null;
-        return new CollectResponse(collectHistory.getSession(), collectHistory.getStatus());
+        return new CollectResponse(collectHistory.getSession(), collectHistory.getStatus(), "");
     }
 
     public Boolean UpdateCollectStatus(String session, Status status)

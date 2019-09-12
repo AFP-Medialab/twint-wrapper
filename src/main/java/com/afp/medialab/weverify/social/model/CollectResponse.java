@@ -4,10 +4,12 @@ public class CollectResponse {
 
 	private String session;
 	private Status status;
+	private String message;
 
-	public CollectResponse(String session, Status status) {
+	public CollectResponse(String session, Status status, String message) {
 		this.session = session;
 		this.status = status;
+		this.message = message;
 	}
 
 	public String getSession() {
@@ -26,4 +28,11 @@ public class CollectResponse {
 		this.status = status;
 	}
 
+	public String getMessage() {
+		return message;
+	}
+
+	public void setMessage(String message) {
+		this.message = message;
+	}
 }

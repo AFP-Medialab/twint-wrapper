@@ -48,7 +48,8 @@ public class TwintThread{
     @Async
     @Transactional
     public void callTwint(CollectRequest request, String name) {
-        Logger.info("STATUS RUNNING : " +  collectService.getCollectInfo(name).getStatus().toString());
+
+        collectService.UpdateCollectStatus(name, Status.Running);
         try {
 
             String r = TwintRequestGenerator.generateRequest(request, name);
