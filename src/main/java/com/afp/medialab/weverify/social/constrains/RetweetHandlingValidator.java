@@ -19,7 +19,7 @@ public class RetweetHandlingValidator implements ConstraintValidator<RetweetHand
 
     @Override
     public boolean isValid(String s, ConstraintValidatorContext constraintValidatorContext) {
-        return (s == null || s == "allowed" || s == "only" || s == "excluded");
+        return (s == null || s.equals("allowed") || s.equals("only") || s.equals("excluded"));
 
     }
 }

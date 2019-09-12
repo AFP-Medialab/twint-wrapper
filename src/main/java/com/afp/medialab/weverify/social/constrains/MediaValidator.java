@@ -17,7 +17,6 @@ public class MediaValidator implements ConstraintValidator<MediaConstrain, Strin
 
     @Override
     public boolean isValid(String s, ConstraintValidatorContext constraintValidatorContext) {
-        return (s == null || s == "video" || s == "image" || s == "both");
-
+        return (s == null || s.equals("video") || s.equals("image") || s.equals("both"));
     }
 }

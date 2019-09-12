@@ -25,7 +25,6 @@ public class TwintRequestGenerator {
         if (cr.getFrom() != null) {
             String fromStr = format.format(cr.getFrom());
             call += " --since " + fromStr;
-
         }
 
         if (cr.getUntil() != null) {
@@ -40,6 +39,26 @@ public class TwintRequestGenerator {
         else
             call += "fr";
 
+        if (cr.getMedia() != null) {
+            if (cr.getMedia().equals("both"))
+                call += " --media";
+            else if (cr.getMedia().equals("image"))
+                call += " --images";
+            else if (cr.getMedia().equals("video"))
+                call += " --videos";
+        }
+
+        if (cr.getRetweetsHandling() != null) {
+            if (cr.getRetweetsHandling().equals("exclude"))
+                call += " -fr";
+            if (cr.getRetweetsHandling().equals("only"))
+                call += " -nr";
+            if (cr.getRetweetsHandling().equals("allowed"))
+                call += " --retweets";
+        }
+
+        if (cr.isVerified())
+            call += " --verified";
         call += " --essid sess-" + id + " -es elasticsearch:9200\"";
 
         return call;
