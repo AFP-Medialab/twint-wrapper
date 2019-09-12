@@ -1,9 +1,11 @@
 package com.afp.medialab.weverify.social.dao.service;
 
+import com.afp.medialab.weverify.social.TwintCall;
 import com.afp.medialab.weverify.social.dao.entity.CollectHistory;
 import com.afp.medialab.weverify.social.dao.repository.CollectInterface;
 import com.afp.medialab.weverify.social.model.CollectRequest;
 import com.afp.medialab.weverify.social.model.Status;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Configurable;
 import org.springframework.stereotype.Service;
@@ -15,6 +17,7 @@ import java.util.Date;
 @Service
 public class CollectService {
 
+    private static org.slf4j.Logger Logger = LoggerFactory.getLogger(TwintCall.class);
     @Autowired
     CollectInterface collectInterface;
 
@@ -33,8 +36,9 @@ public class CollectService {
     public Boolean UpdateCollectStatus(String session, Status status)
     {
         CollectHistory collectHistory = collectInterface.findCollectHistoryBySession(session);
-        if (status == Status.Running && collectHistory.getStatus() == Status.NotStarted)
+        if (status == Status.Running && collectHistory.getStatus() == Status.Pending)
         {
+            Logger.info("RUUUUUUUUUNNNNNNING");
             collectInterface.updateCollectProcessStart(session, new Date());
             collectInterface.updateCollectStatus(session, status);
             return true;

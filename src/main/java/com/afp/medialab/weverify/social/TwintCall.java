@@ -6,14 +6,15 @@ import com.afp.medialab.weverify.social.model.Status;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.task.TaskExecutor;
+import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.text.SimpleDateFormat;
 
 @Configuration
+@EnableAsync
 public class TwintCall {
 
    @Autowired
@@ -21,15 +22,15 @@ public class TwintCall {
 
    private static Logger Logger = LoggerFactory.getLogger(TwintCall.class);
 
-   public Status collect(TwintThread tt) {
+   @Bean(name = "twintCallTaskExecutor")
+   public TaskExecutor twintCallTaskExecutor() {
 
-      collectService.SaveCollectInfo(tt.getName(), tt.getRequest(), null, null, Status.NotStarted);
-
-
-      Thread t = new Thread(tt);
-      t.start();
-
-      return collectService.getCollectInfo(tt.getName()).getStatus();
+      ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+      executor.setCorePoolSize(4);
+      executor.setMaxPoolSize(4);
+      executor.setThreadNamePrefix("twint-");
+      executor.initialize();
+      return executor;
 
    }
 }

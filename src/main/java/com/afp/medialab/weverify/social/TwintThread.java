@@ -6,19 +6,22 @@ import com.afp.medialab.weverify.social.model.Status;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.stereotype.Component;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.text.SimpleDateFormat;
 
-public class TwintThread implements Runnable {
+@Configuration
+public class TwintThread{
 
-    private CollectService collectService;
     private static Logger Logger = LoggerFactory.getLogger(TwintThread.class);
+
+    @Autowired
+    CollectService collectService;
+  /*  private CollectService collectService;
 
     private CollectRequest request;
     private String name;
@@ -31,16 +34,19 @@ public class TwintThread implements Runnable {
         return request;
     }
 
-    public TwintThread(CollectRequest request, String id, CollectService cs)
+    public TwintThread()
     {
         this.request = request;
         name = id;
         collectService = cs;
     }
-
-    @Override
-    public void run() {
+*/
+    @Async
+    @Transactional
+    public void callTwint(CollectRequest request, String name) {
         collectService.UpdateCollectStatus(name, Status.Running);
+
+        Logger.info("STATUS RUNNING : " +  collectService.getCollectInfo(name).getStatus().toString());
         try {
             SimpleDateFormat format =  new SimpleDateFormat("yyyy-MM-dd");
             String fromStr = format.format(request.getFrom());
@@ -66,18 +72,27 @@ public class TwintThread implements Runnable {
                         while ((s = stdError.readLine()) != null) {
                             Logger.error(s);
                         }
+                      /*  if (s != "") {
+                            stdInput.close();
+                            stdError.close();
+                            collectService.UpdateCollectStatus(name, Status.Error);
+                        }*/
 
                         while ((s = stdInput.readLine()) != null) {
                             Logger.info(s);
                         }
 
+                        collectService.UpdateCollectStatus(name, Status.Done);
+
+                        Logger.info("STATUS DONE : " + collectService.getCollectInfo(name).getStatus().toString());
                         stdInput.close();
                         stdError.close();
 
-                        collectService.UpdateCollectStatus(name, Status.Done);
                     } catch (IOException e) {
                         e.printStackTrace();
                         collectService.UpdateCollectStatus(name, Status.Error);
+
+                        Logger.info("STATUS ERROR : " + collectService.getCollectInfo(name).getStatus().toString());
                     }
 
 
@@ -85,7 +100,9 @@ public class TwintThread implements Runnable {
         } catch (Exception e) {
             Logger.error(e.getMessage());
             collectService.UpdateCollectStatus(name, Status.Error);
+            Logger.info("STATUS ERROR : ", collectService.getCollectInfo(name));
             e.printStackTrace();
         }
+
     }
 }

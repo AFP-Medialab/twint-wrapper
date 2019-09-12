@@ -3,6 +3,10 @@ package com.afp.medialab.weverify.social.controller;
 import java.io.IOException;
 import java.util.Date;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import com.afp.medialab.weverify.social.TwintCall;
 import com.afp.medialab.weverify.social.TwintThread;
@@ -17,6 +21,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
+import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.web.bind.annotation.*;
 
 import com.afp.medialab.weverify.social.model.CollectRequest;
@@ -32,10 +37,10 @@ public class TwitterGatewayServiceController {
 	private static Logger Logger = LoggerFactory.getLogger(TwitterGatewayServiceController.class);
 
 	@Autowired
-	private TwintCall tc;
+	private CollectService collectService;
 
 	@Autowired
-	private CollectService collectService;
+	private TwintThread tt;
 
 	@Value("${application.home.msg}")
 	private String homeMsg;
@@ -56,8 +61,13 @@ public class TwitterGatewayServiceController {
 		if (collectRequest.getFrom() != null)
 			Logger.info(collectRequest.getUntil().toString());
 		String session = UUID.randomUUID().toString();
-		Status s = tc.collect(new TwintThread(collectRequest, session, collectService));
-		return new CollectResponse(session, s);
+
+		collectService.SaveCollectInfo(session, collectRequest, null, null, Status.Pending);
+
+		tt.callTwint(collectRequest, session);
+
+		Logger.info(collectService.getCollectInfo(session).getStatus().toString());
+		return new CollectResponse(session, collectService.getCollectInfo(session).getStatus());
 	}
 
 	@ApiOperation(value = "Trigger a status check")
