@@ -1,7 +1,6 @@
 package com.afp.medialab.weverify.social.controller;
 
 import java.io.IOException;
-import java.util.Date;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -55,11 +54,18 @@ public class TwitterGatewayServiceController {
 	@RequestMapping(path = "/collect", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
 	public @ResponseBody CollectResponse collect(@RequestBody CollectRequest collectRequest) {
 		Logger.info(collectRequest.getSearch());
-		if (collectRequest.getFrom() != null)
-			Logger.info(collectRequest.getFrom().toString());
+		Logger.info(collectRequest.getFrom().toString());
+		Logger.info(collectRequest.getUntil().toString());
+		Logger.info(collectRequest.getLang());
+		Logger.info(collectRequest.getUser());
 
-		if (collectRequest.getFrom() != null)
-			Logger.info(collectRequest.getUntil().toString());
+		// Check if this request has already been donne, if it does return it
+		CollectResponse alreadyDonne = collectService.alreadyExists(collectRequest);
+		if (alreadyDonne != null) {
+			Logger.info("This request has already been donne sessionId: " + alreadyDonne.getSession());
+			return alreadyDonne;
+		}
+
 		String session = UUID.randomUUID().toString();
 
 		collectService.SaveCollectInfo(session, collectRequest, null, null, Status.Pending);

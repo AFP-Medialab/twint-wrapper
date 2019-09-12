@@ -11,13 +11,17 @@ import java.util.Date;
 public class CollectRequest {
 
 	private String search;
+	private String lang;
+	private String user;
 	@JsonFormat(pattern="yyyy-MM-dd")
 	private Date from, until;
 
 	public CollectRequest(){}
 
-	public CollectRequest(String search, Date from, Date until) {
+	public CollectRequest(String search, String lang, String user, Date from, Date until) {
 		this.search = search;
+		this.lang = lang;
+		this.user = user;
 		this.from = from;
 		this.until = until;
 	}
@@ -46,4 +50,15 @@ public class CollectRequest {
 		this.until = until;
 	}
 
+	public String getLang() {
+		return lang;
+	}
+
+	public String getUser() {
+		return user;
+	}
+
+	public void setUser(String user) {
+		this.user = user;
+	}
 }

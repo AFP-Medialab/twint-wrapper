@@ -11,6 +11,7 @@ public class TwintRequestGenerator {
         SimpleDateFormat format =  new SimpleDateFormat("yyyy-MM-dd");
 
         String call = "docker run --rm --network twint_esnet -i medialab.registry.afp.com/twint:2.1.1 \"twint -ho ";
+
         if (cr.getSearch()!= null)
             call += "-s '" + cr.getSearch() + "'";
 
@@ -20,6 +21,7 @@ public class TwintRequestGenerator {
         if (cr.getFrom() != null) {
             String fromStr = format.format(cr.getFrom());
             call += " --since " + fromStr;
+
         }
 
         if (cr.getUntil() != null) {

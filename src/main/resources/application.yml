@@ -10,6 +10,10 @@ application:
     msg: Service is Up
 
 spring:
+  jackson:
+    deserialization:
+      FAIL_ON_UNKNOWN_PROPERTIES: true
+
   datasource:
     url: jdbc:mysql://localhost:3308/twitter-gateway?serverTimeZone=CET
     username: dev1
