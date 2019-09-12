@@ -70,6 +70,8 @@ public class TwitterGatewayServiceController {
 
 		collectService.SaveCollectInfo(session, collectRequest, null, null, Status.Pending);
 
+		collectService.UpdateCollectStatus(session, Status.Running);
+
 		tt.callTwint(collectRequest, session);
 
 		Logger.info(collectService.getCollectInfo(session).getStatus().toString());

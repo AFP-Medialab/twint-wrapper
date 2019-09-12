@@ -50,7 +50,6 @@ public class CollectService {
         CollectHistory collectHistory = collectInterface.findCollectHistoryBySession(session);
         if (status == Status.Running && collectHistory.getStatus() == Status.Pending)
         {
-            Logger.info("RUUUUUUUUUNNNNNNING");
             collectInterface.updateCollectProcessStart(session, new Date());
             collectInterface.updateCollectStatus(session, status);
             return true;

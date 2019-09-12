@@ -44,8 +44,6 @@ public class TwintThread{
     @Async
     @Transactional
     public void callTwint(CollectRequest request, String name) {
-        collectService.UpdateCollectStatus(name, Status.Running);
-
         Logger.info("STATUS RUNNING : " +  collectService.getCollectInfo(name).getStatus().toString());
         try {
 
@@ -82,7 +80,6 @@ public class TwintThread{
 
                         collectService.UpdateCollectStatus(name, Status.Done);
 
-                        Logger.info("STATUS DONE : " + collectService.getCollectInfo(name).getStatus().toString());
                         stdInput.close();
                         stdError.close();
 
@@ -90,7 +87,6 @@ public class TwintThread{
                         e.printStackTrace();
                         collectService.UpdateCollectStatus(name, Status.Error);
 
-                        Logger.info("STATUS ERROR : " + collectService.getCollectInfo(name).getStatus().toString());
                     }
 
 
@@ -98,7 +94,6 @@ public class TwintThread{
         } catch (Exception e) {
             Logger.error(e.getMessage());
             collectService.UpdateCollectStatus(name, Status.Error);
-            Logger.info("STATUS ERROR : ", collectService.getCollectInfo(name));
             e.printStackTrace();
         }
 
