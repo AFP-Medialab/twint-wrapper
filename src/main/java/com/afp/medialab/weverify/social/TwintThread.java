@@ -74,11 +74,20 @@ public class TwintThread{
                             collectService.UpdateCollectStatus(name, Status.Error);
                         }*/
 
+                      int nb_tweets = -1;
                         while ((s = stdInput.readLine()) != null) {
                             Logger.info(s);
+                            if (s.contains("Successfully collected"))
+                            {
+                                String str =  s.split("Successfully collected ")[1].split(" ")[0];
+                                nb_tweets = Integer.parseInt(str);
+                            }
                         }
 
-                        collectService.UpdateCollectStatus(name, Status.Done);
+                        if (nb_tweets == -1)
+                            collectService.UpdateCollectStatus(name, Status.Error);
+                        else
+                            collectService.UpdateCollectStatus(name, Status.Done);
 
                         stdInput.close();
                         stdError.close();
