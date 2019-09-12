@@ -6,6 +6,7 @@ import com.afp.medialab.weverify.social.model.Status;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,6 +19,9 @@ import java.io.InputStreamReader;
 public class TwintThread{
 
     private static Logger Logger = LoggerFactory.getLogger(TwintThread.class);
+
+    @Value("${src.profile.docker}")
+    private String dockerCall;
 
     @Autowired
     CollectService collectService;
@@ -49,10 +53,10 @@ public class TwintThread{
 
             String r = TwintRequestGenerator.generateRequest(request, name);
                     ProcessBuilder pb =
-                            new ProcessBuilder("/bin/bash", "-c",
-                                            "PATH=/usr/bin:/usr/local/bin:/bin; " + r);
+                            new ProcessBuilder("/bin/bash", "-c", dockerCall + r);
 
-                    Logger.info(r);
+                    pb.environment().put("PATH", "/usr/bin:/usr/local/bin:/bin");
+                    Logger.info(dockerCall + r);
                     Process p = null;
                     try {
                         p = pb.start();

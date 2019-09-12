@@ -1,16 +1,20 @@
 package com.afp.medialab.weverify.social;
 
 import com.afp.medialab.weverify.social.model.CollectRequest;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.text.SimpleDateFormat;
 
 public class TwintRequestGenerator {
 
+
+
+
     public static String generateRequest(CollectRequest cr, String id)
     {
         SimpleDateFormat format =  new SimpleDateFormat("yyyy-MM-dd");
 
-        String call = "docker run --rm --network twint_esnet -i medialab.registry.afp.com/twint:2.1.1 \"twint -ho --count ";
+        String call = " \"twint -ho --count ";
 
         if (cr.getSearch()!= null)
             call += "-s '" + cr.getSearch() + "'";

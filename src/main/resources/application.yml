@@ -23,3 +23,7 @@ spring:
     hibernate.ddl-auto : create-drop
     generate-ddl: true
     show-sql: true
+
+src:
+  profile:
+    docker: docker run --rm --network twint_esnet -i medialab.registry.afp.com/twint:2.1.1
