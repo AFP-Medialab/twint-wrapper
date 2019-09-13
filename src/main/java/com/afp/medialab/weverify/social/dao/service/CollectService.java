@@ -45,25 +45,25 @@ public class CollectService {
         return new CollectResponse(collectHistory.getSession(), collectHistory.getStatus(), null, collectHistory.getProcessEnd());
     }
 
-    public Boolean UpdateCollectStatus(String session, Status status)
+    public Boolean UpdateCollectStatus(String session, Status Newstatus)
     {
         Status existingStatus = collectInterface.findCollectHistoryBySession(session).getStatus();
-        if (status == Status.Running && existingStatus == Status.Pending)
+        if (Newstatus == Status.Running && existingStatus == Status.Pending)
         {
             collectInterface.updateCollectProcessStart(session, new Date());
-            collectInterface.updateCollectStatus(session, status.toString());
+            collectInterface.updateCollectStatus(session, Newstatus.toString());
             return true;
         }
-        else if (status == Status.Done && existingStatus == Status.Running)
+        else if (Newstatus == Status.Done && existingStatus == Status.Running)
         {
             collectInterface.updateCollectProcessEnd(session, new Date());
-            collectInterface.updateCollectStatus(session, status.toString());
+            collectInterface.updateCollectStatus(session, Newstatus.toString());
             return true;
         }
-        else if (status == status.Error && existingStatus != status.Error)
+        else if (Newstatus == Newstatus.Error && existingStatus != Newstatus.Error)
         {
             collectInterface.updateCollectProcessEnd(session, new Date());
-            collectInterface.updateCollectStatus(session, status.toString());
+            collectInterface.updateCollectStatus(session, Newstatus.toString());
             return true;
         }
         return false;
