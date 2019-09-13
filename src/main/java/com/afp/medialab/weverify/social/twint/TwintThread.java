@@ -30,7 +30,6 @@ public class TwintThread {
     CollectService collectService;
 
     @Async
-    @Transactional
     public CompletableFuture<Integer> callTwint(CollectRequest request, String name) {
 
         collectService.UpdateCollectStatus(name, Status.Running);
