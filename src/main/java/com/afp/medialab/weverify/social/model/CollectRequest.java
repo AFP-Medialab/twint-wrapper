@@ -1,14 +1,20 @@
 package com.afp.medialab.weverify.social.model;
 
+import com.afp.medialab.weverify.social.constrains.LangConstrain;
 import com.afp.medialab.weverify.social.constrains.MediaConstrain;
 import com.afp.medialab.weverify.social.constrains.RetweetHandlingConstrain;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import java.util.Date;
 
+
+@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
 public class CollectRequest {
 
 	private String search;
+
+	@LangConstrain
 	private String lang;
 	private String user;
 	@JsonFormat(pattern="yyyy-MM-dd")

@@ -8,7 +8,6 @@ import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 
 public class MediaValidator implements ConstraintValidator<MediaConstrain, String> {
-    private static org.slf4j.Logger Logger = LoggerFactory.getLogger(TwitterGatewayServiceController.class);
 
     @Override
     public void initialize(MediaConstrain constraintAnnotation) {
