@@ -10,7 +10,6 @@ public class CollectResponse {
 	private String session;
 	private Status status;
 	private String message;
-
 	private Date lastSearch;
 
 	public CollectResponse(String session, Status status, String message, Date lastSearch) {

@@ -72,4 +72,9 @@ public class CollectService {
     public CollectHistory getCollectInfo(String session) {
         return collectInterface.findCollectHistoryBySession(session);
     }
+
+    public void UpdateCollectMessage(String session, String message)
+    {
+        collectInterface.updateCollectMessage(session, message);
+    }
 }

@@ -33,6 +33,17 @@ public class CollectHistory implements Serializable{
     @Column(name = "Status")
     private String status;
 
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
+    }
+
+    @Column(name= "message")
+    private String message;
+
     public CollectHistory(){}
 
     public CollectHistory(String session, String query, Date processStart, Date processEnd, Status status) {
