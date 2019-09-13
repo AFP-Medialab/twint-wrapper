@@ -3,10 +3,9 @@ package com.afp.medialab.weverify.social.controller;
 import java.io.IOException;
 import java.util.UUID;
 
-import com.afp.medialab.weverify.social.TwintThread;
+import com.afp.medialab.weverify.social.twint.TwintThread;
 import com.afp.medialab.weverify.social.dao.entity.CollectHistory;
 import com.afp.medialab.weverify.social.dao.service.CollectService;
-//import com.afp.medialab.weverify.social.exceptions.BadRequestException;
 import com.afp.medialab.weverify.social.model.*;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;

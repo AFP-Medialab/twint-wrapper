@@ -1,6 +1,6 @@
 package com.afp.medialab.weverify.social.dao.service;
 
-import com.afp.medialab.weverify.social.TwintCall;
+import com.afp.medialab.weverify.social.twint.TwintThreadExecutor;
 import com.afp.medialab.weverify.social.dao.entity.CollectHistory;
 import com.afp.medialab.weverify.social.dao.repository.CollectInterface;
 import com.afp.medialab.weverify.social.model.CollectRequest;
@@ -17,7 +17,7 @@ import java.util.Date;
 @Service
 public class CollectService {
 
-    private static org.slf4j.Logger Logger = LoggerFactory.getLogger(TwintCall.class);
+    private static org.slf4j.Logger Logger = LoggerFactory.getLogger(TwintThreadExecutor.class);
     @Autowired
     CollectInterface collectInterface;
 

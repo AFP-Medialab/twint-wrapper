@@ -1,8 +1,5 @@
-package com.afp.medialab.weverify.social;
-
+package com.afp.medialab.weverify.social.twint;
 import com.afp.medialab.weverify.social.model.CollectRequest;
-import org.springframework.beans.factory.annotation.Value;
-
 import java.text.SimpleDateFormat;
 
 public class TwintRequestGenerator {

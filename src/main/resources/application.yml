@@ -8,6 +8,8 @@ logging:
 application:
   home:
     msg: Service is Up
+  twintcall:
+
 
 spring:
   jackson:
@@ -26,4 +28,4 @@ spring:
 
 src:
   profile:
-    docker: docker run --rm --network twint_esnet -i medialab.registry.afp.com/twint:2.1.1
+    twint: docker run --rm --network twint_esnet -i medialab.registry.afp.com/twint:2.1.1

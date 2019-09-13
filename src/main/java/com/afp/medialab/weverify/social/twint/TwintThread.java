@@ -1,4 +1,4 @@
-package com.afp.medialab.weverify.social;
+package com.afp.medialab.weverify.social.twint;
 
 import com.afp.medialab.weverify.social.dao.service.CollectService;
 import com.afp.medialab.weverify.social.model.CollectRequest;
@@ -20,31 +20,12 @@ public class TwintThread{
 
     private static Logger Logger = LoggerFactory.getLogger(TwintThread.class);
 
-    @Value("${src.profile.docker}")
-    private String dockerCall;
+    @Value("${src.profile.twint}")
+    private String twintCall;
 
     @Autowired
     CollectService collectService;
-  /*  private CollectService collectService;
 
-    private CollectRequest request;
-    private String name;
-
-    public String getName() {
-        return name;
-    }
-
-    public CollectRequest getRequest() {
-        return request;
-    }
-
-    public TwintThread()
-    {
-        this.request = request;
-        name = id;
-        collectService = cs;
-    }
-*/
     @Async
     @Transactional
     public void callTwint(CollectRequest request, String name) {
@@ -54,10 +35,10 @@ public class TwintThread{
 
             String r = TwintRequestGenerator.generateRequest(request, name);
                     ProcessBuilder pb =
-                            new ProcessBuilder("/bin/bash", "-c", dockerCall + r);
+                            new ProcessBuilder("/bin/bash", "-c", twintCall + r);
 
                     pb.environment().put("PATH", "/usr/bin:/usr/local/bin:/bin");
-                    Logger.info(dockerCall + r);
+                    Logger.info(twintCall + r);
                     Process p = null;
                     try {
                         p = pb.start();
@@ -73,21 +54,16 @@ public class TwintThread{
                         while ((s = stdError.readLine()) != null) {
                             Logger.error(s);
                         }
-                      /*  if (s != "") {
-                            stdInput.close();
-                            stdError.close();
-                            collectService.UpdateCollectStatus(name, Status.Error);
-                        }*/
 
-                      int nb_tweets = -1;
+                        int nb_tweets = -1;
                         while ((s = stdInput.readLine()) != null) {
-                            Logger.info(s);
-                            if (s.contains("Successfully collected"))
-                            {
-                                String str =  s.split("Successfully collected ")[1].split(" ")[0];
-                                nb_tweets = Integer.parseInt(str);
-                            }
+                        Logger.info(s);
+                        if (s.contains("Successfully collected"))
+                        {
+                            String str =  s.split("Successfully collected ")[1].split(" ")[0];
+                            nb_tweets = Integer.parseInt(str);
                         }
+                    }
 
                         if (nb_tweets == -1)
                             collectService.UpdateCollectStatus(name, Status.Error);
