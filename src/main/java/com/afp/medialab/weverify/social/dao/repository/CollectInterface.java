@@ -19,7 +19,7 @@ public interface CollectInterface extends JpaRepository<CollectHistory, Integer>
     @Modifying
     @Transactional
     @Query("update CollectHistory collect set collect.status = :status where collect.session = :session")
-    void updateCollectStatus(@Param("session") String session, @Param("status") Status status);
+    void updateCollectStatus(@Param("session") String session, @Param("status") String status);
 
     @Modifying
     @Transactional

@@ -42,7 +42,7 @@ public class CollectService {
         CollectHistory collectHistory = collectInterface.findCollectHistoryByQuery(CollectRequestToString(collectRequest));
         if (collectHistory == null)
             return null;
-        return new CollectResponse(collectHistory.getSession(), collectHistory.getStatus());
+        return new CollectResponse(collectHistory.getSession(), collectHistory.getStatus(), collectHistory.getProcessEnd());
     }
 
     public Boolean UpdateCollectStatus(String session, Status status)
@@ -51,19 +51,19 @@ public class CollectService {
         if (status == Status.Running && collectHistory.getStatus() == Status.NotStarted)
         {
             collectInterface.updateCollectProcessStart(session, new Date());
-            collectInterface.updateCollectStatus(session, status);
+            collectInterface.updateCollectStatus(session, status.toString());
             return true;
         }
         else if (status == Status.Done && collectHistory.getStatus() == Status.Running)
         {
             collectInterface.updateCollectProcessEnd(session, new Date());
-            collectInterface.updateCollectStatus(session, status);
+            collectInterface.updateCollectStatus(session, status.toString());
             return true;
         }
         else if (status == status.Error && collectHistory.getStatus() != status.Error)
         {
             collectInterface.updateCollectProcessEnd(session, new Date());
-            collectInterface.updateCollectStatus(session, status);
+            collectInterface.updateCollectStatus(session, status.toString());
             return true;
         }
         return false;

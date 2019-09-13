@@ -63,30 +63,42 @@ public class TwitterGatewayServiceController {
 
 		String session = UUID.randomUUID().toString();
 		Status s = tc.collect(new TwintThread(collectRequest, session, collectService));
-		return new CollectResponse(session, s);
+		return new CollectResponse(session, s, null);
 	}
 
 	@ApiOperation(value = "Trigger a status check")
 	@RequestMapping(path = "/status", method = RequestMethod.POST, consumes = "application/json", produces = "application/json")
 	public @ResponseBody StatusResponse status(@RequestBody StatusRequest statusRequest) {
-		Logger.info(statusRequest.getSession());
-
-		CollectHistory collectHistory = collectService.getCollectInfo(statusRequest.getSession());
-		if (collectHistory == null)
-			return new StatusResponse(statusRequest.getSession(), null, null, Status.Error, null);
-
-		ObjectMapper mapper = new ObjectMapper();
-		try {
-			CollectRequest collectRequest = mapper.readValue(collectHistory.getQuery(), CollectRequest.class);
-			return new StatusResponse(collectHistory.getSession(), collectHistory.getProcessStart(), collectHistory.getProcessEnd(),
-					collectHistory.getStatus(), collectRequest);
-		} catch (JsonParseException e) {
-			e.printStackTrace();
-		} catch (JsonMappingException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		return new StatusResponse(collectHistory.getSession(), null, null, Status.Error, null);
+		Logger.info("POST status " + statusRequest.getSession());
+        return getStatusResponse(statusRequest.getSession());
 	}
+
+
+    @RequestMapping("/status/{id}")
+    public @ResponseBody StatusResponse status(@PathVariable("id") String id) {
+        Logger.info("GET status " + id);
+        return getStatusResponse(id);
+    }
+
+
+    StatusResponse getStatusResponse(String session){
+        CollectHistory collectHistory = collectService.getCollectInfo(session);
+        if (collectHistory == null)
+            return new StatusResponse(session, null, null, Status.Error, null);
+
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            CollectRequest collectRequest = mapper.readValue(collectHistory.getQuery(), CollectRequest.class);
+            return new StatusResponse(collectHistory.getSession(), collectHistory.getProcessStart(), collectHistory.getProcessEnd(),
+                    collectHistory.getStatus(), collectRequest);
+        } catch (JsonParseException e) {
+            e.printStackTrace();
+        } catch (JsonMappingException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return new StatusResponse(collectHistory.getSession(), null, null, Status.Error, null);
+    }
+
 }
