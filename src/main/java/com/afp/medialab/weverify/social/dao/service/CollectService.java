@@ -2,6 +2,7 @@ package com.afp.medialab.weverify.social.dao.service;
 
 import java.util.Date;
 
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -10,6 +11,7 @@ import com.afp.medialab.weverify.social.dao.repository.CollectInterface;
 import com.afp.medialab.weverify.social.model.CollectRequest;
 import com.afp.medialab.weverify.social.model.CollectResponse;
 import com.afp.medialab.weverify.social.model.Status;
+import com.afp.medialab.weverify.social.twint.TwintThreadExecutor;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -17,7 +19,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class CollectService {
 
     //private static org.slf4j.Logger Logger = LoggerFactory.getLogger(TwintThreadExecutor.class);
-    
     @Autowired
     CollectInterface collectInterface;
 
@@ -45,25 +46,25 @@ public class CollectService {
         return new CollectResponse(collectHistory.getSession(), collectHistory.getStatus(), null, collectHistory.getProcessEnd());
     }
 
-    public Boolean UpdateCollectStatus(String session, Status status)
+    public Boolean UpdateCollectStatus(String session, Status newstatus)
     {
         Status existingStatus = collectInterface.findCollectHistoryBySession(session).getStatus();
-        if (status == Status.Running && existingStatus == Status.Pending)
+        if (newstatus == Status.Running && existingStatus == Status.Pending)
         {
             collectInterface.updateCollectProcessStart(session, new Date());
-            collectInterface.updateCollectStatus(session, status.toString());
+            collectInterface.updateCollectStatus(session, newstatus.toString());
             return true;
         }
-        else if (status == Status.Done && existingStatus == Status.Running)
+        else if (newstatus == Status.Done && existingStatus == Status.Running)
         {
             collectInterface.updateCollectProcessEnd(session, new Date());
-            collectInterface.updateCollectStatus(session, status.toString());
+            collectInterface.updateCollectStatus(session, newstatus.toString());
             return true;
         }
-        else if (status == Status.Error && existingStatus != Status.Error)
+        else if (newstatus == Status.Error && existingStatus != Status.Error)
         {
             collectInterface.updateCollectProcessEnd(session, new Date());
-            collectInterface.updateCollectStatus(session, status.toString());
+            collectInterface.updateCollectStatus(session, newstatus.toString());
             return true;
         }
         return false;
