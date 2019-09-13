@@ -9,7 +9,8 @@ application:
   home:
     msg: Service is Up
   twintcall:
-
+    nb-core-threads: 4
+    nb-max-threads: 4
 
 spring:
   jackson:

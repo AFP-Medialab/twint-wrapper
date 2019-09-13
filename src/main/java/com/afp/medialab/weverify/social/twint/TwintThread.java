@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.concurrent.CompletableFuture;
 
 @Configuration
 public class TwintThread{
@@ -28,7 +29,7 @@ public class TwintThread{
 
     @Async
     @Transactional
-    public void callTwint(CollectRequest request, String name) {
+    public CompletableFuture<Integer> callTwint(CollectRequest request, String name) {
 
         collectService.UpdateCollectStatus(name, Status.Running);
         try {
@@ -55,7 +56,7 @@ public class TwintThread{
                             Logger.error(s);
                         }
 
-                        int nb_tweets = -1;
+                        Integer nb_tweets = -1;
                         while ((s = stdInput.readLine()) != null) {
                         Logger.info(s);
                         if (s.contains("Successfully collected"))
@@ -67,16 +68,19 @@ public class TwintThread{
 
                         if (nb_tweets == -1)
                             collectService.UpdateCollectStatus(name, Status.Error);
-                        else
+                        else {
+                            Logger.info("Updating status");
                             collectService.UpdateCollectStatus(name, Status.Done);
+                        }
 
                         stdInput.close();
                         stdError.close();
 
+                        return CompletableFuture.completedFuture(nb_tweets);
+
                     } catch (IOException e) {
                         e.printStackTrace();
                         collectService.UpdateCollectStatus(name, Status.Error);
-
                     }
 
 
@@ -86,6 +90,8 @@ public class TwintThread{
             collectService.UpdateCollectStatus(name, Status.Error);
             e.printStackTrace();
         }
+
+        return CompletableFuture.completedFuture(-1);
 
     }
 }

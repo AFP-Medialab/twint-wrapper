@@ -1,5 +1,8 @@
 package com.afp.medialab.weverify.social.model;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+
+@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
 public class CollectResponse {
 
 	private String session;

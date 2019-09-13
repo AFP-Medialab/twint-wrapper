@@ -2,6 +2,8 @@ package com.afp.medialab.weverify.social.controller;
 
 import java.io.IOException;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 import com.afp.medialab.weverify.social.twint.TwintThread;
 import com.afp.medialab.weverify.social.dao.entity.CollectHistory;
@@ -41,6 +43,8 @@ public class TwitterGatewayServiceController {
 
 	@Value("${application.home.msg}")
 	private String homeMsg;
+
+	private CompletableFuture<Integer> nb_tweet;
 
 	@RequestMapping(path = "/", method = RequestMethod.GET)
 	public @ResponseBody String home() {
@@ -84,9 +88,10 @@ public class TwitterGatewayServiceController {
 
 		collectService.SaveCollectInfo(session, collectRequest, null, null, Status.Pending);
 
-		tt.callTwint(collectRequest, session);
+		nb_tweet = tt.callTwint(collectRequest, session);
 
-		return new CollectResponse(session, collectService.getCollectInfo(session).getStatus(), "");
+
+		return new CollectResponse(session, collectService.getCollectInfo(session).getStatus(),null);
 	}
 
 	@ApiOperation(value = "Trigger a status check")
@@ -96,20 +101,29 @@ public class TwitterGatewayServiceController {
 
 		CollectHistory collectHistory = collectService.getCollectInfo(statusRequest.getSession());
 		if (collectHistory == null)
-			return new StatusResponse(statusRequest.getSession(), null, null, Status.Error, null);
+			return new StatusResponse(statusRequest.getSession(), null, null, Status.Error, null, null);
 
 		ObjectMapper mapper = new ObjectMapper();
 		try {
 			CollectRequest collectRequest = mapper.readValue(collectHistory.getQuery(), CollectRequest.class);
-			return new StatusResponse(collectHistory.getSession(), collectHistory.getProcessStart(), collectHistory.getProcessEnd(),
-					collectHistory.getStatus(), collectRequest);
+			if (collectHistory.getStatus() != Status.Done)
+				return new StatusResponse(collectHistory.getSession(), collectHistory.getProcessStart(), collectHistory.getProcessEnd(),
+					collectHistory.getStatus(), collectRequest, null);
+			else
+
+				return new StatusResponse(collectHistory.getSession(), collectHistory.getProcessStart(), collectHistory.getProcessEnd(),
+						collectHistory.getStatus(), collectRequest, nb_tweet.get());
 		} catch (JsonParseException e) {
 			e.printStackTrace();
 		} catch (JsonMappingException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
 			e.printStackTrace();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		} catch (ExecutionException e) {
+			e.printStackTrace();
 		}
-		return new StatusResponse(collectHistory.getSession(), null, null, Status.Error, null);
+		return new StatusResponse(collectHistory.getSession(), null, null, Status.Error, null, null);
 	}
 }

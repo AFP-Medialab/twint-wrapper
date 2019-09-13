@@ -4,9 +4,6 @@ import java.text.SimpleDateFormat;
 
 public class TwintRequestGenerator {
 
-
-
-
     public static String generateRequest(CollectRequest cr, String id)
     {
         SimpleDateFormat format =  new SimpleDateFormat("yyyy-MM-dd");
