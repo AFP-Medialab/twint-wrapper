@@ -66,7 +66,7 @@ public class TwitterGatewayServiceController {
 			}
 
 			Logger.info(str);
-			return new CollectResponse(session, Status.Error, str);
+			return new CollectResponse(session, Status.Error, str, null);
 		}
 
 		Logger.info("search : " + collectRequest.getSearch());
@@ -91,39 +91,50 @@ public class TwitterGatewayServiceController {
 		nb_tweet = tt.callTwint(collectRequest, session);
 
 
-		return new CollectResponse(session, collectService.getCollectInfo(session).getStatus(),null);
+		return new CollectResponse(session, collectService.getCollectInfo(session).getStatus(),null, collectService.getCollectInfo(session).getProcessEnd());
 	}
 
 	@ApiOperation(value = "Trigger a status check")
 	@RequestMapping(path = "/status", method = RequestMethod.POST, consumes = "application/json", produces = "application/json")
-	public @ResponseBody StatusResponse status(@RequestBody StatusRequest statusRequest){
-		Logger.info(statusRequest.getSession());
+	public @ResponseBody StatusResponse status(@RequestBody StatusRequest statusRequest) {
+		Logger.info("POST status " + statusRequest.getSession());
+        return getStatusResponse(statusRequest.getSession());
+	}
 
-		CollectHistory collectHistory = collectService.getCollectInfo(statusRequest.getSession());
-		if (collectHistory == null)
-			return new StatusResponse(statusRequest.getSession(), null, null, Status.Error, null, null);
 
-		ObjectMapper mapper = new ObjectMapper();
-		try {
-			CollectRequest collectRequest = mapper.readValue(collectHistory.getQuery(), CollectRequest.class);
+    @RequestMapping("/status/{id}")
+    public @ResponseBody StatusResponse status(@PathVariable("id") String id) {
+        Logger.info("GET status " + id);
+        return getStatusResponse(id);
+    }
+
+
+    StatusResponse getStatusResponse(String session){
+        CollectHistory collectHistory = collectService.getCollectInfo(session);
+        if (collectHistory == null)
+            return new StatusResponse(session, null, null, Status.Error, null, null);
+
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            CollectRequest collectRequest = mapper.readValue(collectHistory.getQuery(), CollectRequest.class);
 			if (collectHistory.getStatus() != Status.Done)
-				return new StatusResponse(collectHistory.getSession(), collectHistory.getProcessStart(), collectHistory.getProcessEnd(),
-					collectHistory.getStatus(), collectRequest, null);
+            	return new StatusResponse(collectHistory.getSession(), collectHistory.getProcessStart(), collectHistory.getProcessEnd(),
+                    collectHistory.getStatus(), collectRequest, null);
 			else
-
 				return new StatusResponse(collectHistory.getSession(), collectHistory.getProcessStart(), collectHistory.getProcessEnd(),
 						collectHistory.getStatus(), collectRequest, nb_tweet.get());
-		} catch (JsonParseException e) {
-			e.printStackTrace();
-		} catch (JsonMappingException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		} catch (InterruptedException e) {
+        } catch (JsonParseException e) {
+            e.printStackTrace();
+        } catch (JsonMappingException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
 			e.printStackTrace();
 		} catch (ExecutionException e) {
 			e.printStackTrace();
 		}
 		return new StatusResponse(collectHistory.getSession(), null, null, Status.Error, null, null);
-	}
+    }
+
 }

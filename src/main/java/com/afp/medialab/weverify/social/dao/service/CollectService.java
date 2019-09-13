@@ -42,28 +42,28 @@ public class CollectService {
         CollectHistory collectHistory = collectInterface.findCollectHistoryByQuery(CollectRequestToString(collectRequest));
         if (collectHistory == null)
             return null;
-        return new CollectResponse(collectHistory.getSession(), collectHistory.getStatus(), "");
+        return new CollectResponse(collectHistory.getSession(), collectHistory.getStatus(), null, collectHistory.getProcessEnd());
     }
 
     public Boolean UpdateCollectStatus(String session, Status status)
     {
-        CollectHistory collectHistory = collectInterface.findCollectHistoryBySession(session);
-        if (status == Status.Running && collectHistory.getStatus() == Status.Pending)
+        Status existingStatus = collectInterface.findCollectHistoryBySession(session).getStatus();
+        if (status == Status.Running && existingStatus == Status.Pending)
         {
             collectInterface.updateCollectProcessStart(session, new Date());
-            collectInterface.updateCollectStatus(session, status);
+            collectInterface.updateCollectStatus(session, status.toString());
             return true;
         }
-        else if (status == Status.Done && collectHistory.getStatus() == Status.Running)
+        else if (status == Status.Done && existingStatus == Status.Running)
         {
             collectInterface.updateCollectProcessEnd(session, new Date());
-            collectInterface.updateCollectStatus(session, status);
+            collectInterface.updateCollectStatus(session, status.toString());
             return true;
         }
-        else if (status == status.Error && collectHistory.getStatus() != status.Error)
+        else if (status == status.Error && existingStatus != status.Error)
         {
             collectInterface.updateCollectProcessEnd(session, new Date());
-            collectInterface.updateCollectStatus(session, status);
+            collectInterface.updateCollectStatus(session, status.toString());
             return true;
         }
         return false;

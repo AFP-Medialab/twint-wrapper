@@ -1,6 +1,5 @@
 package com.afp.medialab.weverify.social.model;
 
-//import com.afp.medialab.weverify.social.exceptions.BadRequestException;
 import com.afp.medialab.weverify.social.constrains.MediaConstrain;
 import com.afp.medialab.weverify.social.constrains.RetweetHandlingConstrain;
 import com.fasterxml.jackson.annotation.JsonFormat;
