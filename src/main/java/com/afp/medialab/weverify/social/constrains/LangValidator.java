@@ -11,6 +11,8 @@ public class LangValidator implements ConstraintValidator<LangConstrain, String>
 
     @Override
     public boolean isValid(String s, ConstraintValidatorContext constraintValidatorContext) {
+        if (s == null)
+            return true;
         return s.matches("..");
     }
 }
