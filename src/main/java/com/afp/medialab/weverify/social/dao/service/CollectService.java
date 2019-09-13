@@ -1,23 +1,23 @@
 package com.afp.medialab.weverify.social.dao.service;
 
-import com.afp.medialab.weverify.social.twint.TwintThreadExecutor;
+import java.util.Date;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
 import com.afp.medialab.weverify.social.dao.entity.CollectHistory;
 import com.afp.medialab.weverify.social.dao.repository.CollectInterface;
 import com.afp.medialab.weverify.social.model.CollectRequest;
 import com.afp.medialab.weverify.social.model.CollectResponse;
 import com.afp.medialab.weverify.social.model.Status;
-import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
-import java.util.Date;
 
 @Service
 public class CollectService {
 
-    private static org.slf4j.Logger Logger = LoggerFactory.getLogger(TwintThreadExecutor.class);
+    //private static org.slf4j.Logger Logger = LoggerFactory.getLogger(TwintThreadExecutor.class);
+    
     @Autowired
     CollectInterface collectInterface;
 
@@ -60,7 +60,7 @@ public class CollectService {
             collectInterface.updateCollectStatus(session, status.toString());
             return true;
         }
-        else if (status == status.Error && existingStatus != status.Error)
+        else if (status == Status.Error && existingStatus != Status.Error)
         {
             collectInterface.updateCollectProcessEnd(session, new Date());
             collectInterface.updateCollectStatus(session, status.toString());
