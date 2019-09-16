@@ -12,6 +12,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -74,12 +75,13 @@ public class CollectService {
         return collectInterface.findCollectHistoryBySession(session);
     }
 
-    public List<CollectHistory> getLast5()
+    public List<CollectHistory> getLasts(int nb)
     {
         List<CollectHistory> collectHistoryList = collectInterface.findAll();
+        Collections.reverse(collectHistoryList);
         Logger.info("SIZE : " + collectHistoryList.size());
-        if (collectHistoryList.size() > 4)
-           collectHistoryList = collectHistoryList.subList(0, 5);
+        if (collectHistoryList.size() >= nb)
+           collectHistoryList = collectHistoryList.subList(0, nb);
        return collectHistoryList;
     }
 }
