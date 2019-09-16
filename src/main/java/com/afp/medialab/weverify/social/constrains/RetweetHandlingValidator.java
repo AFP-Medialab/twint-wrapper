@@ -1,7 +1,6 @@
 package com.afp.medialab.weverify.social.constrains;
 
 import com.afp.medialab.weverify.social.controller.TwitterGatewayServiceController;
-import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.validation.ConstraintValidator;
@@ -16,6 +15,7 @@ public class RetweetHandlingValidator implements ConstraintValidator<RetweetHand
     private ArrayList<String> retweetModes = new ArrayList<>(
             Arrays.asList(null, "allowed", "only", "excluded")
     );
+
     @Override
     public void initialize(RetweetHandlingConstrain constraintAnnotation) {
 

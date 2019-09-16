@@ -1,15 +1,16 @@
 package com.afp.medialab.weverify.social.model;
 
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import java.util.Date;
 
-@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class CollectResponse {
 
 	private String session;
 	private Status status;
 	private String message;
-
 	private Date lastSearch;
 
 	public CollectResponse(String session, Status status, String message, Date lastSearch) {

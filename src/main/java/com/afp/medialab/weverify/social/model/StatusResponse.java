@@ -1,10 +1,10 @@
 package com.afp.medialab.weverify.social.model;
 
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-
 import java.util.Date;
 
-@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
+import com.fasterxml.jackson.annotation.JsonInclude;
+
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class StatusResponse {
 
     private String session;
@@ -45,7 +45,7 @@ public class StatusResponse {
     }
 
     public void setEnded(Date until) {
-        this.ended = ended;
+        this.ended = until;
     }
 
     public CollectRequest getQuery() { return this.query; }

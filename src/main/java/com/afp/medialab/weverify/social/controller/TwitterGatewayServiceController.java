@@ -96,8 +96,9 @@ public class TwitterGatewayServiceController {
 
 		nb_tweet = tt.callTwint(collectRequest, session);
 
+		CollectHistory CollectedInfo = collectService.getCollectInfo(session);
 
-		return new CollectResponse(session, collectService.getCollectInfo(session).getStatus(),null, collectService.getCollectInfo(session).getProcessEnd());
+		return new CollectResponse(session, CollectedInfo.getStatus(),CollectedInfo.getMessage(), CollectedInfo.getProcessEnd());
 	}
 
 	@ApiOperation(value = "Trigger a status check")

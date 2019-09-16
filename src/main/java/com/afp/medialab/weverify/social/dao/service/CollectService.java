@@ -1,21 +1,21 @@
 package com.afp.medialab.weverify.social.dao.service;
 
+import java.util.Date;
+
 import com.afp.medialab.weverify.social.twint.TwintThreadExecutor;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
 import com.afp.medialab.weverify.social.dao.entity.CollectHistory;
 import com.afp.medialab.weverify.social.dao.repository.CollectInterface;
 import com.afp.medialab.weverify.social.model.CollectRequest;
 import com.afp.medialab.weverify.social.model.CollectResponse;
 import com.afp.medialab.weverify.social.model.Status;
-import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
-
 @Service
 public class CollectService {
 
@@ -47,25 +47,25 @@ public class CollectService {
         return new CollectResponse(collectHistory.getSession(), collectHistory.getStatus(), null, collectHistory.getProcessEnd());
     }
 
-    public Boolean UpdateCollectStatus(String session, Status status)
+    public Boolean UpdateCollectStatus(String session, Status newstatus)
     {
         Status existingStatus = collectInterface.findCollectHistoryBySession(session).getStatus();
-        if (status == Status.Running && existingStatus == Status.Pending)
+        if (newstatus == Status.Running && existingStatus == Status.Pending)
         {
             collectInterface.updateCollectProcessStart(session, new Date());
-            collectInterface.updateCollectStatus(session, status.toString());
+            collectInterface.updateCollectStatus(session, newstatus.toString());
             return true;
         }
-        else if (status == Status.Done && existingStatus == Status.Running)
+        else if (newstatus == Status.Done && existingStatus == Status.Running)
         {
             collectInterface.updateCollectProcessEnd(session, new Date());
-            collectInterface.updateCollectStatus(session, status.toString());
+            collectInterface.updateCollectStatus(session, newstatus.toString());
             return true;
         }
-        else if (status == status.Error && existingStatus != status.Error)
+        else if (newstatus == Status.Error && existingStatus != Status.Error)
         {
             collectInterface.updateCollectProcessEnd(session, new Date());
-            collectInterface.updateCollectStatus(session, status.toString());
+            collectInterface.updateCollectStatus(session, newstatus.toString());
             return true;
         }
         return false;
@@ -100,8 +100,7 @@ public class CollectService {
         return collectHistoryList;
     }
 
-    public  List<CollectHistory> getHistory(int limit, String status, boolean desc, Date processStart, Date processEnd)
-    {
+    public  List<CollectHistory> getHistory(int limit, String status, boolean desc, Date processStart, Date processEnd) {
         List<CollectHistory> collectHistoryList = collectInterface.findCollectHistoryByProcessEndLessThanEqualOrProcessEndIsNullAndProcessStartGreaterThanEqualAndStatus(processEnd, processStart, status);
 
         Logger.info("GETTING HISTORY : " + collectHistoryList.toString());
@@ -110,6 +109,11 @@ public class CollectService {
         if (collectHistoryList.size() > limit)
             collectHistoryList.subList(0, limit);
         return collectHistoryList;
+    }
+
+    public void UpdateCollectMessage(String session, String message)
+    {
+        collectInterface.updateCollectMessage(session, message);
     }
 }
 

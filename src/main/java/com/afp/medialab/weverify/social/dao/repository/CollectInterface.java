@@ -1,13 +1,15 @@
 package com.afp.medialab.weverify.social.dao.repository;
 
 import com.afp.medialab.weverify.social.dao.entity.CollectHistory;
+import java.util.Date;
+
+import javax.transaction.Transactional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import javax.transaction.Transactional;
-import java.util.Date;
 import java.util.List;
 
 public interface CollectInterface extends JpaRepository<CollectHistory, Integer> {
@@ -36,4 +38,9 @@ public interface CollectInterface extends JpaRepository<CollectHistory, Integer>
     @Transactional
     @Query("update CollectHistory collect set collect.processEnd = :processEnd where collect.session = :session")
     void updateCollectProcessEnd(@Param("session") String session, @Param("processEnd") Date processEnd);
+
+    @Modifying
+    @Transactional
+    @Query("update CollectHistory collect set collect.message = :message where collect.session = :session")
+    void updateCollectMessage(@Param("session") String session, @Param("message") String message);
 }

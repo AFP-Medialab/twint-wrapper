@@ -32,6 +32,11 @@ public class CollectHistory implements Serializable{
     private Date processEnd;
     @Column(name = "Status")
     private String status;
+    @Column(name = "message")
+    private String message;
+
+
+
 
     public CollectHistory(){}
 
@@ -41,6 +46,7 @@ public class CollectHistory implements Serializable{
         this.processStart = processStart;
         this.processEnd = processEnd;
         this.status = status.toString();
+        this.message = null;
     }
 
     public static long getSerialVersionUID() {
@@ -94,4 +100,8 @@ public class CollectHistory implements Serializable{
     public void setStatus(Status status) {
         this.status = status.toString();
     }
+
+    public String getMessage() { return message; }
+
+    public void setMessage(String message) { this.message = message; }
 }
