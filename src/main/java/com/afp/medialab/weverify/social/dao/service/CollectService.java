@@ -84,4 +84,14 @@ public class CollectService {
            collectHistoryList = collectHistoryList.subList(0, nb);
        return collectHistoryList;
     }
+
+    public List<CollectHistory> getAll(boolean desc)
+    {
+        List<CollectHistory> collectHistoryList = collectInterface.findAll();
+        if (desc)
+            Collections.reverse(collectHistoryList);
+
+        return collectHistoryList;
+    }
 }
+
