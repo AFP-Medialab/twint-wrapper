@@ -169,11 +169,10 @@ public class TwitterGatewayServiceController {
 	@ApiOperation(value = "Get the requests history")
 	@RequestMapping(path = "/collect-history", method = RequestMethod.POST, consumes = "application/json", produces = "application/json")
 	public @ResponseBody HistoryResponse status(@RequestBody @Valid HistoryRequest historyRequest) {
-		Logger.info("POST collect-history");
+		Logger.info("POST collect-history : " + historyRequest.toString());
 		List<CollectHistory> collectHistoryList = collectService.getHistory(historyRequest.getLimit(), historyRequest.getStatus(),
 																			(historyRequest.getSort() == null?false : historyRequest.getSort().equals("desc")),
-																			historyRequest.getProcessFrom(), historyRequest.getProcessTo());
-		Logger.info(collectHistoryList.toString());
+																			historyRequest.getProcessStart(), historyRequest.getProcessTo());
 		return new HistoryResponse(collectHistoryList);
 	}
 

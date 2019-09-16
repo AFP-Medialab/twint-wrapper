@@ -3,7 +3,6 @@ package com.afp.medialab.weverify.social.model;
 import com.afp.medialab.weverify.social.constrains.SortConstrain;
 import com.afp.medialab.weverify.social.constrains.StatusConstrain;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import java.util.Date;
 
@@ -15,8 +14,8 @@ public class HistoryRequest {
     private String sort;
     @StatusConstrain
     private String status;
-    private Date processFrom;
-    private Date processTo;
+    private Date processStart;
+    private Date processEnd;
 
     public int getLimit() {
         return limit;
@@ -42,19 +41,26 @@ public class HistoryRequest {
         this.status = status;
     }
 
-    public Date getProcessFrom() {
-        return processFrom;
+    public Date getProcessStart() {
+        return processStart;
     }
 
-    public void setProcessFrom(Date processFrom) {
-        this.processFrom = processFrom;
+    public void setProcessStart(Date processStart) {
+        this.processStart = processStart;
     }
 
     public Date getProcessTo() {
-        return processTo;
+        return processEnd;
     }
 
     public void setProcessTo(Date processTo) {
-        this.processTo = processTo;
+        this.processEnd = processTo;
+    }
+
+    public String toString()
+    {
+        return "History request : \n    " + "Limit: " + limit + "\n   " + "Sort: " + sort + "\n    " + "Status: " +
+                status + "\n    ProcessStart: " + processStart + "\n    ProcessEnd: " + processEnd;
+
     }
 }

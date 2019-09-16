@@ -80,7 +80,7 @@ public class CollectService {
     {
         List<CollectHistory> collectHistoryList = collectInterface.findAll();
         Collections.reverse(collectHistoryList);
-        Logger.info("SIZE : " + collectHistoryList.size());
+
         if (collectHistoryList.size() >= nb)
            collectHistoryList = collectHistoryList.subList(0, nb);
        return collectHistoryList;
@@ -123,10 +123,8 @@ public class CollectService {
         if (desc)
             Collections.reverse(collectHistoryList);
 
-        if (limit != 0 && collectHistoryList.size() > limit) {
+        if (limit != 0 && collectHistoryList.size() > limit)
             collectHistoryList = collectHistoryList.subList(0, limit);
-            Logger.info("FINDING ALL : " + collectHistoryList.toString());
-        }
         return collectHistoryList;
     }
 
