@@ -6,9 +6,14 @@ import org.slf4j.LoggerFactory;
 import javax.print.attribute.standard.Media;
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 public class MediaValidator implements ConstraintValidator<MediaConstrain, String> {
 
+    private ArrayList<String> medias = new ArrayList<>(
+            Arrays.asList(null, "video", "image", "both")
+    );
     @Override
     public void initialize(MediaConstrain constraintAnnotation) {
 
@@ -16,6 +21,6 @@ public class MediaValidator implements ConstraintValidator<MediaConstrain, Strin
 
     @Override
     public boolean isValid(String s, ConstraintValidatorContext constraintValidatorContext) {
-        return (s == null || s.equals("video") || s.equals("image") || s.equals("both"));
+        return medias.contains(s);
     }
 }

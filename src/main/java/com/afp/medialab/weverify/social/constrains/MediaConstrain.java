@@ -9,7 +9,7 @@ import java.lang.annotation.*;
 @Target( { ElementType.METHOD, ElementType.FIELD })
 @Retention(RetentionPolicy.RUNTIME)
 public @interface MediaConstrain {
-    String message() default "Invalid media type in JSON";
+    String message() default "Invalid media type in JSON (\"video\", \"image\", \"both\")";
 
     Class<?>[] groups() default {};
     Class<? extends Payload>[] payload() default {};

@@ -2,7 +2,6 @@ package com.afp.medialab.weverify.social.controller;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -166,6 +165,19 @@ public class TwitterGatewayServiceController {
 		}
 		return new HistoryResponse(last);
 	}
+
+	@ApiOperation(value = "Get the requests history")
+	@RequestMapping(path = "/collect-history", method = RequestMethod.POST, consumes = "application/json", produces = "application/json")
+	public @ResponseBody HistoryResponse status(@RequestBody HistoryRequest historyRequest) {
+		Logger.info("POST collect-history");
+		List<CollectHistory> collectHistoryList = collectService.getHistory(historyRequest.getLimit(), historyRequest.getStatus(),
+																			historyRequest.getSort().equals("desc"),
+																			historyRequest.getProcessFrom(),
+																			historyRequest.getProcessTo());
+		Logger.info(collectHistoryList.toString());
+		return new HistoryResponse(collectHistoryList);
+	}
+
 
 
 
