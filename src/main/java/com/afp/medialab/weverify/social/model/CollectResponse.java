@@ -16,7 +16,6 @@ public class CollectResponse {
 		this.session = session;
 		this.status = status;
 		this.message = message;
-
 		this.lastSearch = lastSearch;
 	}
 
@@ -43,6 +42,7 @@ public class CollectResponse {
 	public void setMessage(String message) {
 		this.message = message;
 	}
+
 	public Date getLastSearch() {
 		return lastSearch;
 	}

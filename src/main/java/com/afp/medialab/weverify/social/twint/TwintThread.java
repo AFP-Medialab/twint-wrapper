@@ -30,7 +30,7 @@ public class TwintThread {
 	@Async
 	public CompletableFuture<Integer> callTwint(CollectRequest request, String name) {
 
-		collectService.UpdateCollectStatus(name, Status.Running);
+		collectService.updateCollectStatus(name, Status.Running);
 		CompletableFuture<Integer> result = CompletableFuture.completedFuture(-1);
 		Status endStatus = Status.Done;
 		String endMessage = "";
@@ -86,8 +86,8 @@ public class TwintThread {
 			e.printStackTrace();
 		}
 
-		collectService.UpdateCollectStatus(name, endStatus);
-		collectService.UpdateCollectMessage(name, endMessage);
+		collectService.updateCollectStatus(name, endStatus);
+		collectService.updateCollectMessage(name, endMessage);
 
 		return result;
 

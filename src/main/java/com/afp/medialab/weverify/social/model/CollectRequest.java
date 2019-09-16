@@ -86,4 +86,31 @@ public class CollectRequest {
 		this.verified = verified;
 	}
 
+	@Override
+	public boolean equals(Object overObject)
+	{
+		if (!(overObject instanceof CollectRequest))
+			return false;
+
+		CollectRequest overRequest = (CollectRequest) overObject;
+
+		Boolean sameSearch;
+		if (this.search != null && overRequest.search != null)
+			sameSearch = this.search.equals(overRequest.search);
+		else if (this.search == null && overRequest.search == null)
+			sameSearch = true;
+		else
+			sameSearch = false;
+
+		Boolean sameLang;
+		if (this.lang != null && overRequest.lang != null)
+			sameLang = this.lang.equals(overRequest.lang);
+		else if (this.lang == null && overRequest.lang == null)
+			sameLang = true;
+		else
+			sameLang = false;
+
+
+		return sameSearch && sameLang;
+	}
 }
