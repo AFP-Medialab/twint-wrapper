@@ -149,16 +149,21 @@ public class TwitterGatewayServiceController {
 	@RequestMapping(value = "/collect-history", method = RequestMethod.GET)
 	public @ResponseBody HistoryResponse collectHistory(@RequestParam(value = "limit", required = false, defaultValue = "5") int limit,
 														@RequestParam(value = "asc", required = false, defaultValue = "false") boolean asc,
-														@RequestParam(value = "desc", required = false, defaultValue = "false") boolean desc)
+														@RequestParam(value = "desc", required = false, defaultValue = "false") boolean desc,
+														@RequestParam(value = "status", required = false) String status)
 	{
 		List<CollectHistory> last = null;
 
 		Logger.info("ASC : " + asc);
 		if (!asc && !desc)
 			last = collectService.getLasts(limit);
-		else
+		else if (status == null)
 			last = collectService.getAll(desc);
-
+		else
+		{
+			Logger.info("STATUS : " + status);
+			last = collectService.getByStatus(status);
+		}
 		return new HistoryResponse(last);
 	}
 

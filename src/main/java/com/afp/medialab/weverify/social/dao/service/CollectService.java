@@ -93,5 +93,11 @@ public class CollectService {
 
         return collectHistoryList;
     }
+
+    public List<CollectHistory> getByStatus(String status)
+    {
+        List<CollectHistory> collectHistoryList = collectInterface.findCollectHistoryByStatus(status);
+        return collectHistoryList;
+    }
 }
 

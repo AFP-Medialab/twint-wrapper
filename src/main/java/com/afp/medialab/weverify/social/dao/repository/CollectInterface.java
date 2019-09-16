@@ -16,6 +16,8 @@ public interface CollectInterface extends JpaRepository<CollectHistory, Integer>
 
     CollectHistory findCollectHistoryByQuery(String query);
 
+    List<CollectHistory> findCollectHistoryByStatus(String status);
+
     List<CollectHistory> findAll();
 
     @Modifying
