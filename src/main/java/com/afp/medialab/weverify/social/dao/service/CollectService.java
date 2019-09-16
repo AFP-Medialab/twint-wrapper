@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
+import java.util.List;
 
 @Service
 public class CollectService {
@@ -71,5 +72,14 @@ public class CollectService {
 
     public CollectHistory getCollectInfo(String session) {
         return collectInterface.findCollectHistoryBySession(session);
+    }
+
+    public List<CollectHistory> getLast5()
+    {
+        List<CollectHistory> collectHistoryList = collectInterface.findAll();
+        Logger.info("SIZE : " + collectHistoryList.size());
+        if (collectHistoryList.size() > 4)
+           collectHistoryList = collectHistoryList.subList(0, 5);
+       return collectHistoryList;
     }
 }

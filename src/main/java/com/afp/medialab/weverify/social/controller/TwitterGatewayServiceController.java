@@ -1,6 +1,7 @@
 package com.afp.medialab.weverify.social.controller;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -46,10 +47,15 @@ public class TwitterGatewayServiceController {
 
 	private CompletableFuture<Integer> nb_tweet;
 
+
+
+
 	@RequestMapping(path = "/", method = RequestMethod.GET)
 	public @ResponseBody String home() {
 		return homeMsg;
 	}
+
+
 
 
 	@ApiOperation(value = "Trigger a Twitter Scraping")
@@ -136,5 +142,13 @@ public class TwitterGatewayServiceController {
 		}
 		return new StatusResponse(collectHistory.getSession(), null, null, Status.Error, null, null);
     }
+
+
+    
+	@RequestMapping(path = "/collect-history", method = RequestMethod.GET)
+	public @ResponseBody HistoryResponse collectHistory() {
+		List<CollectHistory> last5 = collectService.getLast5();
+		return new HistoryResponse(last5);
+	}
 
 }
