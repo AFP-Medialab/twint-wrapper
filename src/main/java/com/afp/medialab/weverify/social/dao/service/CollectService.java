@@ -103,11 +103,12 @@ public class CollectService {
     public  List<CollectHistory> getHistory(int limit, String status, boolean desc, Date processStart, Date processEnd) {
         List<CollectHistory> collectHistoryList = collectInterface.findCollectHistoryByProcessEndLessThanEqualOrProcessEndIsNullAndProcessStartGreaterThanEqualAndStatus(processEnd, processStart, status);
 
-        Logger.info("GETTING HISTORY : " + collectHistoryList.toString());
         if (desc)
             Collections.reverse(collectHistoryList);
-        if (collectHistoryList.size() > limit)
-            collectHistoryList.subList(0, limit);
+
+        if (collectHistoryList.size() > limit) {
+            collectHistoryList = collectHistoryList.subList(0, limit);
+        }
         return collectHistoryList;
     }
 
