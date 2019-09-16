@@ -7,6 +7,7 @@ import java.util.List;
 
 @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
 public class HistoryResponse {
+
     private List<CollectHistory> requests;
 
     public HistoryResponse(List<CollectHistory> requests)

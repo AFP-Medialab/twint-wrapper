@@ -3,8 +3,11 @@ package com.afp.medialab.weverify.social.twint;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.AbstractMap;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
+import io.swagger.models.auth.In;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,17 +31,31 @@ public class TwintThread {
 	CollectService collectService;
 
 	@Async
-	public CompletableFuture<Integer> callTwint(CollectRequest request, String name) {
+	public CompletableFuture<Map.Entry<Integer, Integer>> callTwint2(CollectRequest request1, CollectRequest request2, String id)
+	{
 
-		collectService.UpdateCollectStatus(name, Status.Running);
-		CompletableFuture<Integer> result = CompletableFuture.completedFuture(-1);
-		Status endStatus = Status.Done;
+		collectService.UpdateCollectStatus(id, Status.Running);
+		Integer res = callTwint(request1, id);
+		Logger.info("RES : " + res.toString());
+		Integer res2 = -1;
+		if (request2 != null)
+			res2 = callTwint(request2, id);
+		collectService.UpdateCollectStatus(id, Status.Done);
+		return CompletableFuture.completedFuture(new AbstractMap.SimpleEntry<>(res, res2));
+	}
+
+	public Integer callTwint(CollectRequest request, String name) {
+
+		Integer result = -1;
 		String endMessage = "";
+
+		Logger.info("RES : " + result.toString());
 		try {
 
 			String r = TwintRequestGenerator.generateRequest(request, name);
 			ProcessBuilder pb = new ProcessBuilder("/bin/bash", "-c", twintCall + r);
 
+			Status endStatus;
 			pb.environment().put("PATH", "/usr/bin:/usr/local/bin:/bin");
 			Logger.info(twintCall + r);
 			Process p = null;
@@ -65,17 +82,17 @@ public class TwintThread {
 				}
 
 				if (nb_tweets == -1) {
-					endStatus = Status.Error;
+
+					collectService.UpdateCollectStatus(name, Status.Error);
 					endMessage = "Error while collecting tweets";
 				} else {
-					Logger.info("Updating status");
 					endMessage = "Collected " + nb_tweets.toString() + " successfully.";
 				}
 
 				stdInput.close();
 				stdError.close();
 
-				result = CompletableFuture.completedFuture(nb_tweets);
+				result = nb_tweets;
 
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -86,7 +103,6 @@ public class TwintThread {
 			e.printStackTrace();
 		}
 
-		collectService.UpdateCollectStatus(name, endStatus);
 		collectService.UpdateCollectMessage(name, endMessage);
 
 		return result;

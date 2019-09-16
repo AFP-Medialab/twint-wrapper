@@ -28,7 +28,7 @@ public class CollectService {
     public String CollectRequestToString(CollectRequest collectRequest){
         ObjectMapper mapper = new ObjectMapper();
         try {
-            return mapper.writeValueAsString(collectRequest);
+            return mapper.writeValueAsString(collectRequest).replaceAll("\\\"", "");
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         }
@@ -50,6 +50,8 @@ public class CollectService {
 
     public Boolean UpdateCollectStatus(String session, Status newstatus)
     {
+
+        Logger.info("CALL TWINTCALL : ");
         Status existingStatus = collectInterface.findCollectHistoryBySession(session).getStatus();
         if (newstatus == Status.Running && existingStatus == Status.Pending)
         {

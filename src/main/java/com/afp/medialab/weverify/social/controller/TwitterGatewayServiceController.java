@@ -2,6 +2,7 @@ package com.afp.medialab.weverify.social.controller;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -45,7 +46,7 @@ public class TwitterGatewayServiceController {
 	@Value("${application.home.msg}")
 	private String homeMsg;
 
-	private CompletableFuture<Integer> nb_tweet;
+	private Integer nb_tweet;
 
 
 
@@ -60,7 +61,7 @@ public class TwitterGatewayServiceController {
 
 	@ApiOperation(value = "Trigger a Twitter Scraping")
 	@RequestMapping(path = "/collect", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-	public @ResponseBody CollectResponse collect(@RequestBody @Valid CollectRequest collectRequest, BindingResult result) {
+	public @ResponseBody CollectResponse collect(@RequestBody @Valid CollectRequest collectRequest, BindingResult result) throws ExecutionException, InterruptedException {
 
 		String session = UUID.randomUUID().toString();
 		Logger.info(result.getAllErrors().toString());
@@ -94,11 +95,20 @@ public class TwitterGatewayServiceController {
 
 		collectService.SaveCollectInfo(session, collectRequest, null, null, Status.Pending);
 
-		nb_tweet = tt.callTwint(collectRequest, session);
+		CompletableFuture<Map.Entry<Integer, Integer>> pair = tt.callTwint2(collectRequest, null, session);
 
-		CollectHistory CollectedInfo = collectService.getCollectInfo(session);
+		CollectHistory collectedInfo = collectService.getCollectInfo(session);
 
-		return new CollectResponse(session, CollectedInfo.getStatus(),CollectedInfo.getMessage(), CollectedInfo.getProcessEnd());
+		if (collectedInfo.getStatus() != Status.Done)
+		{
+			return new CollectResponse(session, collectedInfo.getStatus(),null, collectedInfo.getProcessEnd());
+		}
+		else {
+			Logger.info("PAIR : " + pair);
+			Map.Entry<Integer, Integer> map = (pair.get());
+			nb_tweet = map.getKey();
+		}
+		return new CollectResponse(session, collectedInfo.getStatus(),collectedInfo.getMessage(), collectedInfo.getProcessEnd());
 	}
 
 	@ApiOperation(value = "Trigger a status check")
@@ -129,19 +139,15 @@ public class TwitterGatewayServiceController {
                     collectHistory.getStatus(), collectRequest, null);
 			else
 				return new StatusResponse(collectHistory.getSession(), collectHistory.getProcessStart(), collectHistory.getProcessEnd(),
-						collectHistory.getStatus(), collectRequest, nb_tweet.get());
+						collectHistory.getStatus(), collectRequest, nb_tweet);
         } catch (JsonParseException e) {
             e.printStackTrace();
         } catch (JsonMappingException e) {
             e.printStackTrace();
         } catch (IOException e) {
-            e.printStackTrace();
-        } catch (InterruptedException e) {
-			e.printStackTrace();
-		} catch (ExecutionException e) {
 			e.printStackTrace();
 		}
-		return new StatusResponse(collectHistory.getSession(), null, null, Status.Error, null, null);
+        return new StatusResponse(collectHistory.getSession(), null, null, Status.Error, null, null);
     }
 
 
