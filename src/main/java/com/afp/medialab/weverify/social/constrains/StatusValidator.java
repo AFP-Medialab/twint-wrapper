@@ -5,13 +5,14 @@ import javax.validation.ConstraintValidatorContext;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-public class StatusValidator implements ConstraintValidator<SortConstrain, String> {
+public class StatusValidator implements ConstraintValidator<StatusConstrain, String> {
 
     private ArrayList<String> status = new ArrayList<>(
-            Arrays.asList("Pending", "Running", "Error", "Done")
+            Arrays.asList(null, "Pending", "Running", "Error", "Done")
     );
+
     @Override
-    public void initialize(SortConstrain constraintAnnotation) {
+    public void initialize(StatusConstrain constraintAnnotation) {
 
     }
 

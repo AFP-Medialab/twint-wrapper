@@ -9,7 +9,7 @@ import java.lang.annotation.*;
 @Target( { ElementType.METHOD, ElementType.FIELD })
 @Retention(RetentionPolicy.RUNTIME)
 public @interface SortConstrain {
-    String message() default "Invalid sort order in JSON (\"desc\", \"asc\"";
+    String message() default "Invalid sort order in JSON (\"desc\", \"asc\")";
 
     Class<?>[] groups() default {};
     Class<? extends Payload>[] payload() default {};

@@ -11,6 +11,6 @@ public class SortValidator implements ConstraintValidator<SortConstrain, String>
 
     @Override
     public boolean isValid(String s, ConstraintValidatorContext constraintValidatorContext) {
-        return (s.equals("desc") || s.equals("asc"));
+        return (s == null || s.equals("desc") || s.equals("asc"));
     }
 }

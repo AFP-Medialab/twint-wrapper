@@ -1,5 +1,6 @@
 package com.afp.medialab.weverify.social.dao.service;
 
+import java.util.ArrayList;
 import java.util.Date;
 
 import com.afp.medialab.weverify.social.twint.TwintThreadExecutor;
@@ -101,13 +102,30 @@ public class CollectService {
     }
 
     public  List<CollectHistory> getHistory(int limit, String status, boolean desc, Date processStart, Date processEnd) {
-        List<CollectHistory> collectHistoryList = collectInterface.findCollectHistoryByProcessEndLessThanEqualOrProcessEndIsNullAndProcessStartGreaterThanEqualAndStatus(processEnd, processStart, status);
+        List<CollectHistory> collectHistoryList = null;
+        if (status != null && processEnd != null && processStart != null)
+           collectHistoryList = collectInterface.findCollectHistoryByProcessEndLessThanEqualOrProcessEndIsNullAndProcessStartGreaterThanEqualAndStatus(processEnd, processStart, status);
+        else if (status != null && processEnd == null && processStart == null)
+                collectHistoryList = collectInterface.findCollectHistoryByStatus(status);
+        else if (status != null && processEnd != null)
+            collectHistoryList = collectInterface.findCollectHistoryByStatusAndProcessEndLessThan(status, processEnd);
+        else if (status != null)
+            collectHistoryList = collectInterface.findCollectHistoryByStatusAndProcessStartGreaterThan(status, processStart);
+        else if (processEnd != null)
+            collectHistoryList = collectInterface.findCollectHistoryByProcessEndLessThan(processEnd);
+        else if (processStart != null)
+            collectHistoryList = collectInterface.findCollectHistoryByProcessStartGreaterThan(processStart);
+        else {
 
+            collectHistoryList = collectInterface.findAll();
+
+        }
         if (desc)
             Collections.reverse(collectHistoryList);
 
-        if (collectHistoryList.size() > limit) {
+        if (limit != 0 && collectHistoryList.size() > limit) {
             collectHistoryList = collectHistoryList.subList(0, limit);
+            Logger.info("FINDING ALL : " + collectHistoryList.toString());
         }
         return collectHistoryList;
     }

@@ -19,9 +19,12 @@ public interface CollectInterface extends JpaRepository<CollectHistory, Integer>
     CollectHistory findCollectHistoryByQuery(String query);
 
     List<CollectHistory> findCollectHistoryByStatus(String status);
-
+    List<CollectHistory> findCollectHistoryByStatusAndProcessStartGreaterThan(String status, Date processStart);
+    List<CollectHistory> findCollectHistoryByStatusAndProcessEndLessThan(String status, Date processEnd);
     List<CollectHistory> findCollectHistoryByProcessEndLessThanEqualOrProcessEndIsNullAndProcessStartGreaterThanEqualAndStatus(Date processEnd, Date processStart, String status);
 
+    List<CollectHistory> findCollectHistoryByProcessStartGreaterThan(Date processStart);
+    List<CollectHistory> findCollectHistoryByProcessEndLessThan(Date processEnd);
     List<CollectHistory> findAll();
 
     @Modifying
