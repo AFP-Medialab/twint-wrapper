@@ -1,8 +1,11 @@
 package com.afp.medialab.weverify.social.controller;
 
 import java.io.IOException;
+
 import java.util.Date;
 import java.util.Set;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -46,7 +49,8 @@ public class TwitterGatewayServiceController {
     @Value("${application.home.msg}")
     private String homeMsg;
 
-    private CompletableFuture<Integer> nb_tweet;
+
+    private Integer nb_tweet;
 
     @RequestMapping(path = "/", method = RequestMethod.GET)
     public @ResponseBody
@@ -113,7 +117,7 @@ public class TwitterGatewayServiceController {
 						collectHistory.getStatus(), collectRequest, null);
 			else
             	return new StatusResponse(collectHistory.getSession(), collectHistory.getProcessStart(), collectHistory.getProcessEnd(),
-                    collectHistory.getStatus(), collectRequest, nb_tweet.get());
+                    collectHistory.getStatus(), collectRequest, nb_tweet);
         }
         return new StatusResponse(collectHistory.getSession(), null, null, Status.Error, null, null);
     }
@@ -142,11 +146,29 @@ public class TwitterGatewayServiceController {
         // Creation of a brand new  CollectHistory
         collectService.SaveCollectInfo(session, newCollectRequest, null, null, Status.Pending);
 
-        nb_tweet = tt.callTwint(newCollectRequest, session);
+		CompletableFuture<Map.Entry<Integer, Integer>> pair = tt.callTwint2(newCollectRequest, null, session);
 
-        CollectHistory CollectedInfo = collectService.getCollectInfo(session);
 
-        return new CollectResponse(session, CollectedInfo.getStatus(), CollectedInfo.getMessage(), CollectedInfo.getProcessEnd());
+		CollectHistory collectedInfo = collectService.getCollectInfo(session);
+
+
+		if (collectedInfo.getStatus() != Status.Done)
+		{
+			return new CollectResponse(session, collectedInfo.getStatus(),null, collectedInfo.getProcessEnd());
+		}
+		else {
+			Logger.info("PAIR : " + pair);
+			Map.Entry<Integer, Integer> map = null;
+			try {
+				map = (pair.get());
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			} catch (ExecutionException e) {
+				e.printStackTrace();
+			}
+			nb_tweet = map.getKey();
+		}
+		return new CollectResponse(session, collectedInfo.getStatus(),collectedInfo.getMessage(), collectedInfo.getProcessEnd());
     }
 
     /*
@@ -227,5 +249,36 @@ public class TwitterGatewayServiceController {
 		collectRequest.setFrom(from);
 		collectRequest.setUntil(until);
 		nb_tweet = tt.callTwint(collectRequest, session);
+	}
+
+
+	@RequestMapping(value = "/collect-history", method = RequestMethod.GET)
+	public @ResponseBody HistoryResponse collectHistory(@RequestParam(value = "limit", required = false, defaultValue = "5") int limit,
+														@RequestParam(value = "asc", required = false, defaultValue = "false") boolean asc,
+														@RequestParam(value = "desc", required = false, defaultValue = "false") boolean desc,
+														@RequestParam(value = "status", required = false) String status)
+	{
+		List<CollectHistory> last = null;
+
+		if (!asc && !desc)
+			last = collectService.getLasts(limit);
+		else if (status == null)
+			last = collectService.getAll(desc);
+		else
+		{
+			Logger.info("STATUS : " + status);
+			last = collectService.getByStatus(status);
+		}
+		return new HistoryResponse(last);
+	}
+
+	@ApiOperation(value = "Get the requests history")
+	@RequestMapping(path = "/collect-history", method = RequestMethod.POST, consumes = "application/json", produces = "application/json")
+	public @ResponseBody HistoryResponse status(@RequestBody @Valid HistoryRequest historyRequest) {
+		Logger.info("POST collect-history : " + historyRequest.toString());
+		List<CollectHistory> collectHistoryList = collectService.getHistory(historyRequest.getLimit(), historyRequest.getStatus(),
+																			(historyRequest.getSort() == null?false : historyRequest.getSort().equals("desc")),
+																			historyRequest.getProcessStart(), historyRequest.getProcessTo());
+		return new HistoryResponse(collectHistoryList);
 	}
 }

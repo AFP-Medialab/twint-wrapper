@@ -3,8 +3,11 @@ package com.afp.medialab.weverify.social.twint;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.AbstractMap;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
+import io.swagger.models.auth.In;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,77 +22,87 @@ import com.afp.medialab.weverify.social.model.Status;
 @Service
 public class TwintThread {
 
-	private static Logger Logger = LoggerFactory.getLogger(TwintThread.class);
+    private static Logger Logger = LoggerFactory.getLogger(TwintThread.class);
 
-	@Value("${src.profile.twint}")
-	private String twintCall;
+    @Value("${src.profile.twint}")
+    private String twintCall;
 
-	@Autowired
-	CollectService collectService;
+    @Autowired
+    CollectService collectService;
 
-	@Async
-	public CompletableFuture<Integer> callTwint(CollectRequest request, String name) {
+    @Async
+    public CompletableFuture<Map.Entry<Integer, Integer>> callTwint2(CollectRequest request1, CollectRequest request2, String id) {
 
-		collectService.updateCollectStatus(name, Status.Running);
-		CompletableFuture<Integer> result = CompletableFuture.completedFuture(-1);
-		Status endStatus = Status.Done;
-		String endMessage = "";
-		try {
+        collectService.updateCollectStatus(id, Status.Running);
+        Integer res = callTwint(request1, id);
+        Logger.info("RES : " + res.toString());
+        Integer res2 = -1;
+        if (request2 != null)
+            res2 = callTwint(request2, id);
+        collectService.updateCollectStatus(id, Status.Done);
+        return CompletableFuture.completedFuture(new AbstractMap.SimpleEntry<>(res, res2));
+    }
 
-			String r = TwintRequestGenerator.generateRequest(request, name);
-			ProcessBuilder pb = new ProcessBuilder("/bin/bash", "-c", twintCall + r);
+    public Integer callTwint(CollectRequest request, String name) {
 
-			pb.environment().put("PATH", "/usr/bin:/usr/local/bin:/bin");
-			Logger.info(twintCall + r);
-			Process p = null;
-			try {
-				p = pb.start();
+        Integer result = -1;
+        String endMessage = "";
 
-				BufferedReader stdInput = new BufferedReader(new InputStreamReader(p.getInputStream()));
+        Logger.info("RES : " + result.toString());
+        try {
 
-				BufferedReader stdError = new BufferedReader(new InputStreamReader(p.getErrorStream()));
+            String r = TwintRequestGenerator.generateRequest(request, name);
+            ProcessBuilder pb = new ProcessBuilder("/bin/bash", "-c", twintCall + r);
 
-				String s = "";
+            Status endStatus;
+            pb.environment().put("PATH", "/usr/bin:/usr/local/bin:/bin");
+            Logger.info(twintCall + r);
+            Process p = null;
+            try {
+                p = pb.start();
 
-				while ((s = stdError.readLine()) != null) {
-					Logger.error(s);
-				}
+                BufferedReader stdInput = new BufferedReader(new InputStreamReader(p.getInputStream()));
 
-				Integer nb_tweets = -1;
-				while ((s = stdInput.readLine()) != null) {
-					Logger.info(s);
-					if (s.contains("Successfully collected")) {
-						String str = s.split("Successfully collected ")[1].split(" ")[0];
-						nb_tweets = Integer.parseInt(str);
-					}
-				}
+                BufferedReader stdError = new BufferedReader(new InputStreamReader(p.getErrorStream()));
 
-				if (nb_tweets == -1) {
-					endStatus = Status.Error;
-					endMessage = "Error while collecting tweets";
-				} else {
-					Logger.info("Updating status");
-					endMessage = "Collected " + nb_tweets.toString() + " successfully.";
-				}
+                String s = "";
 
-				stdInput.close();
-				stdError.close();
+                while ((s = stdError.readLine()) != null) {
+                    Logger.error(s);
+                }
 
-				result = CompletableFuture.completedFuture(nb_tweets);
+                Integer nb_tweets = -1;
+                while ((s = stdInput.readLine()) != null) {
+                    Logger.info(s);
+                    if (s.contains("Successfully collected")) {
+                        String str = s.split("Successfully collected ")[1].split(" ")[0];
+                        nb_tweets = Integer.parseInt(str);
+                    }
+                }
 
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+                if (nb_tweets == -1) {
 
-		} catch (Exception e) {
-			Logger.error(e.getMessage());
-			e.printStackTrace();
-		}
+                    collectService.updateCollectStatus(name, Status.Error);
+                    endMessage = "Error while collecting tweets";
+                } else {
+                    endMessage = "Collected " + nb_tweets.toString() + " successfully.";
+                }
 
-		collectService.updateCollectStatus(name, endStatus);
-		collectService.updateCollectMessage(name, endMessage);
+                stdInput.close();
+                stdError.close();
 
-		return result;
+                result = nb_tweets;
 
-	}
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+        } catch (Exception e) {
+            Logger.error(e.getMessage());
+            e.printStackTrace();
+        }
+
+        collectService.UpdateCollectMessage(name, endMessage);
+        return result;
+    }
 }

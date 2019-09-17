@@ -5,11 +5,11 @@ import javax.validation.Payload;
 import java.lang.annotation.*;
 
 @Documented
-@Constraint(validatedBy = RetweetHandlingValidator.class)
+@Constraint(validatedBy = StatusValidator.class)
 @Target( { ElementType.METHOD, ElementType.FIELD })
 @Retention(RetentionPolicy.RUNTIME)
-public @interface RetweetHandlingConstrain {
-    String message() default "Invalid retweet handling mode in JSON (\"allowed\", \"only\", \"excluded\")";
+public @interface StatusConstrain {
+    String message() default "Invalid status in JSON (\"Pending\", \"Running\", \"Error\", \"Done\"";
 
     Class<?>[] groups() default {};
     Class<? extends Payload>[] payload() default {};

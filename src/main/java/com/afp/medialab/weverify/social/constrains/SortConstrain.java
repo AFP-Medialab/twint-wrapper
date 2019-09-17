@@ -5,11 +5,11 @@ import javax.validation.Payload;
 import java.lang.annotation.*;
 
 @Documented
-@Constraint(validatedBy = RetweetHandlingValidator.class)
+@Constraint(validatedBy = SortValidator.class)
 @Target( { ElementType.METHOD, ElementType.FIELD })
 @Retention(RetentionPolicy.RUNTIME)
-public @interface RetweetHandlingConstrain {
-    String message() default "Invalid retweet handling mode in JSON (\"allowed\", \"only\", \"excluded\")";
+public @interface SortConstrain {
+    String message() default "Invalid sort order in JSON (\"desc\", \"asc\")";
 
     Class<?>[] groups() default {};
     Class<? extends Payload>[] payload() default {};

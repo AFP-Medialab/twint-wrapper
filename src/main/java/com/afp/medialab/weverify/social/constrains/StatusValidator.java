@@ -5,18 +5,19 @@ import javax.validation.ConstraintValidatorContext;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-public class MediaValidator implements ConstraintValidator<MediaConstrain, String> {
+public class StatusValidator implements ConstraintValidator<StatusConstrain, String> {
 
-    private ArrayList<String> medias = new ArrayList<>(
-            Arrays.asList(null, "video", "image", "both")
+    private ArrayList<String> status = new ArrayList<>(
+            Arrays.asList(null, "Pending", "Running", "Error", "Done")
     );
+
     @Override
-    public void initialize(MediaConstrain constraintAnnotation) {
+    public void initialize(StatusConstrain constraintAnnotation) {
 
     }
 
     @Override
     public boolean isValid(String s, ConstraintValidatorContext constraintValidatorContext) {
-        return medias.contains(s);
+        return status.contains(s);
     }
 }
