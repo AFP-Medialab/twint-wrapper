@@ -108,18 +108,18 @@ public class TwitterGatewayServiceController {
     StatusResponse getStatusResponse(String session) throws ExecutionException, InterruptedException {
         CollectHistory collectHistory = collectService.getCollectInfo(session);
         if (collectHistory == null)
-            return new StatusResponse(session, null, null, Status.Error, null, null);
+            return new StatusResponse(session, null, null, Status.Error, null, null, "This session does not exist");
 
         CollectRequest collectRequest = collectService.StringToCollectRequest(collectHistory.getQuery());
         if (collectRequest != null) {
 			if (collectHistory.getStatus() != Status.Done)
 				return new StatusResponse(collectHistory.getSession(), collectHistory.getProcessStart(), collectHistory.getProcessEnd(),
-						collectHistory.getStatus(), collectRequest, null);
+						collectHistory.getStatus(), collectRequest, null, null);
 			else
             	return new StatusResponse(collectHistory.getSession(), collectHistory.getProcessStart(), collectHistory.getProcessEnd(),
-                    collectHistory.getStatus(), collectRequest, nb_tweet);
+                    collectHistory.getStatus(), collectRequest, nb_tweet, null);
         }
-        return new StatusResponse(collectHistory.getSession(), null, null, Status.Error, null, null);
+        return new StatusResponse(collectHistory.getSession(), null, null, Status.Error, null, null, "No query found, or parsing error");
     }
 
     CollectResponse caching(CollectRequest newCollectRequest, String session) {
@@ -240,7 +240,6 @@ public class TwitterGatewayServiceController {
 	}
 
 
-
 	public CollectResponse getCollectResponseFromTwintCall(CollectRequest newCollectRequest, CollectRequest oldCollectRequest, String session, String message, CompletableFuture<Map.Entry<Integer, Integer>> pair ){
 		CollectHistory collectedInfo = collectService.getCollectInfo(session);
 		if (collectedInfo.getStatus() != Status.Done)
@@ -303,5 +302,38 @@ public class TwitterGatewayServiceController {
 																			(historyRequest.getSort() == null?false : historyRequest.getSort().equals("desc")),
 																			historyRequest.getProcessStart(), historyRequest.getProcessTo());
 		return new HistoryResponse(collectHistoryList);
+	}
+
+	@RequestMapping("/collect-update/{id}")
+	public @ResponseBody
+	StatusResponse collectUpdate(@PathVariable("id") String id) throws ExecutionException, InterruptedException {
+		return collectUpdateFunction(id);
+	}
+
+	@ApiOperation(value = "Update an old request")
+	@RequestMapping(path = "/collect-update", method = RequestMethod.POST, consumes = "application/json", produces = "application/json")
+	public @ResponseBody
+	StatusResponse collectUpdate(@RequestBody @Valid CollectUpdateRequest collectUpdateRequest) throws ExecutionException, InterruptedException {
+		String id = collectUpdateRequest.getSession();
+		return collectUpdateFunction(id);
+	}
+
+	public StatusResponse collectUpdateFunction(String id) throws ExecutionException, InterruptedException {
+		Logger.info("Collect-Update " + id);
+
+		if (collectService.getCollectInfo(id).getStatus() != Status.Done){
+			StatusResponse res = getStatusResponse(id);
+			res.setMessage("This session is already updating");
+			return res;
+		}
+
+		collectService.updateCollectStatus(id, Status.Pending);
+		CollectRequest oldCollectRequest = collectService.StringToCollectRequest(collectService.getCollectInfo(id).getQuery());
+		if (oldCollectRequest == null)
+			return new StatusResponse(id, null, null, Status.Error, null, null, "This session does not exist");
+
+		CompletableFuture<Map.Entry<Integer, Integer>> singleFuture = callTwintOnInterval(oldCollectRequest, id, oldCollectRequest.getFrom(), oldCollectRequest.getUntil());
+		collectService.updateCollectProcessStart(id, new Date());
+		return getStatusResponse(id);
 	}
 }

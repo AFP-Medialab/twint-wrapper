@@ -12,18 +12,27 @@ public class StatusResponse {
     private Status status;
     private CollectRequest query;
     private String nbTweets;
+    private String message;
 
-    public StatusResponse(String session, Date started, Date ended, Status status, CollectRequest query, Integer nbTweet) {
+    public StatusResponse(String session, Date started, Date ended, Status status, CollectRequest query, Integer nbTweet, String message) {
         this.session = session;
         this.started = started;
         this.ended = ended;
         this.status = status;
         this.query = query;
+        this.message = message;
         if (nbTweet != null)
             this.nbTweets = Integer.toString(nbTweet);
         else
             this.nbTweets = null;
+    }
 
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
     }
 
     public String getSession() { return session; }
