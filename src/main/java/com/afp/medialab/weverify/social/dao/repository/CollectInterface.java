@@ -38,7 +38,7 @@ public interface CollectInterface extends JpaRepository<CollectHistory, Integer>
     List<CollectHistory> findAll();
 
 
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
     @Query("update CollectHistory collect set collect.status = :status where collect.session = :session")
     void updateCollectStatus(@Param("session") String session, @Param("status") String status);
@@ -62,4 +62,5 @@ public interface CollectInterface extends JpaRepository<CollectHistory, Integer>
     @Transactional
     @Query("update CollectHistory collect set collect.message = :message where collect.session = :session")
     void updateCollectMessage(@Param("session") String session, @Param("message") String message);
+
 }
