@@ -50,8 +50,6 @@ public class TwitterGatewayServiceController {
     private String homeMsg;
 
 
-    private Integer nb_tweet;
-
     @RequestMapping(path = "/", method = RequestMethod.GET)
     public @ResponseBody
     String home() {
@@ -117,7 +115,7 @@ public class TwitterGatewayServiceController {
 						collectHistory.getStatus(), collectRequest, null, null);
 			else
             	return new StatusResponse(collectHistory.getSession(), collectHistory.getProcessStart(), collectHistory.getProcessEnd(),
-                    collectHistory.getStatus(), collectRequest, nb_tweet, null);
+                    collectHistory.getStatus(), collectRequest, collectHistory.getCount(), null);
         }
         return new StatusResponse(collectHistory.getSession(), null, null, Status.Error, null, null, "No query found, or parsing error");
     }
@@ -144,7 +142,7 @@ public class TwitterGatewayServiceController {
 		}
 
         // Creation of a brand new  CollectHistory
-        collectService.SaveCollectInfo(session, newCollectRequest, null, null, Status.Pending);
+        collectService.SaveCollectInfo(session, newCollectRequest, null, null, Status.Pending, null, null);
 
 		CompletableFuture<Map.Entry<Integer, Integer>> pair = tt.callTwint2(newCollectRequest, null, session);
 
@@ -166,7 +164,7 @@ public class TwitterGatewayServiceController {
 			} catch (ExecutionException e) {
 				e.printStackTrace();
 			}
-			nb_tweet = map.getKey();
+			collectService.updateCollectCount(session, map.getKey());
 		}
 		return new CollectResponse(session, collectedInfo.getStatus(),collectedInfo.getMessage(), collectedInfo.getProcessEnd());
     }
@@ -246,7 +244,7 @@ public class TwitterGatewayServiceController {
 			return new CollectResponse(session, collectedInfo.getStatus(),message, collectedInfo.getProcessEnd());
 		try {
 			Map.Entry<Integer, Integer> map = pair.get();
-			nb_tweet = map.getKey();
+			collectService.updateCollectCount(session, map.getKey());
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		} catch (ExecutionException e) {
