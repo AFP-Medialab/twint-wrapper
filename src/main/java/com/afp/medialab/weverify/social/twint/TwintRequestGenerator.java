@@ -1,8 +1,23 @@
 package com.afp.medialab.weverify.social.twint;
 import com.afp.medialab.weverify.social.model.CollectRequest;
+import com.afp.medialab.weverify.social.model.SearchModel;
+
 import java.text.SimpleDateFormat;
 
 public class TwintRequestGenerator {
+    public static String generateSearch(SearchModel search)
+    {
+        StringBuilder sb = new StringBuilder(search.getSearch());
+        if (search.getOr() != null)
+            for (String s : search.getOr()) {
+                sb.append(" OR " + s);
+            }
+        if (search.getAnd() != null)
+            for (String s : search.getAnd()) {
+                sb.append(" AND " + s);
+            }
+        return sb.toString();
+    }
 
     public static String generateRequest(CollectRequest cr, String id)
     {
@@ -11,7 +26,7 @@ public class TwintRequestGenerator {
         String call = " \"twint -ho --count ";
 
         if (cr.getSearch()!= null)
-            call += "-s '" + cr.getSearch() + "'";
+            call += "-s '" + generateSearch(cr.getSearch())  + "'";
 
         if (cr.getUser() != null)
             call += " -u " + cr.getUser();

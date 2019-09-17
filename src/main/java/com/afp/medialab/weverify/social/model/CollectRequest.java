@@ -1,5 +1,6 @@
 package com.afp.medialab.weverify.social.model;
 
+import java.util.ArrayList;
 import java.util.Date;
 
 import com.afp.medialab.weverify.social.constrains.LangConstrain;
@@ -11,7 +12,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class CollectRequest {
 
-    private String search;
+    private SearchModel search;
 
     @LangConstrain
     private String lang;
@@ -41,11 +42,11 @@ public class CollectRequest {
         this.retweetsHandling = collectRequest.retweetsHandling;
     }
 
-    public String getSearch() {
+    public SearchModel getSearch() {
         return search;
     }
 
-    public void setSearch(String search) {
+    public void setSearch(SearchModel search) {
         this.search = search;
     }
 
