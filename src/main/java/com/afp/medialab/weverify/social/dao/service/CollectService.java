@@ -32,7 +32,7 @@ public class CollectService {
     public String CollectRequestToString(CollectRequest collectRequest) {
         ObjectMapper mapper = new ObjectMapper();
         try {
-            return mapper.writeValueAsString(collectRequest).replaceAll("\\\"", "");
+            return mapper.writeValueAsString(collectRequest);
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         }
@@ -72,6 +72,7 @@ public class CollectService {
         if (newStatus == Status.Pending && existingStatus == Status.Done) {
             collectInterface.updateCollectProcessEnd(session, null);
             collectInterface.updateCollectStatus(session, newStatus.toString());
+            Status status = collectInterface.findCollectHistoryBySession(session).getStatus();
             return true;
         }
         if (newStatus == Status.Running && existingStatus == Status.Pending) {
