@@ -21,6 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.ObjectError;
@@ -56,6 +57,11 @@ public class TwitterGatewayServiceController {
         return homeMsg;
     }
 
+	@ExceptionHandler(NotFoundException.class)
+	@ResponseStatus(HttpStatus.NOT_FOUND)
+	public String handleResourceNotFoundException() {
+		return "This session could not be found";
+	}
 
     @ApiOperation(value = "Trigger a Twitter Scraping")
     @RequestMapping(path = "/collect", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
@@ -105,8 +111,7 @@ public class TwitterGatewayServiceController {
 
     StatusResponse getStatusResponse(String session) throws ExecutionException, InterruptedException {
         CollectHistory collectHistory = collectService.getCollectInfo(session);
-        if (collectHistory == null)
-            return new StatusResponse(session, null, null, Status.Error, null, null, "This session does not exist");
+        if (collectHistory == null) throw new NotFoundException();
 
         CollectRequest collectRequest = collectService.StringToCollectRequest(collectHistory.getQuery());
         if (collectRequest != null) {
@@ -319,7 +324,11 @@ public class TwitterGatewayServiceController {
 	public StatusResponse collectUpdateFunction(String id) throws ExecutionException, InterruptedException {
 		Logger.info("Collect-Update " + id);
 
-		if (collectService.getCollectInfo(id).getStatus() != Status.Done){
+		CollectHistory collectHistory = collectService.getCollectInfo(id);
+		if (collectHistory == null) throw new NotFoundException();
+
+
+		if (collectHistory.getStatus() != Status.Done){
 			StatusResponse res = getStatusResponse(id);
 			res.setMessage("This session is already updating");
 			return res;
@@ -327,8 +336,7 @@ public class TwitterGatewayServiceController {
 
 		collectService.updateCollectStatus(id, Status.Pending);
 		CollectRequest oldCollectRequest = collectService.StringToCollectRequest(collectService.getCollectInfo(id).getQuery());
-		if (oldCollectRequest == null)
-			return new StatusResponse(id, null, null, Status.Error, null, null, "This session does not exist");
+		if (oldCollectRequest == null) throw new NotFoundException();
 
 		CompletableFuture<Map.Entry<Integer, Integer>> singleFuture = callTwintOnInterval(oldCollectRequest, id, oldCollectRequest.getFrom(), oldCollectRequest.getUntil());
 		collectService.updateCollectProcessStart(id, new Date());
