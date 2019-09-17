@@ -262,12 +262,12 @@ public class TwitterGatewayServiceController {
 
 	public CompletableFuture<Map.Entry<Integer, Integer>> callTwintOnInterval(CollectRequest newCollectRequest, String session, Date from1, Date until1, Date from2, Date until2) {
 		// Update the session with the good dates;
-		CollectRequest collectRequest1 = newCollectRequest;
+		CollectRequest collectRequest1 = new CollectRequest(newCollectRequest);
 		collectRequest1.setFrom(from1);
 		collectRequest1.setUntil(until1);
 		CollectRequest collectRequest2 = null;
 		if (from2 != null && until2 != null) {
-			collectRequest2 = newCollectRequest;
+			collectRequest2 = new CollectRequest(newCollectRequest);
 			collectRequest2.setFrom(from2);
 			collectRequest2.setUntil(until2);
 		}

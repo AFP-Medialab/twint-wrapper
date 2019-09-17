@@ -11,110 +11,120 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class CollectRequest {
 
-	private String search;
+    private String search;
 
-	@LangConstrain
-	private String lang;
-	private String user;
-	@JsonFormat(pattern = "yyyy-MM-dd")
-	private Date from, until;
+    @LangConstrain
+    private String lang;
+    private String user;
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    private Date from, until;
 
-	@MediaConstrain
-	private String media;
+    @MediaConstrain
+    private String media;
 
-	private Boolean verified = false;
+    private Boolean verified = false;
 
-	@RetweetHandlingConstrain
-	private String retweetsHandling;
+    @RetweetHandlingConstrain
+    private String retweetsHandling;
 
-	public CollectRequest() {
-	}
+    public CollectRequest() {
+    }
 
-	public String getSearch() {
-		return search;
-	}
+    public CollectRequest(CollectRequest collectRequest) {
+        this.search = collectRequest.search;
+        this.lang = collectRequest.lang;
+        this.user = collectRequest.user;
+        this.from = collectRequest.from;
+        this.until = collectRequest.until;
+        this.media = collectRequest.media;
+        this.verified = collectRequest.verified;
+        this.retweetsHandling = collectRequest.retweetsHandling;
+    }
 
-	public void setSearch(String search) {
-		this.search = search;
-	}
+    public String getSearch() {
+        return search;
+    }
 
-	public Date getFrom() {
-		return from;
-	}
+    public void setSearch(String search) {
+        this.search = search;
+    }
 
-	public void setFrom(Date from) {
-		this.from = from;
-	}
+    public Date getFrom() {
+        return from;
+    }
 
-	public Date getUntil() {
-		return until;
-	}
+    public void setFrom(Date from) {
+        this.from = from;
+    }
 
-	public void setUntil(Date until) {
-		this.until = until;
-	}
+    public Date getUntil() {
+        return until;
+    }
 
-	public String getLang() {
-		return lang;
-	}
+    public void setUntil(Date until) {
+        this.until = until;
+    }
 
-	public String getUser() {
-		return user;
-	}
+    public String getLang() {
+        return lang;
+    }
 
-	public void setUser(String user) {
-		this.user = user;
-	}
+    public String getUser() {
+        return user;
+    }
 
-	public String getMedia() {
-		return media;
-	}
+    public void setUser(String user) {
+        this.user = user;
+    }
 
-	public String getRetweetsHandling() {
-		return retweetsHandling;
-	}
+    public String getMedia() {
+        return media;
+    }
 
-	public void setMedia(String media) {
-		this.media = media;
-	}
+    public String getRetweetsHandling() {
+        return retweetsHandling;
+    }
 
-	public boolean isVerified() {
-		return verified;
-	}
+    public void setMedia(String media) {
+        this.media = media;
+    }
 
-	public void setVerified(boolean verified) {
-		this.verified = verified;
-	}
+    public boolean isVerified() {
+        return verified;
+    }
 
-	//public String toString()
-	//{
-	//}
+    public void setVerified(boolean verified) {
+        this.verified = verified;
+    }
 
-	@Override
-	public boolean equals(Object overObject)
-	{
-		if (!(overObject instanceof CollectRequest))
-			return false;
+    //public String toString()
+    //{
+    //}
 
-		CollectRequest overRequest = (CollectRequest) overObject;
+    @Override
+    public boolean equals(Object overObject) {
+        if (!(overObject instanceof CollectRequest))
+            return false;
 
-		Boolean sameSearch;
-		if (this.search != null && overRequest.search != null)
-			sameSearch = this.search.equals(overRequest.search);
-		else if (this.search == null && overRequest.search == null)
-			sameSearch = true;
-		else
-			sameSearch = false;
+        CollectRequest overRequest = (CollectRequest) overObject;
 
-		Boolean sameLang;
-		if (this.lang != null && overRequest.lang != null)
-			sameLang = this.lang.equals(overRequest.lang);
-		else if (this.lang == null && overRequest.lang == null)
-			sameLang = true;
-		else
-			sameLang = false;
+        Boolean sameSearch;
+        if (this.search != null && overRequest.search != null)
+            sameSearch = this.search.equals(overRequest.search);
+        else if (this.search == null && overRequest.search == null)
+            sameSearch = true;
+        else
+            sameSearch = false;
+
+        Boolean sameLang;
+        if (this.lang != null && overRequest.lang != null)
+            sameLang = this.lang.equals(overRequest.lang);
+        else if (this.lang == null && overRequest.lang == null)
+            sameLang = true;
+        else
+            sameLang = false;
 
 
-		return sameSearch && sameLang;
-	}
+        return sameSearch && sameLang;
+    }
 }
