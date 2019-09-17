@@ -8,13 +8,19 @@ public class TwintRequestGenerator {
     public static String generateSearch(SearchModel search)
     {
         StringBuilder sb = new StringBuilder(search.getSearch());
+
+        if (search.getAnd() != null)
+            for (String s : search.getAnd()) {
+                sb.append(" AND " + s);
+            }
+
         if (search.getOr() != null)
             for (String s : search.getOr()) {
                 sb.append(" OR " + s);
             }
-        if (search.getAnd() != null)
-            for (String s : search.getAnd()) {
-                sb.append(" AND " + s);
+        if (search.getNot() != null)
+            for (String s : search.getNot()) {
+                sb.append(" -" + s);
             }
         return sb.toString();
     }

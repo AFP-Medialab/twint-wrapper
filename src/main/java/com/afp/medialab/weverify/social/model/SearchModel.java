@@ -9,6 +9,7 @@ public class SearchModel {
     private String search;
     private ArrayList<String> or;
     private ArrayList<String> and;
+    private ArrayList<String> not;
 
     public ArrayList<String> getOr() {
         return or;
@@ -32,5 +33,13 @@ public class SearchModel {
 
     public void setSearch(String search) {
         this.search = search;
+    }
+
+    public ArrayList<String> getNot() {
+        return not;
+    }
+
+    public void setNot(ArrayList<String> not) {
+        this.not = not;
     }
 }
