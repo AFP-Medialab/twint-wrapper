@@ -248,7 +248,34 @@ public class TwitterGatewayServiceController {
 		CollectRequest collectRequest = newCollectRequest;
 		collectRequest.setFrom(from);
 		collectRequest.setUntil(until);
-		nb_tweet = tt.callTwint(collectRequest, session);
+		try {
+			CompletableFuture<Map.Entry<Integer, Integer>> pair = tt.callTwint2(collectRequest, null, session);
+			Map.Entry<Integer, Integer> nbTweetTuple = pair.get();
+			nb_tweet = nbTweetTuple.getKey();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		} catch (ExecutionException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public void callTwintOnInterval(CollectRequest newcollectRequest1, CollectRequest newcollectRequest2, String session, Date from1, Date until1, Date from2, Date until2){
+		// Update the session with the good dates;
+		CollectRequest collectRequest1 = newcollectRequest1;
+		collectRequest1.setFrom(from1);
+		collectRequest1.setUntil(until1);
+		CollectRequest collectRequest2 = newcollectRequest2;
+		collectRequest2.setFrom(from2);
+		collectRequest2.setUntil(until2);
+		try {
+			CompletableFuture<Map.Entry<Integer, Integer>> pair = tt.callTwint2(collectRequest1, collectRequest2, session);
+			Map.Entry<Integer, Integer> nbTweetTuple = pair.get();
+			nb_tweet = nbTweetTuple.getKey() + nbTweetTuple.getValue();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		} catch (ExecutionException e) {
+			e.printStackTrace();
+		}
 	}
 
 
