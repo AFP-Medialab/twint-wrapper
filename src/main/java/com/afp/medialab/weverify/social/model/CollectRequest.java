@@ -86,6 +86,10 @@ public class CollectRequest {
 		this.verified = verified;
 	}
 
+	//public String toString()
+	//{
+	//}
+
 	@Override
 	public boolean equals(Object overObject)
 	{

@@ -32,7 +32,7 @@ public class CollectService {
     public String CollectRequestToString(CollectRequest collectRequest) {
         ObjectMapper mapper = new ObjectMapper();
         try {
-            return mapper.writeValueAsString(collectRequest).replaceAll("\\\"", "");
+            return mapper.writeValueAsString(collectRequest);
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         }
