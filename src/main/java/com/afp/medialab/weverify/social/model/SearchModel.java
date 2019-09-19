@@ -23,7 +23,7 @@ public class SearchModel {
         this.or = new TreeSet<>();
         this.and = new TreeSet<>();
         this.not = new TreeSet<>();
-        Logger.info("CONSTRUCTING");
+
         if (or != null)
             for (String str: or)
                 this.or.add(str.toLowerCase());
