@@ -34,19 +34,20 @@ public class CollectHistory implements Serializable{
     private String status;
     @Column(name = "message")
     private String message;
-
-
+    @Column(name = "count")
+    private  Integer count;
 
 
     public CollectHistory(){}
 
-    public CollectHistory(String session, String query, Date processStart, Date processEnd, Status status) {
+    public CollectHistory(String session, String query, Date processStart, Date processEnd, Status status, String message, Integer count) {
         this.session = session;
         this.query = query;
         this.processStart = processStart;
         this.processEnd = processEnd;
         this.status = status.toString();
-        this.message = null;
+        this.message = message;
+        this.count = count;
     }
 
     public static long getSerialVersionUID() {
@@ -104,4 +105,8 @@ public class CollectHistory implements Serializable{
     public String getMessage() { return message; }
 
     public void setMessage(String message) { this.message = message; }
+
+    public Integer getCount() { return count; }
+
+    public void setCount(Integer count) { this.count = count; }
 }

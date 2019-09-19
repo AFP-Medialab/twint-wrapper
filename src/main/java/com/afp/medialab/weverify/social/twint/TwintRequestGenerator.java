@@ -74,7 +74,7 @@ public class TwintRequestGenerator {
 
         if (cr.isVerified())
             call += " --verified";
-        call += " --essid sess-" + id + " -es elasticsearch:9200\"";
+        call += " --essid " + id + " -es elasticsearch:9200\"";
 
         return call;
     }

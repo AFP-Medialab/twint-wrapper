@@ -54,8 +54,8 @@ public class CollectService {
         return null;
     }
 
-    public void SaveCollectInfo(String session, CollectRequest collectRequest, Date processStart, Date processEnd, Status status) {
-        CollectHistory collectHistory = new CollectHistory(session, CollectRequestToString(collectRequest), processStart, processEnd, status);
+    public void SaveCollectInfo(String session, CollectRequest collectRequest, Date processStart, Date processEnd, Status status, String message, Integer count) {
+        CollectHistory collectHistory = new CollectHistory(session, CollectRequestToString(collectRequest), processStart, processEnd, status, message, count);
         collectInterface.save(collectHistory);
     }
 
@@ -158,12 +158,18 @@ public class CollectService {
         return collectHistoryList;
     }
 
-    public void UpdateCollectMessage(String session, String message) {
+    public void updateCollectMessage(String session, String message) {
         collectInterface.updateCollectMessage(session, message);
+    }
+
+    public void updateCollectCount(String session, Integer count) {
+        collectInterface.updateCollectCount(session, count);
     }
 
     public Set<CollectHistory> findCollectHistoryByQueryContains(String str) {
         return collectInterface.findCollectHistoryByQueryContains(str);
     }
+
+
 }
 

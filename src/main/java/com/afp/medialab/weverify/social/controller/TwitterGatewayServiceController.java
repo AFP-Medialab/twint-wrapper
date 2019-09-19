@@ -22,6 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.ObjectError;
@@ -51,14 +52,17 @@ public class TwitterGatewayServiceController {
     private String homeMsg;
 
 
-    private Integer nb_tweet;
-
     @RequestMapping(path = "/", method = RequestMethod.GET)
     public @ResponseBody
     String home() {
         return homeMsg;
     }
 
+	@ExceptionHandler(NotFoundException.class)
+	@ResponseStatus(HttpStatus.NOT_FOUND)
+	public String handleResourceNotFoundException() {
+		return "This session could not be found";
+	}
 
     @ApiOperation(value = "Trigger a Twitter Scraping")
     @RequestMapping(path = "/collect", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
@@ -108,19 +112,18 @@ public class TwitterGatewayServiceController {
 
     StatusResponse getStatusResponse(String session) throws ExecutionException, InterruptedException {
         CollectHistory collectHistory = collectService.getCollectInfo(session);
-        if (collectHistory == null)
-            return new StatusResponse(session, null, null, Status.Error, null, null);
+        if (collectHistory == null) throw new NotFoundException();
 
         CollectRequest collectRequest = collectService.StringToCollectRequest(collectHistory.getQuery());
         if (collectRequest != null) {
 			if (collectHistory.getStatus() != Status.Done)
 				return new StatusResponse(collectHistory.getSession(), collectHistory.getProcessStart(), collectHistory.getProcessEnd(),
-						collectHistory.getStatus(), collectRequest, null);
+						collectHistory.getStatus(), collectRequest, null, null);
 			else
             	return new StatusResponse(collectHistory.getSession(), collectHistory.getProcessStart(), collectHistory.getProcessEnd(),
-                    collectHistory.getStatus(), collectRequest, nb_tweet);
+                    collectHistory.getStatus(), collectRequest, collectHistory.getCount(), null);
         }
-        return new StatusResponse(collectHistory.getSession(), null, null, Status.Error, null, null);
+        return new StatusResponse(collectHistory.getSession(), null, null, Status.Error, null, null, "No query found, or parsing error");
     }
 
     CollectResponse caching(CollectRequest newCollectRequest, String session) {
@@ -145,7 +148,7 @@ public class TwitterGatewayServiceController {
 		}
 
         // Creation of a brand new  CollectHistory
-        collectService.SaveCollectInfo(session, newCollectRequest, null, null, Status.Pending);
+        collectService.SaveCollectInfo(session, newCollectRequest, null, null, Status.Pending, null, null);
 
 		CompletableFuture<Map.Entry<Integer, Integer>> pair = tt.callTwint2(newCollectRequest, null, session);
 
@@ -167,7 +170,7 @@ public class TwitterGatewayServiceController {
 			} catch (ExecutionException e) {
 				e.printStackTrace();
 			}
-			nb_tweet = map.getKey();
+			collectService.updateCollectCount(session, map.getKey());
 		}
 		return new CollectResponse(session, collectedInfo.getStatus(),collectedInfo.getMessage(), collectedInfo.getProcessEnd());
     }
@@ -241,14 +244,13 @@ public class TwitterGatewayServiceController {
 	}
 
 
-
 	public CollectResponse getCollectResponseFromTwintCall(CollectRequest newCollectRequest, CollectRequest oldCollectRequest, String session, String message, CompletableFuture<Map.Entry<Integer, Integer>> pair ){
 		CollectHistory collectedInfo = collectService.getCollectInfo(session);
 		if (collectedInfo.getStatus() != Status.Done)
 			return new CollectResponse(session, collectedInfo.getStatus(),message, collectedInfo.getProcessEnd());
 		try {
 			Map.Entry<Integer, Integer> map = pair.get();
-			nb_tweet = map.getKey();
+			collectService.updateCollectCount(session, map.getKey());
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		} catch (ExecutionException e) {
@@ -304,5 +306,41 @@ public class TwitterGatewayServiceController {
 																			(historyRequest.getSort() == null?false : historyRequest.getSort().equals("desc")),
 																			historyRequest.getProcessStart(), historyRequest.getProcessTo());
 		return new HistoryResponse(collectHistoryList);
+	}
+
+	@RequestMapping("/collect-update/{id}")
+	public @ResponseBody
+	StatusResponse collectUpdate(@PathVariable("id") String id) throws ExecutionException, InterruptedException {
+		return collectUpdateFunction(id);
+	}
+
+	@ApiOperation(value = "Update an old request")
+	@RequestMapping(path = "/collect-update", method = RequestMethod.POST, consumes = "application/json", produces = "application/json")
+	public @ResponseBody
+	StatusResponse collectUpdate(@RequestBody @Valid CollectUpdateRequest collectUpdateRequest) throws ExecutionException, InterruptedException {
+		String id = collectUpdateRequest.getSession();
+		return collectUpdateFunction(id);
+	}
+
+	public StatusResponse collectUpdateFunction(String id) throws ExecutionException, InterruptedException {
+		Logger.info("Collect-Update " + id);
+
+		CollectHistory collectHistory = collectService.getCollectInfo(id);
+		if (collectHistory == null) throw new NotFoundException();
+
+
+		if (collectHistory.getStatus() != Status.Done){
+			StatusResponse res = getStatusResponse(id);
+			res.setMessage("This session is already updating");
+			return res;
+		}
+
+		collectService.updateCollectStatus(id, Status.Pending);
+		CollectRequest oldCollectRequest = collectService.StringToCollectRequest(collectService.getCollectInfo(id).getQuery());
+		if (oldCollectRequest == null) throw new NotFoundException();
+
+		CompletableFuture<Map.Entry<Integer, Integer>> singleFuture = callTwintOnInterval(oldCollectRequest, id, oldCollectRequest.getFrom(), oldCollectRequest.getUntil());
+		collectService.updateCollectProcessStart(id, new Date());
+		return getStatusResponse(id);
 	}
 }

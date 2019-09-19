@@ -102,7 +102,7 @@ public class TwintThread {
             e.printStackTrace();
         }
 
-        collectService.UpdateCollectMessage(name, endMessage);
+        collectService.updateCollectMessage(name, endMessage);
         return result;
     }
 }
