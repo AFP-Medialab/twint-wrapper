@@ -26,12 +26,9 @@ public class TwintRequestGenerator {
 
             call += " --until " + untilStr;
         }
-        call += " -l ";
 
         if (cr.getLang() != null)
-            call += cr.getLang();
-        else
-            call += "fr";
+            call +=  " -l " + cr.getLang();
 
         if (cr.getMedia() != null) {
             if (cr.getMedia().equals("both"))
