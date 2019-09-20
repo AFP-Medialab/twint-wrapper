@@ -17,6 +17,8 @@ public class SearchModel {
     private SortedSet<String> and;
     private SortedSet<String> not;
 
+    public SearchModel(){}
+
     public SearchModel(String search, SortedSet<String> or, SortedSet<String> and, SortedSet<String> not)
     {
         this.search = search.toLowerCase();
