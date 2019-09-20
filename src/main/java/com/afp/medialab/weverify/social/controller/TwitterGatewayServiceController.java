@@ -10,6 +10,7 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
+import com.afp.medialab.weverify.social.twint.TwintRequestGenerator;
 import com.afp.medialab.weverify.social.twint.TwintThread;
 import com.afp.medialab.weverify.social.dao.entity.CollectHistory;
 import com.afp.medialab.weverify.social.dao.service.CollectService;
@@ -134,7 +135,7 @@ public class TwitterGatewayServiceController {
 		}
 
 		//Search for all matching queries regardless of the date
-		Set<CollectHistory> collectHistories = collectService.findCollectHistoryByQueryContains(newCollectRequest.getSearch());
+		Set<CollectHistory> collectHistories = collectService.findCollectHistoryByQueryContains(TwintRequestGenerator.generateSearch(newCollectRequest.getSearch()));
 		for (CollectHistory c : collectHistories) {
 			if (alreadyDonne != null)
 				break;

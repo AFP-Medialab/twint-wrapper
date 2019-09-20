@@ -1,6 +1,9 @@
 package com.afp.medialab.weverify.social.model;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.SortedSet;
+import java.util.logging.Logger;
 
 import com.afp.medialab.weverify.social.constrains.LangConstrain;
 import com.afp.medialab.weverify.social.constrains.MediaConstrain;
@@ -11,7 +14,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class CollectRequest {
 
-    private String search;
+    private SearchModel search;
 
     @LangConstrain
     private String lang;
@@ -41,11 +44,11 @@ public class CollectRequest {
         this.retweetsHandling = collectRequest.retweetsHandling;
     }
 
-    public String getSearch() {
+    public SearchModel getSearch() {
         return search;
     }
 
-    public void setSearch(String search) {
+    public void setSearch(SearchModel search) {
         this.search = search;
     }
 
@@ -101,6 +104,18 @@ public class CollectRequest {
     //{
     //}
 
+    public Boolean equalsSet(SortedSet sortedSet1, SortedSet sortedSet2)
+    {
+        if (sortedSet1 == null && sortedSet2 == null)
+            return true;
+        if (sortedSet1 != null && sortedSet2 != null)
+        {
+            return sortedSet1.equals(sortedSet2);
+        }
+        else
+            return false;
+    }
+
     @Override
     public boolean equals(Object overObject) {
         if (!(overObject instanceof CollectRequest))
@@ -108,9 +123,35 @@ public class CollectRequest {
 
         CollectRequest overRequest = (CollectRequest) overObject;
 
-        Boolean sameSearch;
+        Boolean sameSearch = true;
         if (this.search != null && overRequest.search != null)
-            sameSearch = this.search.equals(overRequest.search);
+        {
+            String search1 = this.search.getSearch();
+            String search2 = overRequest.search.getSearch();
+
+            SortedSet andSet1 = this.search.getAnd();
+            SortedSet andSet2 = overRequest.search.getAnd();
+
+            SortedSet orSet1 = this.search.getOr();
+            SortedSet orSet2 = overRequest.search.getOr();
+
+            SortedSet notSet1 = this.search.getNot();
+            SortedSet notSet2 = overRequest.search.getNot();
+
+            if (search1 != null && search2 != null)
+                sameSearch = search1.equals(search2);
+            else if (!(search1 == null && search2 == null))
+                sameSearch = false;
+
+            if (!equalsSet(andSet1, andSet2))
+                sameSearch = false;
+
+            if (!equalsSet(orSet1, orSet2))
+                sameSearch = false;
+
+            if (!equalsSet(notSet1, notSet2))
+                sameSearch = false;
+        }
         else if (this.search == null && overRequest.search == null)
             sameSearch = true;
         else
@@ -123,7 +164,6 @@ public class CollectRequest {
             sameLang = true;
         else
             sameLang = false;
-
 
         return sameSearch && sameLang;
     }
