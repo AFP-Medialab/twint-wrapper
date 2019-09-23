@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.AbstractMap;
+import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
@@ -33,13 +34,18 @@ public class TwintThread {
     @Async
     public CompletableFuture<Map.Entry<Integer, Integer>> callTwint2(CollectRequest request1, CollectRequest request2, String id) {
 
+        String firstRequest = collectService.getCollectInfo(id).getQuery();
         collectService.updateCollectStatus(id, Status.Running);
         Integer res = callTwint(request1, id);
         Logger.info("RES : " + res.toString());
         Integer res2 = -1;
         if (request2 != null)
             res2 = callTwint(request2, id);
-        collectService.updateCollectStatus(id, Status.Done);
+
+        // If query hasn't change, no extension to the search added
+        if (firstRequest.equals(collectService.getCollectInfo(id).getQuery()))
+            collectService.updateCollectStatus(id, Status.Done);
+
         return CompletableFuture.completedFuture(new AbstractMap.SimpleEntry<>(res, res2));
     }
 
