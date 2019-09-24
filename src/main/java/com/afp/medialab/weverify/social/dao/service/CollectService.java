@@ -72,7 +72,6 @@ public class CollectService {
         if (newStatus == Status.Pending && existingStatus == Status.Done) {
             collectInterface.updateCollectProcessEnd(session, null);
             collectInterface.updateCollectStatus(session, newStatus.toString());
-            Status status = collectInterface.findCollectHistoryBySession(session).getStatus();
             return true;
         }
         if (newStatus == Status.Running && existingStatus == Status.Pending) {

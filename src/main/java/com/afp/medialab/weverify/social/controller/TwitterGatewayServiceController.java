@@ -152,7 +152,6 @@ public class TwitterGatewayServiceController {
 
 		CompletableFuture<Map.Entry<Integer, Integer>> pair = tt.callTwint2(newCollectRequest, null, session);
 
-
 		CollectHistory collectedInfo = collectService.getCollectInfo(session);
 
 
@@ -170,7 +169,6 @@ public class TwitterGatewayServiceController {
 			} catch (ExecutionException e) {
 				e.printStackTrace();
 			}
-			collectService.updateCollectCount(session, map.getKey());
 		}
 		return new CollectResponse(session, collectedInfo.getStatus(),collectedInfo.getMessage(), collectedInfo.getProcessEnd());
     }
@@ -199,7 +197,7 @@ public class TwitterGatewayServiceController {
 				collectService.updateCollectStatus(session, Status.Pending);
 				collectService.updateCollectQuery(session, resultingCollectRequest);
 				CompletableFuture<Map.Entry<Integer, Integer>> DoubleFuture = callTwintOnInterval(newCollectRequest, session, newCollectRequest.getFrom(), oldCollectRequest.getFrom(), oldCollectRequest.getUntil(), newCollectRequest.getUntil());
-				return getCollectResponseFromTwintCall(newCollectRequest, oldCollectRequest, session, message, DoubleFuture);
+				return getCollectResponseFromTwintCall(session, message, DoubleFuture);
 			}
 			// THe new request all the odl request or less
 			else if (newCollectRequest.getFrom().compareTo(oldCollectRequest.getFrom()) >= 0
@@ -218,7 +216,7 @@ public class TwitterGatewayServiceController {
 				resultingCollectRequest.setUntil(oldCollectRequest.getUntil());
 				collectService.updateCollectQuery(session, resultingCollectRequest);
 				CompletableFuture<Map.Entry<Integer, Integer>> singleFuture = callTwintOnInterval(newCollectRequest, session, newCollectRequest.getFrom(), oldCollectRequest.getFrom());
-				return getCollectResponseFromTwintCall(newCollectRequest, oldCollectRequest, session, message, singleFuture);
+				return getCollectResponseFromTwintCall(session, message, singleFuture);
 
 			}
 			// The new request covers after and a part of the old request
@@ -231,7 +229,7 @@ public class TwitterGatewayServiceController {
 				resultingCollectRequest.setFrom(oldCollectRequest.getFrom());
 				collectService.updateCollectQuery(session, resultingCollectRequest);
 				CompletableFuture<Map.Entry<Integer, Integer>> singleFuture = callTwintOnInterval(newCollectRequest, session, oldCollectRequest.getUntil(), newCollectRequest.getUntil());
-				return getCollectResponseFromTwintCall(newCollectRequest, oldCollectRequest, session, message, singleFuture);
+				return getCollectResponseFromTwintCall(session, message, singleFuture);
 			}
 			// else {
 			// The new request covers no days in common with the old one
@@ -244,13 +242,12 @@ public class TwitterGatewayServiceController {
 	}
 
 
-	public CollectResponse getCollectResponseFromTwintCall(CollectRequest newCollectRequest, CollectRequest oldCollectRequest, String session, String message, CompletableFuture<Map.Entry<Integer, Integer>> pair ){
+	public CollectResponse getCollectResponseFromTwintCall(String session, String message, CompletableFuture<Map.Entry<Integer, Integer>> pair ){
 		CollectHistory collectedInfo = collectService.getCollectInfo(session);
 		if (collectedInfo.getStatus() != Status.Done)
 			return new CollectResponse(session, collectedInfo.getStatus(),message, collectedInfo.getProcessEnd());
 		try {
 			Map.Entry<Integer, Integer> map = pair.get();
-			collectService.updateCollectCount(session, map.getKey());
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		} catch (ExecutionException e) {

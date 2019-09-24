@@ -8,6 +8,7 @@ import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
+import com.afp.medialab.weverify.social.dao.entity.CollectHistory;
 import io.swagger.models.auth.In;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,8 +34,10 @@ public class TwintThread {
 
     @Async
     public CompletableFuture<Map.Entry<Integer, Integer>> callTwint2(CollectRequest request1, CollectRequest request2, String id) {
+        CollectHistory collectHistory = collectService.getCollectInfo(id);
+        String firstRequest = collectHistory.getQuery();
+        Integer old_count = collectHistory.getCount();
 
-        String firstRequest = collectService.getCollectInfo(id).getQuery();
         collectService.updateCollectStatus(id, Status.Running);
         Integer res = callTwint(request1, id);
         Logger.info("RES : " + res.toString());
@@ -43,8 +46,9 @@ public class TwintThread {
             res2 = callTwint(request2, id);
 
         // If query hasn't change, no extension to the search added
-        if (firstRequest.equals(collectService.getCollectInfo(id).getQuery()))
+        if (firstRequest.equals(collectService.getCollectInfo(id).getQuery())) {
             collectService.updateCollectStatus(id, Status.Done);
+        }
 
         return CompletableFuture.completedFuture(new AbstractMap.SimpleEntry<>(res, res2));
     }
@@ -107,6 +111,12 @@ public class TwintThread {
             Logger.error(e.getMessage());
             e.printStackTrace();
         }
+
+        Integer old_count = collectService.getCollectInfo(name).getCount();
+        if (old_count == null || old_count == -1)
+            collectService.updateCollectCount(name, result);
+        else
+            collectService.updateCollectCount(name, result + old_count);
 
         collectService.updateCollectMessage(name, endMessage);
         return result;
