@@ -70,4 +70,67 @@ public class SearchModel {
     public void setNot(SortedSet<String> not) {
         this.not = not;
     }
+
+
+    /**
+     * @func    Verifies if the two sets are equal
+     * @param   sortedSet1
+     * @param   sortedSet2
+     * @return
+     */
+    public Boolean equalsSet(SortedSet sortedSet1, SortedSet sortedSet2)
+    {
+        if (sortedSet1 == null && sortedSet2 == null)
+            return true;
+        if (sortedSet1 != null && sortedSet2 != null)
+        {
+            return sortedSet1.equals(sortedSet2);
+        }
+        else
+            return false;
+    }
+
+    /**
+     * @func    Overrides the equals function of the SearchModel object.
+     *          Checks that the attributes : search , or, and and not are the same
+     * @param   overObject
+     * @return
+     */
+    @Override
+    public boolean equals(Object overObject) {
+        if (!(overObject instanceof SearchModel))
+            return false;
+
+        SearchModel overSearchModel = (SearchModel) overObject;
+
+        Boolean sameSearch = true;
+
+        String search1 = this.search;
+        String search2 = overSearchModel.search;
+
+        SortedSet andSet1 = this.and;
+        SortedSet andSet2 = overSearchModel.and;
+
+        SortedSet orSet1 = this.or;
+        SortedSet orSet2 = overSearchModel.or;
+
+        SortedSet notSet1 = this.not;
+        SortedSet notSet2 = overSearchModel.not;
+
+        if (search1 != null && search2 != null)
+            sameSearch = search1.equals(search2);
+        else if (!(search1 == null && search2 == null))
+            sameSearch = false;
+
+        if (!equalsSet(andSet1, andSet2))
+            sameSearch = false;
+
+        if (!equalsSet(orSet1, orSet2))
+            sameSearch = false;
+
+        if (!equalsSet(notSet1, notSet2))
+            sameSearch = false;
+
+        return sameSearch;
+    }
 }

@@ -100,58 +100,21 @@ public class CollectRequest {
         this.verified = verified;
     }
 
-    //public String toString()
-    //{
-    //}
-
-    public Boolean equalsSet(SortedSet sortedSet1, SortedSet sortedSet2)
-    {
-        if (sortedSet1 == null && sortedSet2 == null)
-            return true;
-        if (sortedSet1 != null && sortedSet2 != null)
-        {
-            return sortedSet1.equals(sortedSet2);
-        }
-        else
-            return false;
-    }
-
+    /**
+     * @func    Overrides the equals function of the CollectRequest object.
+     *          Checks that the attributes : search and lang are the same
+     * @param   overObject
+     * @return
+     */
     @Override
     public boolean equals(Object overObject) {
         if (!(overObject instanceof CollectRequest))
             return false;
-
         CollectRequest overRequest = (CollectRequest) overObject;
 
-        Boolean sameSearch = true;
+        Boolean sameSearch;
         if (this.search != null && overRequest.search != null)
-        {
-            String search1 = this.search.getSearch();
-            String search2 = overRequest.search.getSearch();
-
-            SortedSet andSet1 = this.search.getAnd();
-            SortedSet andSet2 = overRequest.search.getAnd();
-
-            SortedSet orSet1 = this.search.getOr();
-            SortedSet orSet2 = overRequest.search.getOr();
-
-            SortedSet notSet1 = this.search.getNot();
-            SortedSet notSet2 = overRequest.search.getNot();
-
-            if (search1 != null && search2 != null)
-                sameSearch = search1.equals(search2);
-            else if (!(search1 == null && search2 == null))
-                sameSearch = false;
-
-            if (!equalsSet(andSet1, andSet2))
-                sameSearch = false;
-
-            if (!equalsSet(orSet1, orSet2))
-                sameSearch = false;
-
-            if (!equalsSet(notSet1, notSet2))
-                sameSearch = false;
-        }
+            sameSearch = this.search.equals(overRequest.search);
         else if (this.search == null && overRequest.search == null)
             sameSearch = true;
         else
