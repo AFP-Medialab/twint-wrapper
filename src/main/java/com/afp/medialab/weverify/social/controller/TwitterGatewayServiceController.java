@@ -136,31 +136,31 @@ public class TwitterGatewayServiceController {
     }
 
 	/**
-	 * @func	Verifies if the request has already been donne.
+	 * @func	Verifies if the request has already been done.
 	 * 			If not creates a new session and gives a CollectResponse accordingly.
 	 * @param 	newCollectRequest collect request asked.
 	 * @param 	session	of the request.
 	 * @return
 	 */
     CollectResponse caching(CollectRequest newCollectRequest, String session) {
-        // Check if this request has already been donne
-        CollectResponse alreadyDonne = collectService.alreadyExists(newCollectRequest);
-        if (alreadyDonne != null) {
-            Logger.info("This request has already been donne sessionId: " + alreadyDonne.getSession());
-            return alreadyDonne;
+        // Check if this request has already been done
+        CollectResponse alreadyDone = collectService.alreadyExists(newCollectRequest);
+        if (alreadyDone != null) {
+            Logger.info("This request has already been done sessionId: " + alreadyDone.getSession());
+            return alreadyDone;
         }
 
         //Search for all matching queries regardless of the date
         Set<CollectHistory> collectHistories = collectService.findCollectHistoryByQueryContains(TwintRequestGenerator.generateSearch(newCollectRequest.getSearch()));
         for (CollectHistory c : collectHistories) {
-            if (alreadyDonne != null)
+            if (alreadyDone != null)
                 break;
-            alreadyDonne = CompletingOldRequest(c.getSession(), newCollectRequest, collectService.StringToCollectRequest(c.getQuery()));
+            alreadyDone = CompletingOldRequest(c.getSession(), newCollectRequest, collectService.StringToCollectRequest(c.getQuery()));
         }
 
-        if (alreadyDonne != null) {
-            Logger.info("This request has already been donne sessionId: " + alreadyDonne.getSession());
-            return alreadyDonne;
+        if (alreadyDone != null) {
+            Logger.info("This request has already been done sessionId: " + alreadyDone.getSession());
+            return alreadyDone;
         }
 
         // Creation of a brand new  CollectHistory
@@ -203,7 +203,7 @@ public class TwitterGatewayServiceController {
 	public CollectResponse CompletingOldRequest(String session, CollectRequest newCollectRequest, CollectRequest oldCollectRequest) {
 
         CollectRequest resultingCollectRequest = newCollectRequest;
-        String message = "Completing the research. This research has already been donne from " + oldCollectRequest.getFrom() + " to " + oldCollectRequest.getUntil();
+        String message = "Completing the research. This research has already been done from " + oldCollectRequest.getFrom() + " to " + oldCollectRequest.getUntil();
 
         if (oldCollectRequest.equals(newCollectRequest)) {
             // The new request covers all the old request and more
@@ -221,7 +221,7 @@ public class TwitterGatewayServiceController {
             else if (newCollectRequest.getFrom().compareTo(oldCollectRequest.getFrom()) >= 0
                     && newCollectRequest.getUntil().compareTo(oldCollectRequest.getUntil()) <= 0) {
                 // Return the existing research
-                String messageDone = "This research has already been donne.";
+                String messageDone = "This research has already been done.";
                 return new CollectResponse(session, collectService.getCollectInfo(session).getStatus(), messageDone, collectService.getCollectInfo(session).getProcessEnd());
             }
             // The new request covers before and a part of the old request
