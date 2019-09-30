@@ -4,12 +4,9 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.AbstractMap;
-import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
-import com.afp.medialab.weverify.social.dao.entity.CollectHistory;
-import io.swagger.models.auth.In;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +14,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import com.afp.medialab.weverify.social.dao.entity.CollectHistory;
 import com.afp.medialab.weverify.social.dao.service.CollectService;
 import com.afp.medialab.weverify.social.model.CollectRequest;
 import com.afp.medialab.weverify.social.model.Status;
@@ -36,7 +34,7 @@ public class TwintThread {
     public CompletableFuture<Map.Entry<Integer, Integer>> callTwint2(CollectRequest request1, CollectRequest request2, String id) {
         CollectHistory collectHistory = collectService.getCollectInfo(id);
         String firstRequest = collectHistory.getQuery();
-        Integer old_count = collectHistory.getCount();
+        //Integer old_count = collectHistory.getCount();
 
         collectService.updateCollectStatus(id, Status.Running);
         Integer res = callTwint(request1, id);
@@ -64,7 +62,7 @@ public class TwintThread {
             String r = TwintRequestGenerator.generateRequest(request, name);
             ProcessBuilder pb = new ProcessBuilder("/bin/bash", "-c", twintCall + r);
 
-            Status endStatus;
+            //Status endStatus;
             pb.environment().put("PATH", "/usr/bin:/usr/local/bin:/bin");
             Logger.info(twintCall + r);
             Process p = null;

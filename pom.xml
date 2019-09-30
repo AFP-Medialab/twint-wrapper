@@ -55,7 +55,6 @@
 		<dependency>
 			<groupId>mysql</groupId>
 			<artifactId>mysql-connector-java</artifactId>
-			<version>8.0.14</version>
 		</dependency>
 		<dependency>
 			<groupId>org.hibernate</groupId>
@@ -69,6 +68,17 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
+			</plugin>
+			<plugin>
+				<groupId>com.spotify</groupId>
+				<artifactId>docker-maven-plugin</artifactId>
+				<version>1.0.0</version>
+				<configuration>
+					<imageName>twint:2.1.2</imageName>
+					<dockerDirectory>src/main/docker</dockerDirectory>
+					<noCache>true</noCache>
+					
+				</configuration>
 			</plugin>
 		</plugins>
 	</build>

@@ -1,30 +1,28 @@
 package com.afp.medialab.weverify.social.dao.service;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 import java.util.Set;
 
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.afp.medialab.weverify.social.twint.TwintThreadExecutor;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
 import com.afp.medialab.weverify.social.dao.entity.CollectHistory;
 import com.afp.medialab.weverify.social.dao.repository.CollectInterface;
 import com.afp.medialab.weverify.social.model.CollectRequest;
 import com.afp.medialab.weverify.social.model.CollectResponse;
 import com.afp.medialab.weverify.social.model.Status;
+import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
-import java.util.Collections;
-import java.util.List;
 
 @Service
 public class CollectService {
 
-    private static org.slf4j.Logger Logger = LoggerFactory.getLogger(TwintThreadExecutor.class);
+    //private static org.slf4j.Logger Logger = LoggerFactory.getLogger(CollectService.class);
     @Autowired
     CollectInterface collectInterface;
 

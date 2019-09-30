@@ -1,7 +1,5 @@
 package com.afp.medialab.weverify.social.dao.repository;
 
-import com.afp.medialab.weverify.social.dao.entity.CollectHistory;
-
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
@@ -13,7 +11,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.util.List;
+import com.afp.medialab.weverify.social.dao.entity.CollectHistory;
 
 public interface CollectInterface extends JpaRepository<CollectHistory, Integer> {
 

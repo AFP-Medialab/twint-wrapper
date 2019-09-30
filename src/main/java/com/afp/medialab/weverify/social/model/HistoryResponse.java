@@ -1,11 +1,11 @@
 package com.afp.medialab.weverify.social.model;
 
-import com.afp.medialab.weverify.social.dao.entity.CollectHistory;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-
 import java.util.List;
 
-@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
+import com.afp.medialab.weverify.social.dao.entity.CollectHistory;
+import com.fasterxml.jackson.annotation.JsonInclude;
+
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class HistoryResponse {
 
     private List<CollectHistory> requests;

@@ -1,9 +1,6 @@
 package com.afp.medialab.weverify.social.model;
 
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.SortedSet;
-import java.util.logging.Logger;
 
 import com.afp.medialab.weverify.social.constrains.LangConstrain;
 import com.afp.medialab.weverify.social.constrains.MediaConstrain;

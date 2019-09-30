@@ -1,17 +1,14 @@
 package com.afp.medialab.weverify.social.model;
 
-import com.afp.medialab.weverify.social.twint.TwintThread;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.SortedSet;
 import java.util.TreeSet;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class SearchModel {
 
-    private static org.slf4j.Logger Logger = LoggerFactory.getLogger(TwintThread.class);
+    //private static org.slf4j.Logger Logger = LoggerFactory.getLogger(SearchModel.class);
     private String search;
     private SortedSet<String> or;
     private SortedSet<String> and;
@@ -78,7 +75,7 @@ public class SearchModel {
      * @param   sortedSet2
      * @return
      */
-    public Boolean equalsSet(SortedSet sortedSet1, SortedSet sortedSet2)
+    public Boolean equalsSet(SortedSet<String> sortedSet1, SortedSet<String> sortedSet2)
     {
         if (sortedSet1 == null && sortedSet2 == null)
             return true;
@@ -108,14 +105,14 @@ public class SearchModel {
         String search1 = this.search;
         String search2 = overSearchModel.search;
 
-        SortedSet andSet1 = this.and;
-        SortedSet andSet2 = overSearchModel.and;
+        SortedSet<String> andSet1 = this.and;
+        SortedSet<String> andSet2 = overSearchModel.and;
 
-        SortedSet orSet1 = this.or;
-        SortedSet orSet2 = overSearchModel.or;
+        SortedSet<String> orSet1 = this.or;
+        SortedSet<String> orSet2 = overSearchModel.or;
 
-        SortedSet notSet1 = this.not;
-        SortedSet notSet2 = overSearchModel.not;
+        SortedSet<String> notSet1 = this.not;
+        SortedSet<String> notSet2 = overSearchModel.not;
 
         if (search1 != null && search2 != null)
             sameSearch = search1.equals(search2);

@@ -36,8 +36,23 @@ services:
       - 83:80
     networks:
       - esnet
+      
+  mysql:
+    image: mysql:5.7
+    environment:
+        MYSQL_ROOT_PASSWORD: devpass123
+        MYSQL_USER: dev1
+        MYSQL_PASSWORD: dev1
+        MYSQL_DATABASE: twitter-gateway
+    container_name: mysql
+    volumes:
+      - mysqldata1:/usr/share/mysql/data
+    ports:
+      - 3308:3306
+      
 volumes:
   esdata1: {}  
+  mysqldata1: {}
 networks:
   esnet:
   

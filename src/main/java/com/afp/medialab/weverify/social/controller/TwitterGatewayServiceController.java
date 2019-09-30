@@ -1,23 +1,15 @@
 package com.afp.medialab.weverify.social.controller;
 
-import java.io.IOException;
-
 import java.util.Date;
-import java.util.Set;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
-import com.afp.medialab.weverify.social.twint.TwintRequestGenerator;
-import com.afp.medialab.weverify.social.twint.TwintThread;
-import com.afp.medialab.weverify.social.dao.entity.CollectHistory;
-import com.afp.medialab.weverify.social.dao.service.CollectService;
-import com.afp.medialab.weverify.social.model.*;
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import javax.validation.Valid;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,15 +18,32 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.ObjectError;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
 
+import com.afp.medialab.weverify.social.dao.entity.CollectHistory;
+import com.afp.medialab.weverify.social.dao.service.CollectService;
 import com.afp.medialab.weverify.social.model.CollectRequest;
 import com.afp.medialab.weverify.social.model.CollectResponse;
+import com.afp.medialab.weverify.social.model.CollectUpdateRequest;
+import com.afp.medialab.weverify.social.model.HistoryRequest;
+import com.afp.medialab.weverify.social.model.HistoryResponse;
+import com.afp.medialab.weverify.social.model.NotFoundException;
 import com.afp.medialab.weverify.social.model.Status;
+import com.afp.medialab.weverify.social.model.StatusRequest;
+import com.afp.medialab.weverify.social.model.StatusResponse;
+import com.afp.medialab.weverify.social.twint.TwintRequestGenerator;
+import com.afp.medialab.weverify.social.twint.TwintThread;
+
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-
-import javax.validation.Valid;
 
 @RestController
 @Api(value = "Twitter scraping API")
@@ -175,14 +184,14 @@ public class TwitterGatewayServiceController {
             return new CollectResponse(session, collectedInfo.getStatus(), null, collectedInfo.getProcessEnd());
         } else {
             Logger.info("PAIR : " + pair);
-            Map.Entry<Integer, Integer> map = null;
+           /* Map.Entry<Integer, Integer> map = null;
             try {
                 map = (pair.get());
             } catch (InterruptedException e) {
                 e.printStackTrace();
             } catch (ExecutionException e) {
                 e.printStackTrace();
-            }
+            }*/
         }
         return new CollectResponse(session, collectedInfo.getStatus(), collectedInfo.getMessage(), collectedInfo.getProcessEnd());
     }
@@ -271,13 +280,13 @@ public class TwitterGatewayServiceController {
         CollectHistory collectedInfo = collectService.getCollectInfo(session);
         if (collectedInfo.getStatus() != Status.Done)
             return new CollectResponse(session, collectedInfo.getStatus(), message, collectedInfo.getProcessEnd());
-        try {
+        /*try {
             Map.Entry<Integer, Integer> map = pair.get();
         } catch (InterruptedException e) {
             e.printStackTrace();
         } catch (ExecutionException e) {
             e.printStackTrace();
-        }
+        }*/
         return new CollectResponse(session, collectService.getCollectInfo(session).getStatus(), message, collectService.getCollectInfo(session).getProcessEnd());
     }
 
@@ -388,7 +397,8 @@ public class TwitterGatewayServiceController {
         CollectRequest oldCollectRequest = collectService.StringToCollectRequest(collectService.getCollectInfo(session).getQuery());
         if (oldCollectRequest == null) throw new NotFoundException();
 
-        CompletableFuture<Map.Entry<Integer, Integer>> singleFuture = callTwintOnInterval(oldCollectRequest, session, oldCollectRequest.getFrom(), oldCollectRequest.getUntil());
+        //CompletableFuture<Map.Entry<Integer, Integer>> singleFuture = callTwintOnInterval(oldCollectRequest, session, oldCollectRequest.getFrom(), oldCollectRequest.getUntil());
+        callTwintOnInterval(oldCollectRequest, session, oldCollectRequest.getFrom(), oldCollectRequest.getUntil());
         collectService.updateCollectProcessStart(session, new Date());
         return getStatusResponse(session);
     }
