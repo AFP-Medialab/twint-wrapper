@@ -89,7 +89,7 @@
 			<id>prod</id>
 			<!-- build prod docker images with twint & java -->
 			<properties>
-				<docker.path>src/main/docker/build</docker.path>
+				<docker.path>src/main/docker/delivery</docker.path>
 				<docker.image.name>twint-gateway</docker.image.name>
 				<docker.image.tag>1.0</docker.image.tag>
 			</properties>
