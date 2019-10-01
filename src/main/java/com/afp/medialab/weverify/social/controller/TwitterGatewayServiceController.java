@@ -11,6 +11,7 @@ import java.util.*;
 import com.afp.medialab.weverify.social.twint.TwintRequestGenerator;
 import com.afp.medialab.weverify.social.dao.entity.CollectHistory;
 import com.afp.medialab.weverify.social.dao.service.CollectService;
+import com.afp.medialab.weverify.social.twint.TwintThread;
 import com.afp.medialab.weverify.social.twint.TwintThreadGroup;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,6 +50,9 @@ public class TwitterGatewayServiceController {
 
     @Autowired
     private CollectService collectService;
+
+    @Autowired
+    private TwintThread tt;
 
     @Autowired
     private TwintThreadGroup ttg;

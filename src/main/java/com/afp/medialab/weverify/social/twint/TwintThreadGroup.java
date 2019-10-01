@@ -26,8 +26,7 @@ public class TwintThreadGroup {
     @Value("${application.twintcall.twint_thread_interval_minutes}")
     private Long minutes_duration;
 
-
-    @Value("${src.profile.twint}")
+    @Value("${command.twint}")
     private String twintCall;
 
     @Autowired
