@@ -26,9 +26,6 @@ import com.afp.medialab.weverify.social.model.Status;
 @Service
 public class TwintThread {
 
-    @Value("${application.twintcall.twint_thread_interval_minutes}")
-    private Long minutes_duration;
-
     private static Logger Logger = LoggerFactory.getLogger(TwintThread.class);
 
     @Value("${src.profile.twint}")
@@ -36,23 +33,6 @@ public class TwintThread {
 
     @Autowired
     CollectService collectService;
-
-
-    public ArrayList<CompletableFuture<Integer>> callTwint2(CollectRequest request1, CollectRequest request2, String id) {
-        CollectHistory collectHistory = collectService.getCollectInfo(id);
-        String firstRequest = collectHistory.getQuery();
-        Duration thread_interval = Duration.ZERO.plusMinutes(minutes_duration);
-        collectService.updateCollectStatus(id, Status.Running);
-        ArrayList<CompletableFuture<Integer>> res = new ArrayList<>(callTwintMultiThreaded(request1, id, thread_interval));
-        Logger.info("RES: first list has " + res.size() + "threads");
-
-        if (request2 != null)
-            res.addAll(callTwintMultiThreaded(request2, id, thread_interval));
-
-        Logger.info("RES: Final list has " + res.size() + "threads");
-
-        return res;
-    }
 
     private Object lock = new Object();
 
@@ -65,8 +45,6 @@ public class TwintThread {
         synchronized (lock) {
             CollectHistory collectHistory = collectService.getCollectInfo(name);
             collectService.updateCollectTotal_threads(name, collectHistory.getTotal_threads() + 1);
-            Logger.info("Thread finished " + collectHistory.getFinished_threads());
-            Logger.info("Thread total " + collectHistory.getTotal_threads());
         }
 
         Logger.info("RES : " + result.toString());
@@ -147,54 +125,5 @@ public class TwintThread {
                 collectService.updateCollectStatus(name, Status.Done);
         }
         return CompletableFuture.completedFuture(result);
-    }
-
-    public Date addDuration(Date date, Duration duration){
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTime(date);
-        calendar.add(calendar.MINUTE, toIntExact(duration.toMinutes()));
-        return calendar.getTime();
-    }
-
-
-    public ArrayList<CollectRequest> createListOfCollecRequest(CollectRequest request, Duration duration)
-    {
-        ArrayList<CollectRequest> collectRequestList = new ArrayList<>();
-
-        Date new_from_date = request.getFrom();
-        Date final_until = request.getUntil();
-        Date new_until_date = addDuration(new_from_date, duration);
-
-        /* while from < until */
-        while (new_until_date.compareTo(final_until) < 0){
-            CollectRequest new_collectrequest = new CollectRequest(request);
-            new_collectrequest.setFrom(new_from_date);
-            new_collectrequest.setUntil(new_until_date);
-            collectRequestList.add(new_collectrequest);
-            new_from_date = new_until_date;
-            new_until_date = addDuration(new_from_date, duration);
-        }
-        /* if stopped early add the last period missing*/
-        if (new_from_date.compareTo(final_until) < 0){
-            CollectRequest new_collectrequest = new CollectRequest(request);
-            new_collectrequest.setFrom(new_from_date);
-            new_collectrequest.setUntil(final_until);
-            collectRequestList.add(new_collectrequest);
-        }
-        return collectRequestList;
-    }
-
-
-    public ArrayList<CompletableFuture<Integer>> callTwintMultiThreaded(CollectRequest request, String name, Duration duration) {
-        ArrayList<CollectRequest> collectRequestList = new ArrayList(createListOfCollecRequest(request, duration));
-
-
-        ArrayList<CompletableFuture<Integer>> result = new ArrayList<>();
-        for (CollectRequest collectRequest : collectRequestList){
-            CompletableFuture<Integer> future = callTwint(collectRequest, name);
-            result.add(future);
-            Logger.info("Finished adding future");
-        }
-        return result;
     }
 }

@@ -11,20 +11,21 @@ public class StatusResponse {
     private Date started, ended;
     private Status status;
     private CollectRequest query;
-    private String nbTweets;
+    private Integer nbTweets;
     private String message;
+    private Integer finished_threads;
+    private Integer total_threads;
 
-    public StatusResponse(String session, Date started, Date ended, Status status, CollectRequest query, Integer nbTweet, String message) {
+    public StatusResponse(String session, Date started, Date ended, Status status, CollectRequest query, Integer nbTweet, String message, Integer finished_threads, Integer total_threads) {
         this.session = session;
         this.started = started;
         this.ended = ended;
         this.status = status;
         this.query = query;
         this.message = message;
-        if (nbTweet != null)
-            this.nbTweets = Integer.toString(nbTweet);
-        else
-            this.nbTweets = null;
+        this.nbTweets = nbTweet;
+        this.finished_threads = finished_threads;
+        this.total_threads = total_threads;
     }
 
     public String getMessage() {
@@ -65,11 +66,27 @@ public class StatusResponse {
 
     public void SetQuery(CollectRequest query) { this.query = query; }
 
-    public String getNbTweets() {
+    public Integer getNbTweets() {
         return nbTweets;
     }
 
-    public void setNbTweets(String nbTweets) {
+    public void setNbTweets(Integer nbTweets) {
         this.nbTweets = nbTweets;
+    }
+
+    public Integer getFinished_threads() {
+        return finished_threads;
+    }
+
+    public void setFinished_threads(Integer finished_threads) {
+        this.finished_threads = finished_threads;
+    }
+
+    public Integer getTotal_threads() {
+        return total_threads;
+    }
+
+    public void setTotal_threads(Integer total_threads) {
+        this.total_threads = total_threads;
     }
 }

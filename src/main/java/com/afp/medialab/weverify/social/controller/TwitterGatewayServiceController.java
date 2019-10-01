@@ -11,6 +11,7 @@ import com.afp.medialab.weverify.social.twint.TwintThread;
 import com.afp.medialab.weverify.social.dao.entity.CollectHistory;
 import com.afp.medialab.weverify.social.dao.service.CollectService;
 import com.afp.medialab.weverify.social.model.*;
+import com.afp.medialab.weverify.social.twint.TwintThreadGroup;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -42,7 +43,7 @@ public class TwitterGatewayServiceController {
     private CollectService collectService;
 
     @Autowired
-    private TwintThread tt;
+    private TwintThreadGroup ttg;
 
     @Value("${application.home.msg}")
     private String homeMsg;
@@ -123,12 +124,12 @@ public class TwitterGatewayServiceController {
         if (collectRequest != null) {
             if (collectHistory.getStatus() != Status.Done)
                 return new StatusResponse(collectHistory.getSession(), collectHistory.getProcessStart(), collectHistory.getProcessEnd(),
-                        collectHistory.getStatus(), collectRequest, null, null);
+                        collectHistory.getStatus(), collectRequest, null, null, collectHistory.getFinished_threads(),collectHistory.getTotal_threads());
             else
                 return new StatusResponse(collectHistory.getSession(), collectHistory.getProcessStart(), collectHistory.getProcessEnd(),
-                        collectHistory.getStatus(), collectRequest, collectHistory.getCount(), null);
+                        collectHistory.getStatus(), collectRequest, collectHistory.getCount(), null, null, null);
         }
-        return new StatusResponse(collectHistory.getSession(), null, null, Status.Error, null, null, "No query found, or parsing error");
+        return new StatusResponse(collectHistory.getSession(), null, null, Status.Error, null, null, "No query found, or parsing error", null, null);
     }
 
 
@@ -176,7 +177,7 @@ public class TwitterGatewayServiceController {
         // Creation of a brand new  CollectHistory
         collectService.SaveCollectInfo(session, newCollectRequest, null, null, Status.Pending, null, null, 0, 0);
 
-        ArrayList<CompletableFuture<Integer>> list = new ArrayList(tt.callTwint2(newCollectRequest, null, session));
+        ArrayList<CompletableFuture<Integer>> list = new ArrayList(ttg.callTwint2(newCollectRequest, null, session));
 
         CollectHistory collectedInfo = collectService.getCollectInfo(session);
 
@@ -313,7 +314,7 @@ public class TwitterGatewayServiceController {
             collectRequest2.setFrom(from2);
             collectRequest2.setUntil(until2);
         }
-        return new ArrayList(tt.callTwint2(collectRequest1, collectRequest2, session));
+        return new ArrayList(ttg.callTwint2(collectRequest1, collectRequest2, session));
     }
 
 
