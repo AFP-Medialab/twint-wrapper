@@ -1,80 +1,92 @@
 package com.afp.medialab.weverify.social.twint;
-import com.afp.medialab.weverify.social.model.CollectRequest;
-import com.afp.medialab.weverify.social.model.SearchModel;
 
 import java.text.SimpleDateFormat;
 
+import com.afp.medialab.weverify.social.model.CollectRequest;
+import com.afp.medialab.weverify.social.model.SearchModel;
+
+/**
+ * Generate twint command with elasticsearch
+ * 
+ * @author Medialab
+ *
+ */
 public class TwintRequestGenerator {
-    public static String generateSearch(SearchModel search)
-    {
-        StringBuilder sb = new StringBuilder(search.getSearch());
 
-        if (search.getAnd() != null)
-            for (String s : search.getAnd()) {
-                sb.append(" AND " + s);
-            }
+	private static final TwintRequestGenerator INSTANCE = new TwintRequestGenerator();
 
-        if (search.getOr() != null)
-            for (String s : search.getOr()) {
-                sb.append(" OR " + s);
-            }
-        if (search.getNot() != null)
-            for (String s : search.getNot()) {
-                sb.append(" -" + s);
-            }
-        return sb.toString();
-    }
+	public static TwintRequestGenerator getInstance() {
+		return INSTANCE;
+	}
 
-    public static String generateRequest(CollectRequest cr, String id)
-    {
-        SimpleDateFormat format =  new SimpleDateFormat("yyyy-MM-dd");
+	public String generateSearch(SearchModel search) {
+		StringBuilder sb = new StringBuilder(search.getSearch());
 
-        String call = " \"twint -ho --count ";
+		if (search.getAnd() != null)
+			for (String s : search.getAnd()) {
+				sb.append(" AND " + s);
+			}
 
-        if (cr.getSearch()!= null)
-            call += "-s '" + generateSearch(cr.getSearch())  + "'";
+		if (search.getOr() != null)
+			for (String s : search.getOr()) {
+				sb.append(" OR " + s);
+			}
+		if (search.getNot() != null)
+			for (String s : search.getNot()) {
+				sb.append(" -" + s);
+			}
+		return sb.toString();
+	}
 
-        if (cr.getUser() != null)
-            call += " -u " + cr.getUser();
+	public  String generateRequest(CollectRequest cr, String id, boolean isDocker, String esURL) {
+		SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
 
-        if (cr.getFrom() != null) {
-            String fromStr = format.format(cr.getFrom());
-            call += " --since " + fromStr;
-        }
+		String call = "twint -ho --count ";
 
-        if (cr.getUntil() != null) {
-            String untilStr = format.format(cr.getUntil());
+		if (cr.getSearch() != null)
+			call += "-s '" + generateSearch(cr.getSearch()) + "'";
 
-            call += " --until " + untilStr;
-        }
+		if (cr.getUser() != null)
+			call += " -u " + cr.getUser();
 
-        if (cr.getLang() != null)
-            call +=  " -l " + cr.getLang();
+		if (cr.getFrom() != null) {
+			String fromStr = format.format(cr.getFrom());
+			call += " --since " + fromStr;
+		}
 
-        if (cr.getMedia() != null) {
-            if (cr.getMedia().equals("both"))
-                call += " --media";
-            else if (cr.getMedia().equals("image"))
-                call += " --images";
-            else if (cr.getMedia().equals("video"))
-                call += " --videos";
-        }
+		if (cr.getUntil() != null) {
+			String untilStr = format.format(cr.getUntil());
 
-        if (cr.getRetweetsHandling() != null) {
-            if (cr.getRetweetsHandling().equals("exclude"))
-                call += " -fr";
-            if (cr.getRetweetsHandling().equals("only"))
-                call += " -nr";
-            if (cr.getRetweetsHandling().equals("allowed"))
-                call += " --retweets";
-        }
+			call += " --until " + untilStr;
+		}
 
-        if (cr.isVerified())
-            call += " --verified";
-        call += " --essid " + id + " -es elasticsearch:9200\"";
+		if (cr.getLang() != null)
+			call += " -l " + cr.getLang();
 
-        return call;
-    }
+		if (cr.getMedia() != null) {
+			if (cr.getMedia().equals("both"))
+				call += " --media";
+			else if (cr.getMedia().equals("image"))
+				call += " --images";
+			else if (cr.getMedia().equals("video"))
+				call += " --videos";
+		}
 
+		if (cr.getRetweetsHandling() != null) {
+			if (cr.getRetweetsHandling().equals("exclude"))
+				call += " -fr";
+			if (cr.getRetweetsHandling().equals("only"))
+				call += " -nr";
+			if (cr.getRetweetsHandling().equals("allowed"))
+				call += " --retweets";
+		}
+
+		if (cr.isVerified())
+			call += " --verified";
+		call += " --essid " + id + " -es " + esURL;
+		if (isDocker)
+			call = " \"" + call + "\"";
+		return call;
+	}
 
 }

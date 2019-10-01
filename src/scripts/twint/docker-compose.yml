@@ -18,15 +18,15 @@ services:
       - 9200:9200
     networks:
       - esnet
-  kibana:
-    image: docker.elastic.co/kibana/kibana:7.3.1
-    container_name: kibana
-    volumes:
-      - ./kibana.yml:/usr/share/kibana/config/kibana.yml  
-    ports:
-      - 5601:5601
-    networks:
-      - esnet
+  #kibana:
+   # image: docker.elastic.co/kibana/kibana:7.3.1
+    #container_name: kibana
+    #volumes:
+     # - ./kibana.yml:/usr/share/kibana/config/kibana.yml  
+    #ports:
+    #  - 5601:5601
+    #networks:
+    #  - esnet
   nginx:
     image: nginx
     container_name: nginx
@@ -39,6 +39,7 @@ services:
       
   mysql:
     image: mysql:5.7
+    container_name: mysql
     environment:
         MYSQL_ROOT_PASSWORD: devpass123
         MYSQL_USER: dev1
@@ -49,6 +50,8 @@ services:
       - mysqldata1:/usr/share/mysql/data
     ports:
       - 3308:3306
+    networks:
+      - esnet
       
 volumes:
   esdata1: {}  

@@ -62,8 +62,65 @@
 			<version>6.0.10.Final</version>
 		</dependency>
 	</dependencies>
-
+	<profiles>
+		<profile>
+			<id>dev</id>
+			<!-- Use dev properties profile -->
+			<activation>
+				<activeByDefault>true</activeByDefault>
+			</activation>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>com.spotify</groupId>
+						<artifactId>docker-maven-plugin</artifactId>
+						<version>1.0.0</version>
+						<executions>
+							<execution>
+								<id>build-image</id>
+								<phase>none</phase>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+		<profile>
+			<id>prod</id>
+			<!-- build prod docker images with twint & java -->
+			<properties>
+				<docker.path>src/main/docker/build</docker.path>
+				<docker.image.name>twint-gateway</docker.image.name>
+				<docker.image.tag>1.0</docker.image.tag>
+			</properties>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>com.spotify</groupId>
+						<artifactId>docker-maven-plugin</artifactId>
+						<version>1.0.0</version>
+						<executions>
+							<execution>
+								<id>build-image</id>
+								<phase>package</phase>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+		<profile>
+			<id>twint-docker</id>
+			<!-- build only twint docker images -->
+			<properties>
+				<docker.path>src/main/docker/twint</docker.path>
+				<docker.image.name>twint</docker.image.name>
+				<docker.image.tag>2.1.2</docker.image.tag>
+			</properties>
+		</profile>
+	</profiles>
 	<build>
+		<finalName>${project.name}</finalName>
 		<plugins>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
@@ -73,11 +130,25 @@
 				<groupId>com.spotify</groupId>
 				<artifactId>docker-maven-plugin</artifactId>
 				<version>1.0.0</version>
+				<executions>
+					<execution>
+						<id>build-image</id>
+						<goals>
+							<goal>build</goal>
+						</goals>
+					</execution>
+				</executions>
 				<configuration>
-					<imageName>twint:2.1.2</imageName>
-					<dockerDirectory>src/main/docker</dockerDirectory>
-					<noCache>true</noCache>
-					
+					<imageName>${docker.image.name}:${docker.image.tag}</imageName>
+					<dockerDirectory>${docker.path}</dockerDirectory>
+					<noCache>false</noCache>
+					<resources>
+						<resource>
+							<targetPath>/</targetPath>
+							<directory>${project.build.directory}</directory>
+							<include>${project.build.finalName}.jar</include>
+						</resource>
+					</resources>
 				</configuration>
 			</plugin>
 		</plugins>

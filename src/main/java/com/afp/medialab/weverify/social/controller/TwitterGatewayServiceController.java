@@ -160,7 +160,7 @@ public class TwitterGatewayServiceController {
         }
 
         //Search for all matching queries regardless of the date
-        Set<CollectHistory> collectHistories = collectService.findCollectHistoryByQueryContains(TwintRequestGenerator.generateSearch(newCollectRequest.getSearch()));
+        Set<CollectHistory> collectHistories = collectService.findCollectHistoryByQueryContains(TwintRequestGenerator.getInstance().generateSearch(newCollectRequest.getSearch()));
         for (CollectHistory c : collectHistories) {
             if (alreadyDone != null)
                 break;
