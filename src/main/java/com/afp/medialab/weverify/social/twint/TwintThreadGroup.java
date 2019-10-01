@@ -92,6 +92,7 @@ public class TwintThreadGroup {
     public ArrayList<CompletableFuture<Integer>> callTwintMultiThreaded(CollectRequest request, String name, Duration duration) {
         ArrayList<CollectRequest> collectRequestList = new ArrayList(createListOfCollecRequest(request, duration));
 
+        collectService.updateCollectTotal_threads(name, collectRequestList.size());
 
         ArrayList<CompletableFuture<Integer>> result = new ArrayList<>();
         for (CollectRequest collectRequest : collectRequestList){

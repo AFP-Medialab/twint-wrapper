@@ -52,11 +52,6 @@ public class TwintThread {
         Integer result = -1;
         String endMessage = "";
 
-        synchronized (lock) {
-            CollectHistory collectHistory = collectService.getCollectInfo(name);
-            collectService.updateCollectTotal_threads(name, collectHistory.getTotal_threads() + 1);
-        }
-
         Logger.info("RES : " + result.toString());
         Logger.info("from : " + request.getFrom());
         Logger.info("until : " + request.getUntil());

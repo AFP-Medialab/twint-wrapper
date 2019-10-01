@@ -39,7 +39,7 @@ public class TwintRequestGenerator {
 	}
 
 	public  String generateRequest(CollectRequest cr, String id, boolean isDocker, String esURL) {
-		SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+		SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
 		String call = "twint -ho --count ";
 
@@ -51,13 +51,13 @@ public class TwintRequestGenerator {
 
 		if (cr.getFrom() != null) {
 			String fromStr = format.format(cr.getFrom());
-			call += " --since " + fromStr;
+			call += " --since '" + fromStr + "'";
 		}
 
 		if (cr.getUntil() != null) {
 			String untilStr = format.format(cr.getUntil());
 
-			call += " --until " + untilStr;
+			call += " --until '" + untilStr + "'";
 		}
 
 		if (cr.getLang() != null)

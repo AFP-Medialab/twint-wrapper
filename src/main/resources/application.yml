@@ -11,7 +11,7 @@ application:
   twintcall:
     nb-core-threads: 4
     nb-max-threads: 4
-    twint_thread_interval_minutes : 2880
+    twint_thread_interval_minutes : 60
   elasticsearch:
     url: ${ES_URL:elasticsearch:9200}
 
