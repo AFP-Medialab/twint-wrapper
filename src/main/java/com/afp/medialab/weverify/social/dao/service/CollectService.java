@@ -52,8 +52,8 @@ public class CollectService {
         return null;
     }
 
-    public void SaveCollectInfo(String session, CollectRequest collectRequest, Date processStart, Date processEnd, Status status, String message, Integer count) {
-        CollectHistory collectHistory = new CollectHistory(session, CollectRequestToString(collectRequest), processStart, processEnd, status, message, count);
+    public void SaveCollectInfo(String session, CollectRequest collectRequest, Date processStart, Date processEnd, Status status, String message, Integer count, Integer finished_threads, Integer total_threads) {
+        CollectHistory collectHistory = new CollectHistory(session, CollectRequestToString(collectRequest), processStart, processEnd, status, message, count, finished_threads, total_threads);
         collectInterface.save(collectHistory);
     }
 
@@ -70,6 +70,8 @@ public class CollectService {
         if (newStatus == Status.Pending && existingStatus == Status.Done) {
             collectInterface.updateCollectProcessEnd(session, null);
             collectInterface.updateCollectStatus(session, newStatus.toString());
+            collectInterface.updateCollectTotal_threads(session, 0);
+            collectInterface.updateCollectFinished_threads(session, 0);
             return true;
         }
         if (newStatus == Status.Running && existingStatus == Status.Pending) {
@@ -167,6 +169,13 @@ public class CollectService {
         return collectInterface.findCollectHistoryByQueryContains(str);
     }
 
+    public void updateCollectFinished_threads(String session, Integer finished_threads) {
+        collectInterface.updateCollectFinished_threads(session, finished_threads);
+    }
+
+    public void updateCollectTotal_threads(String session, Integer total_threads) {
+        collectInterface.updateCollectTotal_threads(session, total_threads);
+    }
 
 }
 

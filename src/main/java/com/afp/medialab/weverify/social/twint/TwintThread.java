@@ -27,112 +27,115 @@ import com.afp.medialab.weverify.social.model.Status;
 @Service
 public class TwintThread {
 
+
 	private static Logger Logger = LoggerFactory.getLogger(TwintThread.class);
 
 	@Value("${command.twint}")
 	private String twintCall;
-	
+
 	@Value("${application.elasticsearch.url}")
 	private String esURL;
 
-	@Autowired
-	CollectService collectService;
+    @Autowired
+    CollectService collectService;
 
-	@Async
-	public CompletableFuture<Map.Entry<Integer, Integer>> callTwint2(CollectRequest request1, CollectRequest request2,
-			String id) {
-		CollectHistory collectHistory = collectService.getCollectInfo(id);
-		String firstRequest = collectHistory.getQuery();
-		// Integer old_count = collectHistory.getCount();
+    private Object lock = new Object();
 
-		collectService.updateCollectStatus(id, Status.Running);
-		Integer res = callTwint(request1, id);
-		Logger.info("RES : " + res.toString());
-		Integer res2 = -1;
-		if (request2 != null)
-			res2 = callTwint(request2, id);
+    private boolean isDockerCommand(String twintCall) {
+        if (twintCall.startsWith("docker"))
+            return true;
+        else
+            return false;
+    }
 
-		// If query hasn't change, no extension to the search added
-		if (firstRequest.equals(collectService.getCollectInfo(id).getQuery())) {
-			collectService.updateCollectStatus(id, Status.Done);
-		}
+    @Async
+    public CompletableFuture<Integer> callTwint(CollectRequest request, String name) {
 
-		return CompletableFuture.completedFuture(new AbstractMap.SimpleEntry<>(res, res2));
-	}
+        Integer result = -1;
+        String endMessage = "";
 
-	public Integer callTwint(CollectRequest request, String name) {
+        synchronized (lock) {
+            CollectHistory collectHistory = collectService.getCollectInfo(name);
+            collectService.updateCollectTotal_threads(name, collectHistory.getTotal_threads() + 1);
+        }
 
-		Integer result = -1;
-		String endMessage = "";
+        Logger.info("RES : " + result.toString());
+        Logger.info("from : " + request.getFrom());
+        Logger.info("until : " + request.getUntil());
+        try {
+            boolean isDocker = isDockerCommand(twintCall);
+            String r = TwintRequestGenerator.getInstance().generateRequest(request, name, isDocker, esURL);
+            ProcessBuilder pb = new ProcessBuilder("/bin/bash", "-c", twintCall + r);
 
-		Logger.debug("RES : " + result.toString());
-		try {
-			boolean isDocker = isDockerCommand(twintCall);
-			String r = TwintRequestGenerator.getInstance().generateRequest(request, name, isDocker, esURL);
-			ProcessBuilder pb = new ProcessBuilder("/bin/bash", "-c", twintCall + r);
+            // Status endStatus;
+            pb.environment().put("PATH", "/usr/bin:/usr/local/bin:/bin");
+            Logger.info(twintCall + r);
+            Process p = null;
+            try {
+                p = pb.start();
 
-			// Status endStatus;
-			pb.environment().put("PATH", "/usr/bin:/usr/local/bin:/bin");
-			Logger.info(twintCall + r);
-			Process p = null;
-			try {
-				p = pb.start();
+                BufferedReader stdInput = new BufferedReader(new InputStreamReader(p.getInputStream()));
 
-				BufferedReader stdInput = new BufferedReader(new InputStreamReader(p.getInputStream()));
+                BufferedReader stdError = new BufferedReader(new InputStreamReader(p.getErrorStream()));
 
-				BufferedReader stdError = new BufferedReader(new InputStreamReader(p.getErrorStream()));
+                String s = "";
 
-				String s = "";
+                while ((s = stdError.readLine()) != null) {
+                    Logger.error(s);
+                }
 
-				while ((s = stdError.readLine()) != null) {
-					Logger.error(s);
-				}
+                Integer nb_tweets = -1;
+                while ((s = stdInput.readLine()) != null) {
+                    Logger.info(s);
+                    if (s.contains("Successfully collected")) {
+                        String str = s.split("Successfully collected ")[1].split(" ")[0];
+                        nb_tweets = Integer.parseInt(str);
+                    }
+                }
 
-				Integer nb_tweets = -1;
-				while ((s = stdInput.readLine()) != null) {
-					Logger.info(s);
-					if (s.contains("Successfully collected")) {
-						String str = s.split("Successfully collected ")[1].split(" ")[0];
-						nb_tweets = Integer.parseInt(str);
-					}
-				}
+                if (nb_tweets == -1) {
+                    synchronized (lock) {
+                        collectService.updateCollectStatus(name, Status.Error);
+                    }
+                    endMessage = "Error while collecting tweets";
+                } else {
+                    endMessage = "Collected " + nb_tweets.toString() + " successfully.";
+                }
 
-				if (nb_tweets == -1) {
+                stdInput.close();
+                stdError.close();
 
-					collectService.updateCollectStatus(name, Status.Error);
-					endMessage = "Error while collecting tweets";
-				} else {
-					endMessage = "Collected " + nb_tweets.toString() + " successfully.";
-				}
+                result = nb_tweets;
 
-				stdInput.close();
-				stdError.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
 
-				result = nb_tweets;
+        } catch (Exception e) {
+            Logger.error(e.getMessage());
+            e.printStackTrace();
+        }
 
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+        synchronized (lock) {
+            CollectHistory collectHistory = collectService.getCollectInfo(name);
+            int finished_thread = collectHistory.getFinished_threads() + 1;
+            collectService.updateCollectFinished_threads(name, finished_thread);
 
-		} catch (Exception e) {
-			Logger.error(e.getMessage());
-			e.printStackTrace();
-		}
+            Integer old_count = collectHistory.getCount();
+            if (old_count == null || old_count == -1)
+                collectService.updateCollectCount(name, result);
+            else
+                collectService.updateCollectCount(name, result + old_count);
+        }
 
-		Integer old_count = collectService.getCollectInfo(name).getCount();
-		if (old_count == null || old_count == -1)
-			collectService.updateCollectCount(name, result);
-		else
-			collectService.updateCollectCount(name, result + old_count);
-
-		collectService.updateCollectMessage(name, endMessage);
-		return result;
-	}
-
-	private boolean isDockerCommand(String twintCall) {
-		if (twintCall.startsWith("docker"))
-			return true;
-		else
-			return false;
-	}
+        synchronized (lock){
+            collectService.updateCollectMessage(name, endMessage);
+            CollectHistory collectHistory = collectService.getCollectInfo(name);
+            int finished_thread = collectHistory.getFinished_threads();
+            int total_threads = collectHistory.getTotal_threads();
+            if (finished_thread == total_threads)
+                collectService.updateCollectStatus(name, Status.Done);
+        }
+        return CompletableFuture.completedFuture(result);
+    }
 }
