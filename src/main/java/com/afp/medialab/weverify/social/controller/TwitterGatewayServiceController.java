@@ -2,11 +2,7 @@ package com.afp.medialab.weverify.social.controller;
 
 import java.io.IOException;
 
-import java.util.Date;
-import java.util.Set;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
@@ -135,6 +131,20 @@ public class TwitterGatewayServiceController {
         return new StatusResponse(collectHistory.getSession(), null, null, Status.Error, null, null, "No query found, or parsing error");
     }
 
+
+
+
+    public void getOnAllList(List<CompletableFuture<Integer>> list){
+        try {
+            for (CompletableFuture<Integer> thread : list)
+                thread.get();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+        }
+    }
+
 	/**
 	 * @func	Verifies if the request has already been done.
 	 * 			If not creates a new session and gives a CollectResponse accordingly.
@@ -164,9 +174,9 @@ public class TwitterGatewayServiceController {
         }
 
         // Creation of a brand new  CollectHistory
-        collectService.SaveCollectInfo(session, newCollectRequest, null, null, Status.Pending, null, null);
+        collectService.SaveCollectInfo(session, newCollectRequest, null, null, Status.Pending, null, null, 0, 0);
 
-        CompletableFuture<Map.Entry<Integer, Integer>> pair = tt.callTwint2(newCollectRequest, null, session);
+        ArrayList<CompletableFuture<Integer>> list = new ArrayList(tt.callTwint2(newCollectRequest, null, session));
 
         CollectHistory collectedInfo = collectService.getCollectInfo(session);
 
@@ -174,15 +184,8 @@ public class TwitterGatewayServiceController {
         if (collectedInfo.getStatus() != Status.Done) {
             return new CollectResponse(session, collectedInfo.getStatus(), null, collectedInfo.getProcessEnd());
         } else {
-            Logger.info("PAIR : " + pair);
-            Map.Entry<Integer, Integer> map = null;
-            try {
-                map = (pair.get());
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            } catch (ExecutionException e) {
-                e.printStackTrace();
-            }
+            Logger.info("LIST : " + list);
+            getOnAllList(list);
         }
         return new CollectResponse(session, collectedInfo.getStatus(), collectedInfo.getMessage(), collectedInfo.getProcessEnd());
     }
@@ -214,8 +217,8 @@ public class TwitterGatewayServiceController {
 
                 collectService.updateCollectStatus(session, Status.Pending);
                 collectService.updateCollectQuery(session, resultingCollectRequest);
-                CompletableFuture<Map.Entry<Integer, Integer>> DoubleFuture = callTwintOnInterval(newCollectRequest, session, newCollectRequest.getFrom(), oldCollectRequest.getFrom(), oldCollectRequest.getUntil(), newCollectRequest.getUntil());
-                return getCollectResponseFromTwintCall(session, message, DoubleFuture);
+                List<CompletableFuture<Integer>> listFuture = callTwintOnInterval(newCollectRequest, session, newCollectRequest.getFrom(), oldCollectRequest.getFrom(), oldCollectRequest.getUntil(), newCollectRequest.getUntil());
+                return getCollectResponseFromTwintCall(session, message, listFuture);
             }
             // THe new request all the odl request or less
             else if (newCollectRequest.getFrom().compareTo(oldCollectRequest.getFrom()) >= 0
@@ -233,7 +236,7 @@ public class TwitterGatewayServiceController {
                 collectService.updateCollectStatus(session, Status.Pending);
                 resultingCollectRequest.setUntil(oldCollectRequest.getUntil());
                 collectService.updateCollectQuery(session, resultingCollectRequest);
-                CompletableFuture<Map.Entry<Integer, Integer>> singleFuture = callTwintOnInterval(newCollectRequest, session, newCollectRequest.getFrom(), oldCollectRequest.getFrom());
+                List<CompletableFuture<Integer>> singleFuture = callTwintOnInterval(newCollectRequest, session, newCollectRequest.getFrom(), oldCollectRequest.getFrom());
                 return getCollectResponseFromTwintCall(session, message, singleFuture);
 
             }
@@ -246,7 +249,7 @@ public class TwitterGatewayServiceController {
                 collectService.updateCollectStatus(session, Status.Pending);
                 resultingCollectRequest.setFrom(oldCollectRequest.getFrom());
                 collectService.updateCollectQuery(session, resultingCollectRequest);
-                CompletableFuture<Map.Entry<Integer, Integer>> singleFuture = callTwintOnInterval(newCollectRequest, session, oldCollectRequest.getUntil(), newCollectRequest.getUntil());
+                List<CompletableFuture<Integer>> singleFuture = callTwintOnInterval(newCollectRequest, session, oldCollectRequest.getUntil(), newCollectRequest.getUntil());
                 return getCollectResponseFromTwintCall(session, message, singleFuture);
             }
             // else {
@@ -264,20 +267,14 @@ public class TwitterGatewayServiceController {
 	 * @func 	getCollectResponseFromTwintCall
 	 * @param 	session	of the collectHistory
 	 * @param 	message
-	 * @param 	pair
+	 * @param 	futureList
 	 * @return	the collect response corresponding to the new call to Twint.
 	 */
-    public CollectResponse getCollectResponseFromTwintCall(String session, String message, CompletableFuture<Map.Entry<Integer, Integer>> pair) {
+    public CollectResponse getCollectResponseFromTwintCall(String session, String message, List<CompletableFuture<Integer>> futureList) {
         CollectHistory collectedInfo = collectService.getCollectInfo(session);
         if (collectedInfo.getStatus() != Status.Done)
             return new CollectResponse(session, collectedInfo.getStatus(), message, collectedInfo.getProcessEnd());
-        try {
-            Map.Entry<Integer, Integer> map = pair.get();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } catch (ExecutionException e) {
-            e.printStackTrace();
-        }
+        getOnAllList(futureList);
         return new CollectResponse(session, collectService.getCollectInfo(session).getStatus(), message, collectService.getCollectInfo(session).getProcessEnd());
     }
 
@@ -290,7 +287,7 @@ public class TwitterGatewayServiceController {
 	 * @param 	until
 	 * @return
 	 */
-    public CompletableFuture<Map.Entry<Integer, Integer>> callTwintOnInterval(CollectRequest newCollectRequest, String session, Date from, Date until) {
+    public List<CompletableFuture<Integer>> callTwintOnInterval(CollectRequest newCollectRequest, String session, Date from, Date until) {
         return callTwintOnInterval(newCollectRequest, session, from, until, null, null);
     }
 
@@ -305,7 +302,7 @@ public class TwitterGatewayServiceController {
 	 * @param 	until2
 	 * @return
 	 */
-    public CompletableFuture<Map.Entry<Integer, Integer>> callTwintOnInterval(CollectRequest newCollectRequest, String session, Date from1, Date until1, Date from2, Date until2) {
+    public List<CompletableFuture<Integer>> callTwintOnInterval(CollectRequest newCollectRequest, String session, Date from1, Date until1, Date from2, Date until2) {
         // Update the session with the good dates;
         CollectRequest collectRequest1 = new CollectRequest(newCollectRequest);
         collectRequest1.setFrom(from1);
@@ -316,7 +313,7 @@ public class TwitterGatewayServiceController {
             collectRequest2.setFrom(from2);
             collectRequest2.setUntil(until2);
         }
-        return tt.callTwint2(collectRequest1, collectRequest2, session);
+        return new ArrayList(tt.callTwint2(collectRequest1, collectRequest2, session));
     }
 
 
@@ -388,7 +385,7 @@ public class TwitterGatewayServiceController {
         CollectRequest oldCollectRequest = collectService.StringToCollectRequest(collectService.getCollectInfo(session).getQuery());
         if (oldCollectRequest == null) throw new NotFoundException();
 
-        CompletableFuture<Map.Entry<Integer, Integer>> singleFuture = callTwintOnInterval(oldCollectRequest, session, oldCollectRequest.getFrom(), oldCollectRequest.getUntil());
+        List<CompletableFuture<Integer>> singleFuture = callTwintOnInterval(oldCollectRequest, session, oldCollectRequest.getFrom(), oldCollectRequest.getUntil());
         collectService.updateCollectProcessStart(session, new Date());
         return getStatusResponse(session);
     }

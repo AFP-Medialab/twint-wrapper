@@ -36,11 +36,15 @@ public class CollectHistory implements Serializable{
     private String message;
     @Column(name = "count")
     private  Integer count;
+    @Column(name = "finished_threads")
+    private  Integer finished_threads;
+    @Column(name = "total_threads")
+    private  Integer total_threads;
 
 
     public CollectHistory(){}
 
-    public CollectHistory(String session, String query, Date processStart, Date processEnd, Status status, String message, Integer count) {
+    public CollectHistory(String session, String query, Date processStart, Date processEnd, Status status, String message, Integer count, Integer finished_threads, Integer total_threads) {
         this.session = session;
         this.query = query;
         this.processStart = processStart;
@@ -48,6 +52,8 @@ public class CollectHistory implements Serializable{
         this.status = status.toString();
         this.message = message;
         this.count = count;
+        this.finished_threads = finished_threads;
+        this.total_threads = total_threads;
     }
 
     public static long getSerialVersionUID() {
@@ -109,4 +115,20 @@ public class CollectHistory implements Serializable{
     public Integer getCount() { return count; }
 
     public void setCount(Integer count) { this.count = count; }
+
+    public Integer getFinished_threads() {
+        return finished_threads;
+    }
+
+    public void setFinished_threads(Integer finished_threads) {
+        this.finished_threads = finished_threads;
+    }
+
+    public Integer getTotal_threads() {
+        return total_threads;
+    }
+
+    public void setTotal_threads(Integer total_threads) {
+        this.total_threads = total_threads;
+    }
 }
