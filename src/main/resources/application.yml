@@ -37,12 +37,15 @@ command:
 ---
 spring:
   profiles: dev    
-command:
-  twint: docker run --rm --network twint_esnet -i medialab.registry.afp.com/twint:2.1.2
  
 ---
 spring:
-  profiles: prod    
+  profiles: prod 
+  jpa:
+    hibernate.ddl-auto: update
+    generate-ddl: false
+    show-sql: false
+      
 command:
   twint: 
  
