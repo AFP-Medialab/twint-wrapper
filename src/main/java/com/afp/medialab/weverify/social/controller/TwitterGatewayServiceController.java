@@ -132,24 +132,12 @@ public class TwitterGatewayServiceController {
         if (collectRequest != null) {
             if (collectHistory.getStatus() != Status.Done)
                 return new StatusResponse(collectHistory.getSession(), collectHistory.getProcessStart(), collectHistory.getProcessEnd(),
-                        collectHistory.getStatus(), collectRequest, null, null, collectHistory.getFinished_threads(), collectHistory.getTotal_threads(), collectHistory.getSuccessful_threads());
+                        collectHistory.getStatus(), collectRequest, null, null);
             else
                 return new StatusResponse(collectHistory.getSession(), collectHistory.getProcessStart(), collectHistory.getProcessEnd(),
-                        collectHistory.getStatus(), collectRequest, collectHistory.getCount(), collectHistory.getMessage(), null, collectHistory.getTotal_threads(), collectHistory.getSuccessful_threads());
+                        collectHistory.getStatus(), collectRequest, collectHistory.getCount(), collectHistory.getMessage());
         }
-        return new StatusResponse(collectHistory.getSession(), null, null, Status.Error, null, null, "No query found, or parsing error", null, null, null);
-    }
-
-
-    public void getOnAllList(List<CompletableFuture<Integer>> list) {
-        try {
-            for (CompletableFuture<Integer> thread : list)
-                thread.get();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } catch (ExecutionException e) {
-            e.printStackTrace();
-        }
+        return new StatusResponse(collectHistory.getSession(), null, null, Status.Error, null, null, "No query found, or parsing error");
     }
 
     /**
