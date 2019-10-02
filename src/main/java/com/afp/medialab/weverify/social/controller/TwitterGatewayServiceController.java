@@ -81,7 +81,7 @@ public class TwitterGatewayServiceController {
     CollectResponse collect(@RequestBody @Valid CollectRequest collectRequest, BindingResult result) {
 
         String session = UUID.randomUUID().toString();
-        Logger.info(result.getAllErrors().toString());
+        Logger.debug(result.getAllErrors().toString());
         if (result.hasErrors()) {
             String str = "";
             for (ObjectError r : result.getAllErrors()) {
@@ -91,14 +91,14 @@ public class TwitterGatewayServiceController {
             return new CollectResponse(session, Status.Error, str, null);
         }
 
-        Logger.info("search : " + collectRequest.getSearch());
-        Logger.info("from : " + collectRequest.getFrom().toString());
-        Logger.info("until : " + collectRequest.getUntil().toString());
-        Logger.info("language : " + collectRequest.getLang());
-        Logger.info("user : " + collectRequest.getUser());
-        Logger.info("verified : " + collectRequest.isVerified());
-        Logger.info("Retweets : " + collectRequest.getRetweetsHandling());
-        Logger.info("Media : " + collectRequest.getMedia());
+        Logger.debug("search : " + collectRequest.getSearch());
+        Logger.debug("from : " + collectRequest.getFrom().toString());
+        Logger.debug("until : " + collectRequest.getUntil().toString());
+        Logger.debug("language : " + collectRequest.getLang());
+        Logger.debug("user : " + collectRequest.getUser());
+        Logger.debug("verified : " + collectRequest.isVerified());
+        Logger.debug("Retweets : " + collectRequest.getRetweetsHandling());
+        Logger.debug("Media : " + collectRequest.getMedia());
 
         return caching(collectRequest, session);
     }

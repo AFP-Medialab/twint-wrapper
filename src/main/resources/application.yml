@@ -10,7 +10,10 @@ application:
     msg: Service is Up
   twintcall:
     nb-core-threads: 4
-    nb-max-threads: 4
+    nb-max-threads: 20
+    nb-queue-threads: 16
+    grp-nb-core-threads: 4
+    grp-nb-max-threads: 4
     twint_request_maximum_days : 15
     twint_big_request_subdivisions : 4
     twint_thread_nb_restart_on_error : 3
@@ -31,10 +34,10 @@ spring:
   jpa:
     hibernate.ddl-auto : create-drop
     generate-ddl: true
-    show-sql: true
+    show-sql: false
 
 command:
-  twint: docker run --rm --network twint_esnet -i medialab.registry.afp.com/twint:2.1.2
+  twint: docker run --rm --network dev_esnet -i medialab.registry.afp.com/twint:2.1.2
  
 ---
 spring:

@@ -1,0 +1,8 @@
+<included>
+	<include resource="defaults.xml" />
+	<include resource="console-appender.xml" />
+	<root level="INFO">
+		<appender-ref ref="CONSOLE" />
+	</root>
+
+</included>

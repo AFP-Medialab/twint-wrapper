@@ -48,10 +48,10 @@ public class TwintThread {
             return false;
     }
 
-    @Async
+    @Async(value = "twintCallTaskExecutor")
     public CompletableFuture<Integer> callTwint(CollectRequest request, String session, Integer cpt) {
 
-        Logger.info("Started Thread n°" + cpt);
+        Logger.debug("Started Thread n°" + cpt);
 
         Integer result = callProcessUntilSuccess(request, session);
 

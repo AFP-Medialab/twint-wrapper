@@ -9,7 +9,7 @@
 	</springProfile>
 
 	<springProfile name="prod">
-		<include resource="logback-dev.xml" />
+		<include resource="logback-prod.xml" />
 	</springProfile>
 
 </configuration>

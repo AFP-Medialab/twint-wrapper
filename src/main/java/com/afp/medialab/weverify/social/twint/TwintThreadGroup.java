@@ -10,6 +10,8 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
@@ -23,7 +25,7 @@ import com.afp.medialab.weverify.social.model.Status;
 @Service
 public class TwintThreadGroup {
 
-    //private static Logger Logger = LoggerFactory.getLogger(TwintThreadGroup.class);
+    private static Logger Logger = LoggerFactory.getLogger(TwintThreadGroup.class);
 
     @Value("${application.twintcall.twint_request_maximum_days}")
     private Long days_limit;
@@ -83,7 +85,7 @@ public class TwintThreadGroup {
         return collectRequestList;
     }
 
-    @Async
+    @Async(value ="twintCallGroupTaskExecutor")
     public CompletableFuture<ArrayList<CompletableFuture<Integer>>> callTwintMultiThreaded(CollectRequest request, String session) {
 
         ArrayList<CollectRequest> collectRequestList = createListOfCollectRequest(request);
@@ -94,6 +96,7 @@ public class TwintThreadGroup {
         ArrayList<CompletableFuture<Integer>> result = new ArrayList<CompletableFuture<Integer>>();
 
         collectService.updateCollectStatus(session, Status.Running);
+        Logger.debug("launch thread group");
         Integer cpt = 0;
         for (CollectRequest collectRequest : collectRequestList) {
             result.add(tt.callTwint(collectRequest, session, cpt));
