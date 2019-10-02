@@ -113,7 +113,8 @@ public class TwitterGatewayServiceController {
     }
 
 
-    @RequestMapping("/status/{id}")
+    @ApiOperation(value = "Trigger a status check")
+    @RequestMapping(path = "/status/{id}", method = RequestMethod.GET)
     public @ResponseBody
     StatusResponse status(@PathVariable("id") String id) throws ExecutionException, InterruptedException {
         Logger.info("GET status " + id);
@@ -360,7 +361,8 @@ public class TwitterGatewayServiceController {
         return new HistoryResponse(collectHistoryList);
     }
 
-    @RequestMapping("/collect-update/{id}")
+    @ApiOperation(value = "Update an old request")
+    @RequestMapping(path = "/collect-update/{id}", method = RequestMethod.GET)
     public @ResponseBody
     StatusResponse collectUpdate(@PathVariable("id") String id) throws ExecutionException, InterruptedException {
         return collectUpdateFunction(id);
