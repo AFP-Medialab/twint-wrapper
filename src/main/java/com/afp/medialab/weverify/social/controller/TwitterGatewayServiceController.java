@@ -12,7 +12,6 @@ import java.util.*;
 import com.afp.medialab.weverify.social.twint.TwintRequestGenerator;
 import com.afp.medialab.weverify.social.dao.entity.CollectHistory;
 import com.afp.medialab.weverify.social.dao.service.CollectService;
-import com.afp.medialab.weverify.social.twint.TwintThread;
 import com.afp.medialab.weverify.social.twint.TwintThreadGroup;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -105,7 +104,7 @@ public class TwitterGatewayServiceController {
     @ApiOperation(value = "Trigger a status check")
     @RequestMapping(path = "/status", method = RequestMethod.POST, consumes = "application/json", produces = "application/json")
     public @ResponseBody
-    StatusResponse status(@RequestBody StatusRequest statusRequest) throws ExecutionException, InterruptedException {
+    StatusResponse status(@RequestBody StatusRequest statusRequest){
         Logger.info("POST status " + statusRequest.getSession());
         return getStatusResponse(statusRequest.getSession());
     }
@@ -114,7 +113,7 @@ public class TwitterGatewayServiceController {
     @ApiOperation(value = "Trigger a status check")
     @RequestMapping(path = "/status/{id}", method = RequestMethod.GET)
     public @ResponseBody
-    StatusResponse status(@PathVariable("id") String id) throws ExecutionException, InterruptedException {
+    StatusResponse status(@PathVariable("id") String id){
         Logger.info("GET status " + id);
         return getStatusResponse(id);
     }

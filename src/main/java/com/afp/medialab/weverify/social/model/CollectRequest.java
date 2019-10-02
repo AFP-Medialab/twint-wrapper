@@ -1,7 +1,6 @@
 package com.afp.medialab.weverify.social.model;
 
 import java.util.Date;
-
 import com.afp.medialab.weverify.social.constrains.LangConstrain;
 import com.afp.medialab.weverify.social.constrains.MediaConstrain;
 import com.afp.medialab.weverify.social.constrains.RetweetHandlingConstrain;
@@ -16,7 +15,7 @@ public class CollectRequest {
     @LangConstrain
     private String lang;
     private String user;
-    @JsonFormat(pattern = "yyyy-MM-dd")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date from, until;
 
     @MediaConstrain

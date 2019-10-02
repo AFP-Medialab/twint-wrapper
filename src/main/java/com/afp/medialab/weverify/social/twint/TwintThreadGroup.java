@@ -1,5 +1,6 @@
 package com.afp.medialab.weverify.social.twint;
 
+import com.afp.medialab.weverify.social.dao.entity.CollectHistory;
 import com.afp.medialab.weverify.social.dao.service.CollectService;
 import com.afp.medialab.weverify.social.model.CollectRequest;
 import com.afp.medialab.weverify.social.model.Status;
@@ -74,7 +75,9 @@ public class TwintThreadGroup {
 
         Duration duration = Duration.ZERO.plusMinutes(minutes_duration);
         ArrayList<CollectRequest> collectRequestList = createListOfCollectRequest(request, duration);
-        collectService.updateCollectTotal_threads(session, collectRequestList.size());
+        CollectHistory collectHistory = collectService.getCollectInfo(session);
+
+        collectService.updateCollectTotal_threads(session, collectHistory.getTotal_threads() + collectRequestList.size());
 
         ArrayList<CompletableFuture<Integer>> result = new ArrayList<CompletableFuture<Integer>>();
 

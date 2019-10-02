@@ -70,8 +70,11 @@ public class CollectService {
         if (newStatus == Status.Pending && existingStatus == Status.Done) {
             collectInterface.updateCollectProcessEnd(session, null);
             collectInterface.updateCollectStatus(session, newStatus.toString());
-            collectInterface.updateCollectTotal_threads(session, 0);
-            collectInterface.updateCollectFinished_threads(session, 0);
+            if (collectHistory.getTotal_threads() == null) {
+                collectInterface.updateCollectTotal_threads(session, 0);
+                collectInterface.updateCollectFinished_threads(session, 0);
+                collectInterface.updateCollectSuccessful_threads(session, 0);
+            }
             return true;
         }
         if (newStatus == Status.Running && existingStatus == Status.Pending) {
