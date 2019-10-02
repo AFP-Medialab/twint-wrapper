@@ -8,13 +8,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
+import java.time.temporal.Temporal;
+import java.time.temporal.TemporalUnit;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 import static java.lang.Math.toIntExact;
 
@@ -23,8 +28,11 @@ public class TwintThreadGroup {
 
     private static Logger Logger = LoggerFactory.getLogger(TwintThreadGroup.class);
 
-    @Value("${application.twintcall.twint_thread_interval_minutes}")
-    private Long minutes_duration;
+    @Value("${application.twintcall.twint_request_maximum_days}")
+    private Long days_limit;
+
+    @Value("${application.twintcall.twint_big_request_subdivisions}")
+    private Long subdivisions;
 
     @Value("${command.twint}")
     private String twintCall;
@@ -44,12 +52,21 @@ public class TwintThreadGroup {
     }
 
 
-    public ArrayList<CollectRequest> createListOfCollectRequest(CollectRequest request, Duration duration) {
+    public ArrayList<CollectRequest> createListOfCollectRequest(CollectRequest request) {
 
+        Long maximum_duration = days_limit * 86400000;
         ArrayList<CollectRequest> collectRequestList = new ArrayList<CollectRequest>();
+        Long request_duration = request.getUntil().getTime() - request.getFrom().getTime();
+
+        if (request_duration < maximum_duration) {
+            collectRequestList.add(request);
+            return collectRequestList;
+        }
+
+        Duration interval_size = Duration.ofSeconds(request_duration / subdivisions / 1000);
         Date new_from_date = request.getFrom();
         Date final_until = request.getUntil();
-        Date new_until_date = addDuration(new_from_date, duration);
+        Date new_until_date = addDuration(new_from_date, interval_size);
 
         /* while from < until */
         while (new_until_date.compareTo(final_until) < 0) {
@@ -58,23 +75,21 @@ public class TwintThreadGroup {
             new_collectRequest.setUntil(new_until_date);
             collectRequestList.add(new_collectRequest);
             new_from_date = new_until_date;
-            new_until_date = addDuration(new_from_date, duration);
+            new_until_date = addDuration(new_from_date, interval_size);
         }
-        /* if stopped early add the last period missing*/
+        /* if stopped early replace the last date by final_until*/
         if (new_from_date.compareTo(final_until) < 0) {
-            CollectRequest new_collectRequest = new CollectRequest(request);
-            new_collectRequest.setFrom(new_from_date);
+            CollectRequest new_collectRequest = new CollectRequest(collectRequestList.get(collectRequestList.size()-1));
             new_collectRequest.setUntil(final_until);
-            collectRequestList.add(new_collectRequest);
+            collectRequestList.set(collectRequestList.size()-1, new_collectRequest);
         }
         return collectRequestList;
     }
 
+    @Async
+    public CompletableFuture<ArrayList<CompletableFuture<Integer>>> callTwintMultiThreaded(CollectRequest request, String session) {
 
-    public ArrayList<CompletableFuture<Integer>> callTwintMultiThreaded(CollectRequest request, String session) {
-
-        Duration duration = Duration.ZERO.plusMinutes(minutes_duration);
-        ArrayList<CollectRequest> collectRequestList = createListOfCollectRequest(request, duration);
+        ArrayList<CollectRequest> collectRequestList = createListOfCollectRequest(request);
         CollectHistory collectHistory = collectService.getCollectInfo(session);
 
         collectService.updateCollectTotal_threads(session, collectHistory.getTotal_threads() + collectRequestList.size());
@@ -87,6 +102,18 @@ public class TwintThreadGroup {
             result.add(tt.callTwint(collectRequest, session, cpt));
             cpt++;
         }
-        return result;
+        getOnAllList(result);
+        return CompletableFuture.completedFuture(result);
+    }
+
+    public void getOnAllList(List<CompletableFuture<Integer>> list) {
+        try {
+            for (CompletableFuture<Integer> thread : list)
+                thread.get();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+        }
     }
 }

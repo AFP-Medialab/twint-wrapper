@@ -183,17 +183,12 @@ public class TwitterGatewayServiceController {
         // Creation of a brand new  CollectHistory
         collectService.SaveCollectInfo(session, newCollectRequest, null, null, Status.Pending, null, null, 0, 0, 0);
 
-        ArrayList<CompletableFuture<Integer>> list = new ArrayList(ttg.callTwintMultiThreaded(newCollectRequest, session));
+        CompletableFuture<ArrayList<CompletableFuture<Integer>>> list = ttg.callTwintMultiThreaded(newCollectRequest, session);
 
         CollectHistory collectedInfo = collectService.getCollectInfo(session);
 
-
-        if (collectedInfo.getStatus() != Status.Done) {
+        if (collectedInfo.getStatus() != Status.Done)
             return new CollectResponse(session, collectedInfo.getStatus(), null, collectedInfo.getProcessEnd());
-        } else {
-            Logger.info("LIST : " + list);
-            getOnAllList(list);
-        }
         return new CollectResponse(session, collectedInfo.getStatus(), collectedInfo.getMessage(), collectedInfo.getProcessEnd());
     }
 
@@ -222,9 +217,9 @@ public class TwitterGatewayServiceController {
 
                 collectService.updateCollectStatus(session, Status.Pending);
                 collectService.updateCollectQuery(session, resultingCollectRequest);
-                ArrayList<CompletableFuture<Integer>> listFuture = callTwintOnInterval(newCollectRequest, session, newCollectRequest.getFrom(), oldCollectRequest.getFrom());
-                listFuture.addAll(callTwintOnInterval(newCollectRequest, session, oldCollectRequest.getUntil(), newCollectRequest.getUntil()));
-                return getCollectResponseFromTwintCall(session, message, listFuture);
+                callTwintOnInterval(newCollectRequest, session, newCollectRequest.getFrom(), oldCollectRequest.getFrom());
+                callTwintOnInterval(newCollectRequest, session, oldCollectRequest.getUntil(), newCollectRequest.getUntil());
+                return getCollectResponseFromTwintCall(session, message);
             }
             // THe new request all the odl request or less
             else if (newCollectRequest.getFrom().compareTo(oldCollectRequest.getFrom()) >= 0
@@ -242,8 +237,8 @@ public class TwitterGatewayServiceController {
                 collectService.updateCollectStatus(session, Status.Pending);
                 resultingCollectRequest.setUntil(oldCollectRequest.getUntil());
                 collectService.updateCollectQuery(session, resultingCollectRequest);
-                ArrayList<CompletableFuture<Integer>> singleFuture = callTwintOnInterval(newCollectRequest, session, newCollectRequest.getFrom(), oldCollectRequest.getFrom());
-                return getCollectResponseFromTwintCall(session, message, singleFuture);
+                callTwintOnInterval(newCollectRequest, session, newCollectRequest.getFrom(), oldCollectRequest.getFrom());
+                return getCollectResponseFromTwintCall(session, message);
 
             }
             // The new request covers after and a part of the old request
@@ -255,8 +250,8 @@ public class TwitterGatewayServiceController {
                 collectService.updateCollectStatus(session, Status.Pending);
                 resultingCollectRequest.setFrom(oldCollectRequest.getFrom());
                 collectService.updateCollectQuery(session, resultingCollectRequest);
-                ArrayList<CompletableFuture<Integer>> singleFuture = callTwintOnInterval(newCollectRequest, session, oldCollectRequest.getUntil(), newCollectRequest.getUntil());
-                return getCollectResponseFromTwintCall(session, message, singleFuture);
+                callTwintOnInterval(newCollectRequest, session, oldCollectRequest.getUntil(), newCollectRequest.getUntil());
+                return getCollectResponseFromTwintCall(session, message);
             }
             // else {
             // The new request covers no days in common with the old one
@@ -271,15 +266,13 @@ public class TwitterGatewayServiceController {
     /**
      * @param session    of the collectHistory
      * @param message
-     * @param futureList
      * @func getCollectResponseFromTwintCall
      * @return the collect response corresponding to the new call to Twint.
      */
-    public CollectResponse getCollectResponseFromTwintCall(String session, String message, ArrayList<CompletableFuture<Integer>> futureList) {
+    public CollectResponse getCollectResponseFromTwintCall(String session, String message) {
         CollectHistory collectedInfo = collectService.getCollectInfo(session);
         if (collectedInfo.getStatus() != Status.Done)
             return new CollectResponse(session, collectedInfo.getStatus(), message, collectedInfo.getProcessEnd());
-        getOnAllList(futureList);
         return new CollectResponse(session, collectService.getCollectInfo(session).getStatus(), message, collectService.getCollectInfo(session).getProcessEnd());
     }
 
@@ -292,7 +285,7 @@ public class TwitterGatewayServiceController {
      * @func callTwintOnInterval overload with only one date interval.
      * call Twint on the interval and append the result to the elastic search session
      */
-    public ArrayList<CompletableFuture<Integer>> callTwintOnInterval(CollectRequest collectRequest, String session, Date from, Date until) {
+    public CompletableFuture<ArrayList<CompletableFuture<Integer>>> callTwintOnInterval(CollectRequest collectRequest, String session, Date from, Date until) {
         CollectRequest newCollectRequest = new CollectRequest(collectRequest);
         newCollectRequest.setFrom(from);
         newCollectRequest.setUntil(until);

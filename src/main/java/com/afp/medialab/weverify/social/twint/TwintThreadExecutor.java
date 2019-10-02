@@ -12,7 +12,6 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 @EnableAsync
 public class TwintThreadExecutor {
 
-
    @Value("${application.twintcall.nb-core-threads}")
    private int nbCoreThreads;
    @Value("${application.twintcall.nb-max-threads}")
@@ -27,6 +26,5 @@ public class TwintThreadExecutor {
       executor.setThreadNamePrefix("twint-");
       executor.initialize();
       return executor;
-
    }
 }
