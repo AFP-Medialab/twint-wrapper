@@ -1,18 +1,15 @@
 package com.afp.medialab.weverify.social.controller;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import javax.validation.Valid;
-import java.util.*;
 
-import com.afp.medialab.weverify.social.twint.TwintRequestGenerator;
-import com.afp.medialab.weverify.social.dao.entity.CollectHistory;
-import com.afp.medialab.weverify.social.dao.service.CollectService;
-import com.afp.medialab.weverify.social.twint.TwintThreadGroup;
+import javax.validation.Valid;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,6 +27,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.afp.medialab.weverify.social.dao.entity.CollectHistory;
+import com.afp.medialab.weverify.social.dao.service.CollectService;
 import com.afp.medialab.weverify.social.model.CollectRequest;
 import com.afp.medialab.weverify.social.model.CollectResponse;
 import com.afp.medialab.weverify.social.model.CollectUpdateRequest;
@@ -39,6 +39,9 @@ import com.afp.medialab.weverify.social.model.NotFoundException;
 import com.afp.medialab.weverify.social.model.Status;
 import com.afp.medialab.weverify.social.model.StatusRequest;
 import com.afp.medialab.weverify.social.model.StatusResponse;
+import com.afp.medialab.weverify.social.twint.TwintRequestGenerator;
+import com.afp.medialab.weverify.social.twint.TwintThreadGroup;
+
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 
@@ -105,7 +108,7 @@ public class TwitterGatewayServiceController {
     @RequestMapping(path = "/status", method = RequestMethod.POST, consumes = "application/json", produces = "application/json")
     public @ResponseBody
     StatusResponse status(@RequestBody StatusRequest statusRequest){
-        Logger.info("POST status " + statusRequest.getSession());
+        Logger.debug("POST status " + statusRequest.getSession());
         return getStatusResponse(statusRequest.getSession());
     }
 
@@ -114,7 +117,7 @@ public class TwitterGatewayServiceController {
     @RequestMapping(path = "/status/{id}", method = RequestMethod.GET)
     public @ResponseBody
     StatusResponse status(@PathVariable("id") String id){
-        Logger.info("GET status " + id);
+        Logger.debug("GET status " + id);
         return getStatusResponse(id);
     }
 
@@ -183,7 +186,8 @@ public class TwitterGatewayServiceController {
         // Creation of a brand new  CollectHistory
         collectService.SaveCollectInfo(session, newCollectRequest, null, null, Status.Pending, null, null, 0, 0, 0);
 
-        CompletableFuture<ArrayList<CompletableFuture<Integer>>> list = ttg.callTwintMultiThreaded(newCollectRequest, session);
+        
+        ttg.callTwintMultiThreaded(newCollectRequest, session);
 
         CollectHistory collectedInfo = collectService.getCollectInfo(session);
 

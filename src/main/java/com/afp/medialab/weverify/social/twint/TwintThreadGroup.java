@@ -1,19 +1,8 @@
 package com.afp.medialab.weverify.social.twint;
 
-import com.afp.medialab.weverify.social.dao.entity.CollectHistory;
-import com.afp.medialab.weverify.social.dao.service.CollectService;
-import com.afp.medialab.weverify.social.model.CollectRequest;
-import com.afp.medialab.weverify.social.model.Status;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.stereotype.Service;
+import static java.lang.Math.toIntExact;
 
 import java.time.Duration;
-import java.time.temporal.Temporal;
-import java.time.temporal.TemporalUnit;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -21,12 +10,20 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
-import static java.lang.Math.toIntExact;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Service;
+
+import com.afp.medialab.weverify.social.dao.entity.CollectHistory;
+import com.afp.medialab.weverify.social.dao.service.CollectService;
+import com.afp.medialab.weverify.social.model.CollectRequest;
+import com.afp.medialab.weverify.social.model.Status;
 
 @Service
 public class TwintThreadGroup {
 
-    private static Logger Logger = LoggerFactory.getLogger(TwintThreadGroup.class);
+    //private static Logger Logger = LoggerFactory.getLogger(TwintThreadGroup.class);
 
     @Value("${application.twintcall.twint_request_maximum_days}")
     private Long days_limit;
@@ -47,7 +44,7 @@ public class TwintThreadGroup {
     public Date addDuration(Date date, Duration duration) {
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(date);
-        calendar.add(calendar.MINUTE, toIntExact(duration.toMinutes()));
+        calendar.add(Calendar.MINUTE, toIntExact(duration.toMinutes()));
         return calendar.getTime();
     }
 
