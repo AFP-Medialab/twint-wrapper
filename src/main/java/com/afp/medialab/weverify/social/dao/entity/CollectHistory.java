@@ -12,13 +12,13 @@ import javax.persistence.Id;
 import com.afp.medialab.weverify.social.model.Status;
 
 @Entity
-public class CollectHistory implements Serializable{
+public class CollectHistory implements Serializable {
 
     /**
-	 * 
-	 */
-	private static final long serialVersionUID = 1L;
-	@Id
+     *
+     */
+    private static final long serialVersionUID = 1L;
+    @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false, updatable = false)
     private Integer id;
@@ -35,16 +35,19 @@ public class CollectHistory implements Serializable{
     @Column(name = "message")
     private String message;
     @Column(name = "count")
-    private  Integer count;
+    private Integer count;
     @Column(name = "finished_threads")
-    private  Integer finished_threads;
+    private Integer finished_threads;
     @Column(name = "total_threads")
-    private  Integer total_threads;
+    private Integer total_threads;
+    @Column(name = "successful_threads")
+    private Integer successful_threads;
 
 
-    public CollectHistory(){}
+    public CollectHistory() {
+    }
 
-    public CollectHistory(String session, String query, Date processStart, Date processEnd, Status status, String message, Integer count, Integer finished_threads, Integer total_threads) {
+    public CollectHistory(String session, String query, Date processStart, Date processEnd, Status status, String message, Integer count, Integer finished_threads, Integer total_threads, Integer successful_threads) {
         this.session = session;
         this.query = query;
         this.processStart = processStart;
@@ -54,6 +57,7 @@ public class CollectHistory implements Serializable{
         this.count = count;
         this.finished_threads = finished_threads;
         this.total_threads = total_threads;
+        this.successful_threads = successful_threads;
     }
 
     public static long getSerialVersionUID() {
@@ -108,13 +112,21 @@ public class CollectHistory implements Serializable{
         this.status = status.toString();
     }
 
-    public String getMessage() { return message; }
+    public String getMessage() {
+        return message;
+    }
 
-    public void setMessage(String message) { this.message = message; }
+    public void setMessage(String message) {
+        this.message = message;
+    }
 
-    public Integer getCount() { return count; }
+    public Integer getCount() {
+        return count;
+    }
 
-    public void setCount(Integer count) { this.count = count; }
+    public void setCount(Integer count) {
+        this.count = count;
+    }
 
     public Integer getFinished_threads() {
         return finished_threads;
@@ -130,5 +142,13 @@ public class CollectHistory implements Serializable{
 
     public void setTotal_threads(Integer total_threads) {
         this.total_threads = total_threads;
+    }
+
+    public Integer getSuccessful_threads() {
+        return successful_threads;
+    }
+
+    public void setSuccessful_threads(Integer successful_threads) {
+        this.successful_threads = successful_threads;
     }
 }

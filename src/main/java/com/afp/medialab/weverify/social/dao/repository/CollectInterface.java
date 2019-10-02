@@ -76,4 +76,9 @@ public interface CollectInterface extends JpaRepository<CollectHistory, Integer>
     @Query("update CollectHistory collect set collect.total_threads = :int where collect.session = :session")
     void updateCollectTotal_threads(@Param("session") String session, @Param("int") Integer total_threads);
 
+    @Modifying
+    @Transactional
+    @Query("update CollectHistory collect set collect.successful_threads = :int where collect.session = :session")
+    void updateCollectSuccessful_threads(@Param("session") String session, @Param("int") Integer successful_threads);
+
 }

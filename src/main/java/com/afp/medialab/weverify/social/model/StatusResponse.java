@@ -15,8 +15,9 @@ public class StatusResponse {
     private String message;
     private Integer finished_threads;
     private Integer total_threads;
+    private Integer successful_threads;
 
-    public StatusResponse(String session, Date started, Date ended, Status status, CollectRequest query, Integer nbTweet, String message, Integer finished_threads, Integer total_threads) {
+    public StatusResponse(String session, Date started, Date ended, Status status, CollectRequest query, Integer nbTweet, String message, Integer finished_threads, Integer total_threads, Integer successful_threads) {
         this.session = session;
         this.started = started;
         this.ended = ended;
@@ -26,6 +27,7 @@ public class StatusResponse {
         this.nbTweets = nbTweet;
         this.finished_threads = finished_threads;
         this.total_threads = total_threads;
+        this.successful_threads = successful_threads;
     }
 
     public String getMessage() {
@@ -36,7 +38,9 @@ public class StatusResponse {
         this.message = message;
     }
 
-    public String getSession() { return session; }
+    public String getSession() {
+        return session;
+    }
 
     public void setSession(String search) {
         this.session = search;
@@ -58,13 +62,21 @@ public class StatusResponse {
         this.ended = until;
     }
 
-    public CollectRequest getQuery() { return this.query; }
+    public CollectRequest getQuery() {
+        return this.query;
+    }
 
-    public Status getStatus() { return this.status; }
+    public Status getStatus() {
+        return this.status;
+    }
 
-    public void SetStatus(Status status) { this.status = status; }
+    public void SetStatus(Status status) {
+        this.status = status;
+    }
 
-    public void SetQuery(CollectRequest query) { this.query = query; }
+    public void SetQuery(CollectRequest query) {
+        this.query = query;
+    }
 
     public Integer getNbTweets() {
         return nbTweets;
@@ -88,5 +100,13 @@ public class StatusResponse {
 
     public void setTotal_threads(Integer total_threads) {
         this.total_threads = total_threads;
+    }
+
+    public Integer getSuccessful_threads() {
+        return successful_threads;
+    }
+
+    public void setSuccessful_threads(Integer successful_threads) {
+        this.successful_threads = successful_threads;
     }
 }

@@ -52,8 +52,8 @@ public class CollectService {
         return null;
     }
 
-    public void SaveCollectInfo(String session, CollectRequest collectRequest, Date processStart, Date processEnd, Status status, String message, Integer count, Integer finished_threads, Integer total_threads) {
-        CollectHistory collectHistory = new CollectHistory(session, CollectRequestToString(collectRequest), processStart, processEnd, status, message, count, finished_threads, total_threads);
+    public void SaveCollectInfo(String session, CollectRequest collectRequest, Date processStart, Date processEnd, Status status, String message, Integer count, Integer finished_threads, Integer total_threads, Integer successful_threads) {
+        CollectHistory collectHistory = new CollectHistory(session, CollectRequestToString(collectRequest), processStart, processEnd, status, message, count, finished_threads, total_threads, successful_threads);
         collectInterface.save(collectHistory);
     }
 
@@ -175,6 +175,10 @@ public class CollectService {
 
     public void updateCollectTotal_threads(String session, Integer total_threads) {
         collectInterface.updateCollectTotal_threads(session, total_threads);
+    }
+
+    public void updateCollectSuccessful_threads(String session, Integer sucessful_threads) {
+        collectInterface.updateCollectSuccessful_threads(session, sucessful_threads);
     }
 
 }
