@@ -12,6 +12,7 @@ application:
     nb-core-threads: 4
     nb-max-threads: 4
     twint_thread_interval_minutes : 60
+    twint_thread_nb_restart_on_error : 3
   elasticsearch:
     url: ${ES_URL:elasticsearch:9200}
 
