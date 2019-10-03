@@ -18,8 +18,10 @@ public class CollectRequest {
     private String lang;
     private String user;
     @JsonProperty("from")@JsonDeserialize(using =  MultiDateDeserializer.class)
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date from;
     @JsonProperty("until")@JsonDeserialize(using =  MultiDateDeserializer.class)
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date until;
 
     @MediaConstrain
