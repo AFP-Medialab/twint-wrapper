@@ -9,9 +9,9 @@ application:
   home:
     msg: Service is Up
   twintcall:
-    nb-core-threads: 6
-    nb-max-threads: 20
-    nb-queue-threads: 16
+    nb-core-threads: 24
+    nb-max-threads: 80
+    nb-queue-threads: 64
     grp-nb-core-threads: 4
     grp-nb-max-threads: 4
     twint_request_maximum_days : 15

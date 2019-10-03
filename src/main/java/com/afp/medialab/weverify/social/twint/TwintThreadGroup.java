@@ -43,7 +43,7 @@ public class TwintThreadGroup {
     private TwintThread tt;
 
 
-    public Date addDuration(Date date, Duration duration) {
+    private Date addDuration(Date date, Duration duration) {
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(date);
         calendar.add(Calendar.MINUTE, toIntExact(duration.toMinutes()));
@@ -51,7 +51,7 @@ public class TwintThreadGroup {
     }
 
 
-    public ArrayList<CollectRequest> createListOfCollectRequest(CollectRequest request) {
+    private ArrayList<CollectRequest> createListOfCollectRequest(CollectRequest request) {
 
         Long maximum_duration = days_limit * 86400000;
         ArrayList<CollectRequest> collectRequestList = new ArrayList<CollectRequest>();
@@ -106,7 +106,7 @@ public class TwintThreadGroup {
         return CompletableFuture.completedFuture(result);
     }
 
-    public void getOnAllList(List<CompletableFuture<Integer>> list) {
+    private void getOnAllList(List<CompletableFuture<Integer>> list) {
         try {
             for (CompletableFuture<Integer> thread : list)
                 thread.get();
