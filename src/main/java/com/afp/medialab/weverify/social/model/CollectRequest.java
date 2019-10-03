@@ -1,7 +1,7 @@
 package com.afp.medialab.weverify.social.model;
 
 import java.util.Date;
-import java.util.List;
+import java.util.SortedSet;
 
 import com.afp.medialab.weverify.social.constrains.LangConstrain;
 import com.afp.medialab.weverify.social.constrains.MediaConstrain;
@@ -11,14 +11,14 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
-@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class CollectRequest {
 
     private SearchModel search;
 
     @LangConstrain
     private String lang;
-    private List<String> user_list;
+    private SortedSet<String> user_list;
     @JsonProperty("from")@JsonDeserialize(using =  MultiDateDeserializer.class)
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date from;
@@ -76,11 +76,11 @@ public class CollectRequest {
         return lang;
     }
 
-    public List<String> getUser_list() {
+    public SortedSet<String> getUser_list() {
         return user_list;
     }
 
-    public void setUser_list(List<String> user_list) {
+    public void setUser_list(SortedSet<String> user_list) {
         this.user_list = user_list;
     }
 

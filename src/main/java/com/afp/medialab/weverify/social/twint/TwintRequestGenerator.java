@@ -4,6 +4,7 @@ import java.text.SimpleDateFormat;
 
 import com.afp.medialab.weverify.social.model.CollectRequest;
 import com.afp.medialab.weverify.social.model.SearchModel;
+import org.slf4j.LoggerFactory;
 
 /**
  * Generate twint command with elasticsearch
@@ -12,6 +13,9 @@ import com.afp.medialab.weverify.social.model.SearchModel;
  *
  */
 public class TwintRequestGenerator {
+
+	private static org.slf4j.Logger Logger = LoggerFactory.getLogger(TwintRequestGenerator.class);
+
 
 	private static final TwintRequestGenerator INSTANCE = new TwintRequestGenerator();
 
@@ -46,7 +50,8 @@ public class TwintRequestGenerator {
 		if (cr.getSearch() != null)
 			call += "-s '" + generateSearch(cr.getSearch()) + "'";
 
-		if (cr.getUser_list() != null) {
+		if (cr.getUser_list() != null && !cr.getUser_list().isEmpty()) {
+			Logger.debug(cr.getUser_list().toString());
 			String users = String.join(",", cr.getUser_list());
 			if (cr.getUser_list().size() > 1)
 				call += " --userlist '" + users + "'";
