@@ -95,7 +95,7 @@ public class TwitterGatewayServiceController {
         Logger.debug("from : " + collectRequest.getFrom().toString());
         Logger.debug("until : " + collectRequest.getUntil().toString());
         Logger.debug("language : " + collectRequest.getLang());
-        Logger.debug("user : " + collectRequest.getUser());
+        Logger.debug("user : " + collectRequest.getUser_list());
         Logger.debug("verified : " + collectRequest.isVerified());
         Logger.debug("Retweets : " + collectRequest.getRetweetsHandling());
         Logger.debug("Media : " + collectRequest.getMedia());

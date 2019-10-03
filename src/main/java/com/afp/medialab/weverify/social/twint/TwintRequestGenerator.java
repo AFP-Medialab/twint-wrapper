@@ -46,8 +46,13 @@ public class TwintRequestGenerator {
 		if (cr.getSearch() != null)
 			call += "-s '" + generateSearch(cr.getSearch()) + "'";
 
-		if (cr.getUser() != null)
-			call += " -u " + cr.getUser();
+		if (cr.getUser_list() != null) {
+			String users = String.join(",", cr.getUser_list());
+			if (cr.getUser_list().size() > 1)
+				call += " --userlist '" + users + "'";
+			else
+				call += " -u " + users;
+		}
 
 		if (cr.getFrom() != null) {
 			String fromStr = format.format(cr.getFrom());
