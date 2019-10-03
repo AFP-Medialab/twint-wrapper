@@ -6,6 +6,8 @@ import com.afp.medialab.weverify.social.constrains.MediaConstrain;
 import com.afp.medialab.weverify.social.constrains.RetweetHandlingConstrain;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class CollectRequest {
@@ -15,8 +17,10 @@ public class CollectRequest {
     @LangConstrain
     private String lang;
     private String user;
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    private Date from, until;
+    @JsonProperty("from")@JsonDeserialize(using =  MultiDateDeserializer.class)
+    private Date from;
+    @JsonProperty("until")@JsonDeserialize(using =  MultiDateDeserializer.class)
+    private Date until;
 
     @MediaConstrain
     private String media;

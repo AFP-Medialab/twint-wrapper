@@ -76,7 +76,7 @@ public class TwitterGatewayServiceController {
 
 
     @ApiOperation(value = "Trigger a Twitter Scraping")
-    @RequestMapping(path = "/collect", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @RequestMapping(path = "/collect", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_UTF8_VALUE, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public @ResponseBody
     CollectResponse collect(@RequestBody @Valid CollectRequest collectRequest, BindingResult result) {
 
@@ -105,7 +105,7 @@ public class TwitterGatewayServiceController {
 
 
     @ApiOperation(value = "Trigger a status check")
-    @RequestMapping(path = "/status", method = RequestMethod.POST, consumes = "application/json", produces = "application/json")
+    @RequestMapping(path = "/status", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_UTF8_VALUE, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public @ResponseBody
     StatusResponse status(@RequestBody StatusRequest statusRequest){
         Logger.debug("POST status " + statusRequest.getSession());
@@ -305,7 +305,7 @@ public class TwitterGatewayServiceController {
     }
 
     @ApiOperation(value = "Get the requests history")
-    @RequestMapping(path = "/collect-history", method = RequestMethod.POST, consumes = "application/json", produces = "application/json")
+    @RequestMapping(path = "/collect-history", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_UTF8_VALUE, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public @ResponseBody
     HistoryResponse status(@RequestBody @Valid HistoryRequest historyRequest) {
         Logger.info("POST collect-history : " + historyRequest.toString());
@@ -323,7 +323,7 @@ public class TwitterGatewayServiceController {
     }
 
     @ApiOperation(value = "Update an old request")
-    @RequestMapping(path = "/collect-update", method = RequestMethod.POST, consumes = "application/json", produces = "application/json")
+    @RequestMapping(path = "/collect-update", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_UTF8_VALUE, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public @ResponseBody
     StatusResponse collectUpdate(@RequestBody @Valid CollectUpdateRequest collectUpdateRequest) throws ExecutionException, InterruptedException {
         String id = collectUpdateRequest.getSession();
