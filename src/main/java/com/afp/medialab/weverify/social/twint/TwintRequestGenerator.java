@@ -2,9 +2,11 @@ package com.afp.medialab.weverify.social.twint;
 
 import java.text.SimpleDateFormat;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.afp.medialab.weverify.social.model.CollectRequest;
 import com.afp.medialab.weverify.social.model.SearchModel;
-import org.slf4j.LoggerFactory;
 
 /**
  * Generate twint command with elasticsearch
@@ -14,7 +16,7 @@ import org.slf4j.LoggerFactory;
  */
 public class TwintRequestGenerator {
 
-	private static org.slf4j.Logger Logger = LoggerFactory.getLogger(TwintRequestGenerator.class);
+	private static Logger Logger = LoggerFactory.getLogger(TwintRequestGenerator.class);
 
 
 	private static final TwintRequestGenerator INSTANCE = new TwintRequestGenerator();

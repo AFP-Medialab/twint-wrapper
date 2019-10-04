@@ -98,7 +98,7 @@ public class TwintThread {
     }
 
 
-    public ProcessBuilder createProcessBuilder(CollectRequest request, String session) {
+    private ProcessBuilder createProcessBuilder(CollectRequest request, String session) {
         boolean isDocker = isDockerCommand(twintCall);
         String twintRequest = TwintRequestGenerator.getInstance().generateRequest(request, session, isDocker, esURL);
 
@@ -108,7 +108,7 @@ public class TwintThread {
         return processBuilder;
     }
 
-    public Integer callProcess(ProcessBuilder processBuilder) throws IOException {
+    private Integer callProcess(ProcessBuilder processBuilder) throws IOException {
         Process process = processBuilder.start();
         BufferedReader stdInput = new BufferedReader(new InputStreamReader(process.getInputStream()));
         BufferedReader stdError = new BufferedReader(new InputStreamReader(process.getErrorStream()));
@@ -136,7 +136,7 @@ public class TwintThread {
         return nb_tweets;
     }
 
-    public Integer callTwintProcess(CollectRequest request, String session) {
+    private Integer callTwintProcess(CollectRequest request, String session) {
 
         Integer result = -1;
         try {
@@ -156,7 +156,7 @@ public class TwintThread {
         return result;
     }
 
-    public Integer callProcessUntilSuccess(CollectRequest request, String session) {
+    private Integer callProcessUntilSuccess(CollectRequest request, String session) {
         // could add a request subdivision on error
         Integer nb_tweets = -1;
         for (int i = 0; i < restart_time && nb_tweets == -1; i++) {

@@ -127,11 +127,11 @@ public class TwitterGatewayServiceController {
      * @func Returns the status response of a given session.
      * @return StatusResponse of the session.
      */
-    StatusResponse getStatusResponse(String session) {
+    private StatusResponse getStatusResponse(String session) {
         CollectHistory collectHistory = collectService.getCollectInfo(session);
         if (collectHistory == null) throw new NotFoundException();
 
-        CollectRequest collectRequest = collectService.StringToCollectRequest(collectHistory.getQuery());
+        CollectRequest collectRequest = collectService.stringToCollectRequest(collectHistory.getQuery());
         if (collectRequest != null) {
             if (collectHistory.getStatus() != Status.Done)
                 return new StatusResponse(collectHistory.getSession(), collectHistory.getProcessStart(), collectHistory.getProcessEnd(),
@@ -150,7 +150,7 @@ public class TwitterGatewayServiceController {
      * @func Verifies if the request has already been done.
      * If not creates a new session and gives a CollectResponse accordingly.
      */
-    CollectResponse caching(CollectRequest newCollectRequest, String session) {
+    private CollectResponse caching(CollectRequest newCollectRequest, String session) {
         // Check if this request has already been done
         CollectResponse alreadyDone = collectService.alreadyExists(newCollectRequest);
         if (alreadyDone != null) {
@@ -163,7 +163,7 @@ public class TwitterGatewayServiceController {
         for (CollectHistory c : collectHistories) {
             if (alreadyDone != null)
                 break;
-            alreadyDone = CompletingOldRequest(c.getSession(), newCollectRequest, collectService.StringToCollectRequest(c.getQuery()));
+            alreadyDone = completingOldRequest(c.getSession(), newCollectRequest, collectService.stringToCollectRequest(c.getQuery()));
         }
 
         if (alreadyDone != null) {
@@ -172,7 +172,7 @@ public class TwitterGatewayServiceController {
         }
 
         // Creation of a brand new  CollectHistory
-        collectService.SaveCollectInfo(session, newCollectRequest, null, null, Status.Pending, null, null, 0, 0, 0);
+        collectService.saveCollectInfo(session, newCollectRequest, null, null, Status.Pending, null, null, 0, 0, 0);
 
         
         ttg.callTwintMultiThreaded(newCollectRequest, session);
@@ -195,7 +195,7 @@ public class TwitterGatewayServiceController {
      * if the 	newCollectRequest does not match,
      * It makes a new CollectHistory
      */
-    public CollectResponse CompletingOldRequest(String session, CollectRequest newCollectRequest, CollectRequest oldCollectRequest) {
+    private CollectResponse completingOldRequest(String session, CollectRequest newCollectRequest, CollectRequest oldCollectRequest) {
 
         CollectRequest resultingCollectRequest = newCollectRequest;
         String message = "Completing the research. This research has already been done from " + oldCollectRequest.getFrom() + " to " + oldCollectRequest.getUntil();
@@ -261,7 +261,7 @@ public class TwitterGatewayServiceController {
      * @func getCollectResponseFromTwintCall
      * @return the collect response corresponding to the new call to Twint.
      */
-    public CollectResponse getCollectResponseFromTwintCall(String session, String message) {
+    private CollectResponse getCollectResponseFromTwintCall(String session, String message) {
         CollectHistory collectedInfo = collectService.getCollectInfo(session);
         if (collectedInfo.getStatus() != Status.Done)
             return new CollectResponse(session, collectedInfo.getStatus(), message, collectedInfo.getProcessEnd());
@@ -277,7 +277,7 @@ public class TwitterGatewayServiceController {
      * @func callTwintOnInterval overload with only one date interval.
      * call Twint on the interval and append the result to the elastic search session
      */
-    public CompletableFuture<ArrayList<CompletableFuture<Integer>>> callTwintOnInterval(CollectRequest collectRequest, String session, Date from, Date until) {
+    private CompletableFuture<ArrayList<CompletableFuture<Integer>>> callTwintOnInterval(CollectRequest collectRequest, String session, Date from, Date until) {
         CollectRequest newCollectRequest = new CollectRequest(collectRequest);
         newCollectRequest.setFrom(from);
         newCollectRequest.setUntil(until);
@@ -337,7 +337,7 @@ public class TwitterGatewayServiceController {
      * @func Calls Twint on the time interval of a session. The result replaces the old ones un elastic search.
      * @return Status response or the corresponding session
      */
-    public StatusResponse collectUpdateFunction(String session) throws ExecutionException, InterruptedException {
+   private StatusResponse collectUpdateFunction(String session) throws ExecutionException, InterruptedException {
         Logger.info("Collect-Update " + session);
 
         CollectHistory collectHistory = collectService.getCollectInfo(session);
@@ -351,7 +351,7 @@ public class TwitterGatewayServiceController {
         }
 
         collectService.updateCollectStatus(session, Status.Pending);
-        CollectRequest oldCollectRequest = collectService.StringToCollectRequest(collectService.getCollectInfo(session).getQuery());
+        CollectRequest oldCollectRequest = collectService.stringToCollectRequest(collectService.getCollectInfo(session).getQuery());
         if (oldCollectRequest == null) throw new NotFoundException();
 
         callTwintOnInterval(oldCollectRequest, session, oldCollectRequest.getFrom(), oldCollectRequest.getUntil());
