@@ -51,7 +51,6 @@ public class TwintRequestGenerator {
 			call += "-s '" + generateSearch(cr.getSearch()) + "'";
 
 		if (cr.getUser_list() != null && !cr.getUser_list().isEmpty()) {
-			Logger.debug(cr.getUser_list().toString());
 			String users = String.join(",", cr.getUser_list());
 			if (cr.getUser_list().size() > 1)
 				call += " --userlist '" + users + "'";
