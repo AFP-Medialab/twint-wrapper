@@ -337,13 +337,25 @@ public class TwitterGatewayServiceController {
                                    @RequestParam(value = "status", required = false) String status) {
         List<CollectHistory> last;
 
-        if (!asc && !desc)
-            last = collectService.getLasts(limit);
-        else if (status == null)
-            last = collectService.getAll(desc);
+        Logger.info("GET collect-history :  " + status);
+
+        if (status == null) {
+            if (!asc && !desc)
+                last = collectService.getLasts(limit, true);
+            else if (asc)
+                last = collectService.getLasts(limit, !asc);
+            else
+                last = collectService.getLasts(limit, desc);
+        }
         else {
-            Logger.info("STATUS : " + status);
-            last = collectService.getByStatus(status);
+            if (!asc && !desc)
+            last = collectService.getByStatus(status, limit, true);
+            else if (asc)
+                last = collectService.getByStatus(status, limit, !asc);
+            else
+                last = collectService.getByStatus(status, limit, desc);
+
+
         }
         return new HistoryResponse(last);
     }

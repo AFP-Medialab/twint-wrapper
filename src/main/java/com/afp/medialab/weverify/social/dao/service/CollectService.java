@@ -106,9 +106,10 @@ public class CollectService {
         return collectInterface.findCollectHistoryBySession(session);
     }
 
-    public List<CollectHistory> getLasts(int nb) {
+    public List<CollectHistory> getLasts(int nb, boolean desc) {
         List<CollectHistory> collectHistoryList = collectInterface.findAll();
-        Collections.reverse(collectHistoryList);
+        if (desc)
+            Collections.reverse(collectHistoryList);
 
         if (collectHistoryList.size() >= nb)
             collectHistoryList = collectHistoryList.subList(0, nb);
@@ -123,8 +124,13 @@ public class CollectService {
         return collectHistoryList;
     }
 
-    public List<CollectHistory> getByStatus(String status) {
+    public List<CollectHistory> getByStatus(String status, int limit,  boolean desc) {
         List<CollectHistory> collectHistoryList = collectInterface.findCollectHistoryByStatus(status);
+        if (desc)
+            Collections.reverse(collectHistoryList);
+
+        if (collectHistoryList.size() >= limit)
+            collectHistoryList = collectHistoryList.subList(0, limit);
         return collectHistoryList;
     }
 
