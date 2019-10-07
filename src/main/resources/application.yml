@@ -9,12 +9,17 @@ application:
   home:
     msg: Service is Up
   twintcall:
-    nb-core-threads: 4
-    nb-max-threads: 4
-    
+    nb-core-threads: 24
+    nb-max-threads: 80
+    nb-queue-threads: 64
+    grp-nb-core-threads: 4
+    grp-nb-max-threads: 4
+    twint_request_maximum_days : 15
+    twint_big_request_subdivisions : 6
+    twint_thread_nb_restart_on_error : 3
   elasticsearch:
     url: ${ES_URL:elasticsearch:9200}
-  
+
 
 spring:
   jackson:
@@ -23,16 +28,16 @@ spring:
 
   datasource:
     url: ${MYSQL_URL:jdbc:mysql://localhost:3308/twitter-gateway?serverTimeZone=CET&useSSL=false}
-    username: dev1
-    password: dev1
+    username: ${MYSQL_USER:dev1}
+    password: ${MYSQL_PASSWD:dev1}
     #driver-class-name: com.mysql.jdbc.Driver
   jpa:
     hibernate.ddl-auto : create-drop
     generate-ddl: true
-    show-sql: true
+    show-sql: false
 
 command:
-  twint: docker run --rm --network twint_esnet -i medialab.registry.afp.com/twint:2.1.2
+  twint: docker run --rm --network dev_esnet -i medialab.registry.afp.com/twint:2.1.2
  
 ---
 spring:

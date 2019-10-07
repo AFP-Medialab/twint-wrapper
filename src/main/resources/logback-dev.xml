@@ -1,0 +1,11 @@
+<included>
+	<include resource="defaults.xml" />
+	<include resource="console-appender.xml" />
+	<root level="INFO">
+		<appender-ref ref="CONSOLE" />
+	</root>
+	<logger name="com.afp.medialab.weverify.social"
+		level="DEBUG">
+	</logger>
+
+</included>

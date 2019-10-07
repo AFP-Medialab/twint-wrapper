@@ -3,10 +3,14 @@ package com.afp.medialab.weverify.social.twint;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.AbstractMap;
-import java.util.Map;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.concurrent.CompletableFuture;
 
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,118 +25,186 @@ import com.afp.medialab.weverify.social.model.Status;
 
 /**
  * Run twint command in a asynchronous thread
- * 
+ *
  * @author Medialab
  */
 @Service
 public class TwintThread {
 
-	private static Logger Logger = LoggerFactory.getLogger(TwintThread.class);
+    private static Logger Logger = LoggerFactory.getLogger(TwintThread.class);
 
-	@Value("${command.twint}")
-	private String twintCall;
-	
-	@Value("${application.elasticsearch.url}")
-	private String esURL;
+    @Value("${command.twint}")
+    private String twintCall;
 
-	@Autowired
-	CollectService collectService;
+    @Value("${application.elasticsearch.url}")
+    private String esURL;
 
-	@Async
-	public CompletableFuture<Map.Entry<Integer, Integer>> callTwint2(CollectRequest request1, CollectRequest request2,
-			String id) {
-		CollectHistory collectHistory = collectService.getCollectInfo(id);
-		String firstRequest = collectHistory.getQuery();
-		// Integer old_count = collectHistory.getCount();
+    @Value("${application.twintcall.twint_thread_nb_restart_on_error}")
+    private Long restart_time;
 
-		collectService.updateCollectStatus(id, Status.Running);
-		Integer res = callTwint(request1, id);
-		Logger.info("RES : " + res.toString());
-		Integer res2 = -1;
-		if (request2 != null)
-			res2 = callTwint(request2, id);
+    @Autowired
+    CollectService collectService;
 
-		// If query hasn't change, no extension to the search added
-		if (firstRequest.equals(collectService.getCollectInfo(id).getQuery())) {
-			collectService.updateCollectStatus(id, Status.Done);
-		}
+    private Object lock = new Object();
 
-		return CompletableFuture.completedFuture(new AbstractMap.SimpleEntry<>(res, res2));
-	}
+    private boolean isDockerCommand(String twintCall) {
+        if (twintCall.startsWith("docker"))
+            return true;
+        else
+            return false;
+    }
 
-	public Integer callTwint(CollectRequest request, String name) {
+    @Async(value = "twintCallTaskExecutor")
+    public CompletableFuture<Integer> callTwint(CollectRequest request, String session, Integer cpt) {
 
-		Integer result = -1;
-		String endMessage = "";
+        Logger.debug("Started Thread n°" + cpt);
 
-		Logger.debug("RES : " + result.toString());
-		try {
-			boolean isDocker = isDockerCommand(twintCall);
-			String r = TwintRequestGenerator.getInstance().generateRequest(request, name, isDocker, esURL);
-			ProcessBuilder pb = new ProcessBuilder("/bin/bash", "-c", twintCall + r);
+        Integer result = callProcessUntilSuccess(request, session);
 
-			// Status endStatus;
-			pb.environment().put("PATH", "/usr/bin:/usr/local/bin:/bin");
-			Logger.info(twintCall + r);
-			Process p = null;
-			try {
-				p = pb.start();
+        // update db to say this thread is finished
+        synchronized (lock) {
+            CollectHistory collectHistory = collectService.getCollectInfo(session);
+            int finished_thread = collectHistory.getFinished_threads() + 1;
+            collectService.updateCollectFinished_threads(session, finished_thread);
 
-				BufferedReader stdInput = new BufferedReader(new InputStreamReader(p.getInputStream()));
+            Integer old_count = collectHistory.getCount();
+            if (old_count == null || old_count == -1)
+                collectService.updateCollectCount(session, result);
+            else
+                collectService.updateCollectCount(session, result + old_count);
+        }
 
-				BufferedReader stdError = new BufferedReader(new InputStreamReader(p.getErrorStream()));
+        if (result != -1) {
+            synchronized (lock) {
+                CollectHistory collectHistory = collectService.getCollectInfo(session);
+                int successful_threads = collectHistory.getSuccessful_threads() + 1;
+                collectService.updateCollectSuccessful_threads(session, successful_threads);
+            }
+        }
+        synchronized (lock) {
+            CollectHistory collectHistory = collectService.getCollectInfo(session);
+            int finished_threads = collectHistory.getFinished_threads();
+            int successful_threads = collectHistory.getSuccessful_threads();
+            int total_threads = collectHistory.getTotal_threads();
+            if (finished_threads == total_threads) {
+                collectService.updateCollectStatus(session, Status.Done);
+                if (successful_threads == finished_threads)
+                    collectService.updateCollectMessage(session, "Finished successfully");
+                else
+                    collectService.updateCollectMessage(session, "Parts of this search could not be found");
+            }
+        }
+        return CompletableFuture.completedFuture(result);
+    }
 
-				String s = "";
 
-				while ((s = stdError.readLine()) != null) {
-					Logger.error(s);
-				}
+    private ProcessBuilder createProcessBuilder(CollectRequest request, String session) {
+        boolean isDocker = isDockerCommand(twintCall);
+        String twintRequest = TwintRequestGenerator.getInstance().generateRequest(request, session, isDocker, esURL);
 
-				Integer nb_tweets = -1;
-				while ((s = stdInput.readLine()) != null) {
-					Logger.info(s);
-					if (s.contains("Successfully collected")) {
-						String str = s.split("Successfully collected ")[1].split(" ")[0];
-						nb_tweets = Integer.parseInt(str);
-					}
-				}
+        ProcessBuilder processBuilder = new ProcessBuilder("/bin/bash", "-c", twintCall + twintRequest);
+        processBuilder.environment().put("PATH", "/usr/bin:/usr/local/bin:/bin");
+        Logger.info(twintCall + twintRequest);
+        return processBuilder;
+    }
 
-				if (nb_tweets == -1) {
+    private Integer callProcess(ProcessBuilder processBuilder) throws IOException {
+        Process process = processBuilder.start();
+        BufferedReader stdInput = new BufferedReader(new InputStreamReader(process.getInputStream()));
+        BufferedReader stdError = new BufferedReader(new InputStreamReader(process.getErrorStream()));
+        String LoggerString;
 
-					collectService.updateCollectStatus(name, Status.Error);
-					endMessage = "Error while collecting tweets";
-				} else {
-					endMessage = "Collected " + nb_tweets.toString() + " successfully.";
-				}
+        Boolean error_occurred = false;
 
-				stdInput.close();
-				stdError.close();
+        while ((LoggerString = stdError.readLine()) != null) {
+            Logger.error(LoggerString);
+            error_occurred = true;
+        }
 
-				result = nb_tweets;
+        Integer nb_tweets = -1;
+        while ((LoggerString = stdInput.readLine()) != null) {
+            Logger.info(LoggerString);
+            if (LoggerString.contains("Successfully collected")) {
+                String str = LoggerString.split("Successfully collected ")[1].split(" ")[0];
+                nb_tweets = Integer.parseInt(str);
+            }
+        }
+        stdInput.close();
+        stdError.close();
+        if (error_occurred)
+            return -1;
+        return nb_tweets;
+    }
 
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+    private Integer callTwintProcess(CollectRequest request, String session) {
 
-		} catch (Exception e) {
-			Logger.error(e.getMessage());
-			e.printStackTrace();
-		}
+        Integer result = -1;
+        try {
+            ProcessBuilder processBuilder = createProcessBuilder(request, session);
+            try {
 
-		Integer old_count = collectService.getCollectInfo(name).getCount();
-		if (old_count == null || old_count == -1)
-			collectService.updateCollectCount(name, result);
-		else
-			collectService.updateCollectCount(name, result + old_count);
+                result = callProcess(processBuilder);
 
-		collectService.updateCollectMessage(name, endMessage);
-		return result;
-	}
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
 
-	private boolean isDockerCommand(String twintCall) {
-		if (twintCall.startsWith("docker"))
-			return true;
-		else
-			return false;
-	}
+        } catch (Exception e) {
+            Logger.error(e.getMessage());
+            e.printStackTrace();
+        }
+        return result;
+    }
+
+    private Integer callProcessUntilSuccess(CollectRequest request, String session) {
+        // could add a request subdivision on error
+        Integer nb_tweets = -1;
+        for (int i = 0; i < restart_time && nb_tweets == -1; i++) {
+            nb_tweets = callTwintProcess(request, session);
+            if (nb_tweets == -1){
+                Date collected_to = findWhereIndexingStopped(request, session);
+                if (collected_to != null)
+                    request.setUntil(collected_to);
+            }
+        }
+        return nb_tweets;
+    }
+
+    public Date findWhereIndexingStopped(CollectRequest request, String session){
+        try {
+            myHttpUrlConnection urlConnection = new myHttpUrlConnection();
+
+            String url = "http://localhost:9200/twinttweets/_search";
+            String json = urlConnection.makeElasticSearchJsonQuery(request.getFrom(), request.getUntil(), session);
+
+            String response = urlConnection.postRequest(url, json);
+
+            JSONParser parser = new JSONParser();
+
+            JSONObject jsonObj = (JSONObject) parser.parse(response);
+
+            JSONArray hits = (JSONArray)((JSONObject)jsonObj.get("hits")).get("hits");
+            if (hits.size() < 1) {
+                Logger.error("No tweets found");
+                return null;
+            }
+            JSONObject hit = (JSONObject) hits.get(0);
+            String date = (String)((JSONObject)hit.get("_source")).get("date");
+
+            if (date.contains("-")){
+                if (date.length() > 10)
+                    return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(date);
+                else
+                    return new SimpleDateFormat("yyyy-MM-dd").parse(date);
+            }
+            else
+                return new Date(Long.parseLong(date));
+
+
+        } catch (ParseException | java.text.ParseException e) {
+            Logger.error(e.getMessage());
+            e.printStackTrace();
+        }
+        return null;
+    }
 }

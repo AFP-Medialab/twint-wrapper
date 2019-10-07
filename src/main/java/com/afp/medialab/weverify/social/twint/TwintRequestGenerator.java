@@ -2,6 +2,9 @@ package com.afp.medialab.weverify.social.twint;
 
 import java.text.SimpleDateFormat;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.afp.medialab.weverify.social.model.CollectRequest;
 import com.afp.medialab.weverify.social.model.SearchModel;
 
@@ -12,6 +15,9 @@ import com.afp.medialab.weverify.social.model.SearchModel;
  *
  */
 public class TwintRequestGenerator {
+
+	private static Logger Logger = LoggerFactory.getLogger(TwintRequestGenerator.class);
+
 
 	private static final TwintRequestGenerator INSTANCE = new TwintRequestGenerator();
 
@@ -39,25 +45,30 @@ public class TwintRequestGenerator {
 	}
 
 	public  String generateRequest(CollectRequest cr, String id, boolean isDocker, String esURL) {
-		SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+		SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
 		String call = "twint -ho --count ";
 
 		if (cr.getSearch() != null)
 			call += "-s '" + generateSearch(cr.getSearch()) + "'";
 
-		if (cr.getUser() != null)
-			call += " -u " + cr.getUser();
+		if (cr.getUser_list() != null && !cr.getUser_list().isEmpty()) {
+			String users = String.join(",", cr.getUser_list());
+			if (cr.getUser_list().size() > 1)
+				call += " --userlist '" + users + "'";
+			else
+				call += " -u " + users;
+		}
 
 		if (cr.getFrom() != null) {
 			String fromStr = format.format(cr.getFrom());
-			call += " --since " + fromStr;
+			call += " --since '" + fromStr + "'";
 		}
 
 		if (cr.getUntil() != null) {
 			String untilStr = format.format(cr.getUntil());
 
-			call += " --until " + untilStr;
+			call += " --until '" + untilStr + "'";
 		}
 
 		if (cr.getLang() != null)

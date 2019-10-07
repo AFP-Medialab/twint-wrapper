@@ -5,7 +5,7 @@ import java.util.TreeSet;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
-@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class SearchModel {
 
     //private static org.slf4j.Logger Logger = LoggerFactory.getLogger(SearchModel.class);

@@ -11,7 +11,7 @@ public class StatusResponse {
     private Date started, ended;
     private Status status;
     private CollectRequest query;
-    private String nbTweets;
+    private Integer nbTweets;
     private String message;
 
     public StatusResponse(String session, Date started, Date ended, Status status, CollectRequest query, Integer nbTweet, String message) {
@@ -21,10 +21,7 @@ public class StatusResponse {
         this.status = status;
         this.query = query;
         this.message = message;
-        if (nbTweet != null)
-            this.nbTweets = Integer.toString(nbTweet);
-        else
-            this.nbTweets = null;
+        this.nbTweets = nbTweet;
     }
 
     public String getMessage() {
@@ -35,7 +32,9 @@ public class StatusResponse {
         this.message = message;
     }
 
-    public String getSession() { return session; }
+    public String getSession() {
+        return session;
+    }
 
     public void setSession(String search) {
         this.session = search;
@@ -57,19 +56,27 @@ public class StatusResponse {
         this.ended = until;
     }
 
-    public CollectRequest getQuery() { return this.query; }
+    public CollectRequest getQuery() {
+        return this.query;
+    }
 
-    public Status getStatus() { return this.status; }
+    public Status getStatus() {
+        return this.status;
+    }
 
-    public void SetStatus(Status status) { this.status = status; }
+    public void SetStatus(Status status) {
+        this.status = status;
+    }
 
-    public void SetQuery(CollectRequest query) { this.query = query; }
+    public void SetQuery(CollectRequest query) {
+        this.query = query;
+    }
 
-    public String getNbTweets() {
+    public Integer getNbTweets() {
         return nbTweets;
     }
 
-    public void setNbTweets(String nbTweets) {
+    public void setNbTweets(Integer nbTweets) {
         this.nbTweets = nbTweets;
     }
 }

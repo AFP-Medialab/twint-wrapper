@@ -1,23 +1,30 @@
 package com.afp.medialab.weverify.social.model;
 
 import java.util.Date;
+import java.util.SortedSet;
 
 import com.afp.medialab.weverify.social.constrains.LangConstrain;
 import com.afp.medialab.weverify.social.constrains.MediaConstrain;
 import com.afp.medialab.weverify.social.constrains.RetweetHandlingConstrain;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
-@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class CollectRequest {
 
     private SearchModel search;
 
     @LangConstrain
     private String lang;
-    private String user;
-    @JsonFormat(pattern = "yyyy-MM-dd")
-    private Date from, until;
+    private SortedSet<String> user_list;
+    @JsonProperty("from")@JsonDeserialize(using =  MultiDateDeserializer.class)
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private Date from;
+    @JsonProperty("until")@JsonDeserialize(using =  MultiDateDeserializer.class)
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private Date until;
 
     @MediaConstrain
     private String media;
@@ -33,7 +40,7 @@ public class CollectRequest {
     public CollectRequest(CollectRequest collectRequest) {
         this.search = collectRequest.search;
         this.lang = collectRequest.lang;
-        this.user = collectRequest.user;
+        this.user_list = collectRequest.user_list;
         this.from = collectRequest.from;
         this.until = collectRequest.until;
         this.media = collectRequest.media;
@@ -69,12 +76,12 @@ public class CollectRequest {
         return lang;
     }
 
-    public String getUser() {
-        return user;
+    public SortedSet<String> getUser_list() {
+        return user_list;
     }
 
-    public void setUser(String user) {
-        this.user = user;
+    public void setUser_list(SortedSet<String> user_list) {
+        this.user_list = user_list;
     }
 
     public String getMedia() {

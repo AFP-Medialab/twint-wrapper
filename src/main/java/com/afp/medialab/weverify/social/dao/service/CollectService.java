@@ -27,7 +27,7 @@ public class CollectService {
     CollectInterface collectInterface;
 
 
-    public String CollectRequestToString(CollectRequest collectRequest) {
+    private String collectRequestToString(CollectRequest collectRequest) {
         ObjectMapper mapper = new ObjectMapper();
         try {
             return mapper.writeValueAsString(collectRequest);
@@ -37,7 +37,7 @@ public class CollectService {
         return "Json parsing Error";
     }
 
-    public CollectRequest StringToCollectRequest(String query) {
+    public CollectRequest stringToCollectRequest(String query) {
         ObjectMapper mapper = new ObjectMapper();
         try {
             CollectRequest collectRequest = mapper.readValue(query, CollectRequest.class);
@@ -52,13 +52,13 @@ public class CollectService {
         return null;
     }
 
-    public void SaveCollectInfo(String session, CollectRequest collectRequest, Date processStart, Date processEnd, Status status, String message, Integer count) {
-        CollectHistory collectHistory = new CollectHistory(session, CollectRequestToString(collectRequest), processStart, processEnd, status, message, count);
+    public void saveCollectInfo(String session, CollectRequest collectRequest, Date processStart, Date processEnd, Status status, String message, Integer count, Integer finished_threads, Integer total_threads, Integer successful_threads) {
+        CollectHistory collectHistory = new CollectHistory(session, collectRequestToString(collectRequest), processStart, processEnd, status, message, count, finished_threads, total_threads, successful_threads);
         collectInterface.save(collectHistory);
     }
 
     public CollectResponse alreadyExists(CollectRequest collectRequest) {
-        CollectHistory collectHistory = collectInterface.findCollectHistoryByQuery(CollectRequestToString(collectRequest));
+        CollectHistory collectHistory = collectInterface.findCollectHistoryByQuery(collectRequestToString(collectRequest));
         if (collectHistory == null)
             return null;
         return new CollectResponse(collectHistory.getSession(), collectHistory.getStatus(), null, collectHistory.getProcessEnd());
@@ -70,6 +70,11 @@ public class CollectService {
         if (newStatus == Status.Pending && existingStatus == Status.Done) {
             collectInterface.updateCollectProcessEnd(session, null);
             collectInterface.updateCollectStatus(session, newStatus.toString());
+            if (collectHistory.getTotal_threads() == null) {
+                collectInterface.updateCollectTotal_threads(session, 0);
+                collectInterface.updateCollectFinished_threads(session, 0);
+                collectInterface.updateCollectSuccessful_threads(session, 0);
+            }
             return true;
         }
         if (newStatus == Status.Running && existingStatus == Status.Pending) {
@@ -90,7 +95,7 @@ public class CollectService {
     }
 
     public void updateCollectQuery(String session, CollectRequest collectRequest) {
-        String query = CollectRequestToString(collectRequest);
+        String query = collectRequestToString(collectRequest);
         collectInterface.updateCollectQuery(session, query);
     }
 
@@ -173,6 +178,17 @@ public class CollectService {
         return collectInterface.findCollectHistoryByQueryContains(str);
     }
 
+    public void updateCollectFinished_threads(String session, Integer finished_threads) {
+        collectInterface.updateCollectFinished_threads(session, finished_threads);
+    }
+
+    public void updateCollectTotal_threads(String session, Integer total_threads) {
+        collectInterface.updateCollectTotal_threads(session, total_threads);
+    }
+
+    public void updateCollectSuccessful_threads(String session, Integer sucessful_threads) {
+        collectInterface.updateCollectSuccessful_threads(session, sucessful_threads);
+    }
 
 }
 
