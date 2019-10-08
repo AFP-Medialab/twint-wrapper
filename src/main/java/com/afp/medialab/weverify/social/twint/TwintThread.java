@@ -139,7 +139,7 @@ public class TwintThread {
 			if (LoggerString.contains("Successfully collected")) {
 				String str = LoggerString.split("Successfully collected ")[1].split(" ")[0];
 				nb_tweets = Integer.parseInt(str);
-				Logger.info("Successfully collected: " + str + " tweets");
+				Logger.info("Successfully collected: " + nb_tweets + " tweets");
 			}
 		}
 		stdInput.close();

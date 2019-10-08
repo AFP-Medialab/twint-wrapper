@@ -77,6 +77,7 @@ services:
     environment:
       MYSQL_URL: "jdbc:mysql://mysql:3306/twitter-gateway?serverTimeZone=CET&useSSL=false"
       ES_URL: elasticsearch:9200
+      ES_HOST: elasticsearch
 volumes:
   esdata1: {}
   esdata2: {}  
