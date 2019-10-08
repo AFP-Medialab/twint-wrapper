@@ -19,6 +19,9 @@ application:
     twint_thread_nb_restart_on_error : 3
   elasticsearch:
     url: ${ES_URL:elasticsearch:9200}
+    host: ${ES_HOST:localhost}
+    port: ${ES_PORT:9200}
+    
 
 
 spring:

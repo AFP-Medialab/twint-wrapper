@@ -63,7 +63,7 @@ services:
       - esnet
       
   twint-gateway:
-    image: medialab.registry.afp.com/twint-gateway:1.0.1
+    image: medialab.registry.afp.com/twint-gateway:1.0.2
     container_name: twint-gateway
     restart: on-failure
     depends_on:

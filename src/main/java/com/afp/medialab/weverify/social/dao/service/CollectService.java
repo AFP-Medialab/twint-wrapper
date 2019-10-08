@@ -178,15 +178,15 @@ public class CollectService {
         return collectInterface.findCollectHistoryByQueryContains(str);
     }
 
-    public void updateCollectFinished_threads(String session, Integer finished_threads) {
+    public void updateCollectFinishedThreads(String session, Integer finished_threads) {
         collectInterface.updateCollectFinished_threads(session, finished_threads);
     }
 
-    public void updateCollectTotal_threads(String session, Integer total_threads) {
+    public void updateCollectTotalThreads(String session, Integer total_threads) {
         collectInterface.updateCollectTotal_threads(session, total_threads);
     }
 
-    public void updateCollectSuccessful_threads(String session, Integer sucessful_threads) {
+    public void updateCollectSuccessfulThreads(String session, Integer sucessful_threads) {
         collectInterface.updateCollectSuccessful_threads(session, sucessful_threads);
     }
 

@@ -91,7 +91,7 @@ public class TwintThreadGroup {
         ArrayList<CollectRequest> collectRequestList = createListOfCollectRequest(request);
         CollectHistory collectHistory = collectService.getCollectInfo(session);
 
-        collectService.updateCollectTotal_threads(session, collectHistory.getTotal_threads() + collectRequestList.size());
+        collectService.updateCollectTotalThreads(session, collectHistory.getTotal_threads() + collectRequestList.size());
 
         ArrayList<CompletableFuture<Integer>> result = new ArrayList<CompletableFuture<Integer>>();
 

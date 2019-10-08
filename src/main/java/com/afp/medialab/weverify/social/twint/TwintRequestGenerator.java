@@ -97,6 +97,7 @@ public class TwintRequestGenerator {
 		call += " --essid " + id + " -es " + esURL;
 		if (isDocker)
 			call = " \"" + call + "\"";
+		Logger.debug("Twint command: " + call);
 		return call;
 	}
 

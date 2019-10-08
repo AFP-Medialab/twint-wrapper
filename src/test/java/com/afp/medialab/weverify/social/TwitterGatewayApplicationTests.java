@@ -15,18 +15,26 @@ import com.afp.medialab.weverify.social.controller.TwitterGatewayServiceControll
 
 @RunWith(SpringRunner.class)
 @WebMvcTest(TwitterGatewayServiceController.class)
-@ContextConfiguration(classes = {EndpointMockConfiguration.class})
+@ContextConfiguration(classes = { EndpointMockConfiguration.class })
 public class TwitterGatewayApplicationTests {
 
 	@Autowired
 	private MockMvc mvc;
-	
-	
+
 	@Test
 	public void contextLoads() throws Exception {
-		
+//		String collect = "{\n" + 
+//				"    \"search\": {\n" + 
+//				"        \"search\": \"#fake\"\n" + 
+//				"    },\n" + 
+//				"    \"from\": \"2019-09-01\",\n" + 
+//				"    \"until\": \"2019-09-04\",\n" + 
+//				"    \"lang\": \"fr\"\n" + 
+//				"}";
 		this.mvc.perform(get("/")).andExpect(status().isOk());
-		
+//		this.mvc.perform(post("/collect").contentType(MediaType.APPLICATION_JSON_VALUE)
+//				.content(collect))
+//				.andExpect(status().isOk());
 	}
 
 }
