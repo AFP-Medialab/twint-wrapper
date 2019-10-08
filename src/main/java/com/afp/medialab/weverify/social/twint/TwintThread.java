@@ -192,7 +192,7 @@ public class TwintThread {
 	 * @param session
 	 * @return
 	 */
-	public Date findWhereIndexingStopped(CollectRequest request, String session) {
+	private Date findWhereIndexingStopped(CollectRequest request, String session) {
 
 		String sinceStr = dateFormat.format(request.getFrom());
 		String untilStr = dateFormat.format(request.getUntil());
