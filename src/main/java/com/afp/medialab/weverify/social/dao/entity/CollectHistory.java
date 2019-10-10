@@ -2,12 +2,9 @@ package com.afp.medialab.weverify.social.dao.entity;
 
 import java.io.Serializable;
 import java.util.Date;
+import java.util.SortedSet;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
+import javax.persistence.*;
 
 import com.afp.medialab.weverify.social.model.Status;
 
@@ -24,8 +21,10 @@ public class CollectHistory implements Serializable {
     private Integer id;
     @Column(name = "session")
     private String session;
-    @Column(name = "query", columnDefinition = "TEXT")
-    private String query;
+
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "request_id", referencedColumnName = "id")
+    Request request;
     @Column(name = "processStart", nullable = true)
     private Date processStart;
     @Column(name = "processEnd", nullable = true)
@@ -47,9 +46,9 @@ public class CollectHistory implements Serializable {
     public CollectHistory() {
     }
 
-    public CollectHistory(String session, String query, Date processStart, Date processEnd, Status status, String message, Integer count, Integer finished_threads, Integer total_threads, Integer successful_threads) {
+    public CollectHistory(String session, Request request, Date processStart, Date processEnd, Status status, String message, Integer count, Integer finished_threads, Integer total_threads, Integer successful_threads) {
         this.session = session;
-        this.query = query;
+        this.request = request;
         this.processStart = processStart;
         this.processEnd = processEnd;
         this.status = status.toString();
@@ -80,12 +79,12 @@ public class CollectHistory implements Serializable {
         this.session = session;
     }
 
-    public String getQuery() {
-        return query;
+    public Request getRequest() {
+        return request;
     }
 
-    public void setQuery(String query) {
-        this.query = query;
+    public void setRequest(Request request) {
+        this.request = request;
     }
 
     public Date getProcessStart() {

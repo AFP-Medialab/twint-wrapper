@@ -1,12 +1,12 @@
 package com.afp.medialab.weverify.social.twint;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.afp.medialab.weverify.social.model.CollectRequest;
-import com.afp.medialab.weverify.social.model.SearchModel;
 
 /**
  * Generate twint command with elasticsearch
@@ -25,20 +25,21 @@ public class TwintRequestGenerator {
 		return INSTANCE;
 	}
 
-	public String generateSearch(SearchModel search) {
-		StringBuilder sb = new StringBuilder(search.getSearch());
+	public String generateSearch(CollectRequest collectRequest) {
+		if (collectRequest == null)
+			return null;
+		StringBuilder sb = new StringBuilder("");
 
-		if (search.getAnd() != null)
-			for (String s : search.getAnd()) {
-				sb.append(" AND " + s);
+		if (collectRequest.getAnd_list() != null) {
+			ArrayList<String> and = new ArrayList<String>(collectRequest.getAnd_list());
+			sb.append(and.get(0));
+			for (int i = 1; i < and.size(); i++) {
+				sb.append(" AND " + and.get(i));
 			}
+		}
 
-		if (search.getOr() != null)
-			for (String s : search.getOr()) {
-				sb.append(" OR " + s);
-			}
-		if (search.getNot() != null)
-			for (String s : search.getNot()) {
+		if (collectRequest.getNot_list() != null)
+			for (String s : collectRequest.getNot_list()) {
 				sb.append(" -" + s);
 			}
 		return sb.toString();
@@ -49,8 +50,7 @@ public class TwintRequestGenerator {
 
 		String call = "twint -ho --count ";
 
-		if (cr.getSearch() != null)
-			call += "-s '" + generateSearch(cr.getSearch()) + "'";
+		call += "-s '" + generateSearch(cr) + "'";
 
 		if (cr.getUser_list() != null && !cr.getUser_list().isEmpty()) {
 			String users = String.join(",", cr.getUser_list());

@@ -4,8 +4,10 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
-import java.util.Set;
 
+import com.afp.medialab.weverify.social.dao.entity.Request;
+import com.afp.medialab.weverify.social.dao.repository.RequestInterface;
+import org.elasticsearch.common.recycler.Recycler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -25,6 +27,9 @@ public class CollectService {
     //private static org.slf4j.Logger Logger = LoggerFactory.getLogger(CollectService.class);
     @Autowired
     CollectInterface collectInterface;
+
+    @Autowired
+    RequestInterface requestInterface;
 
 
     private String collectRequestToString(CollectRequest collectRequest) {
@@ -52,13 +57,14 @@ public class CollectService {
         return null;
     }
 
-    public void saveCollectInfo(String session, CollectRequest collectRequest, Date processStart, Date processEnd, Status status, String message, Integer count, Integer finished_threads, Integer total_threads, Integer successful_threads) {
-        CollectHistory collectHistory = new CollectHistory(session, collectRequestToString(collectRequest), processStart, processEnd, status, message, count, finished_threads, total_threads, successful_threads);
-        collectInterface.save(collectHistory);
+    public CollectHistory saveCollectInfo(String session, CollectRequest collectRequest, Date processStart, Date processEnd, Status status, String message, Integer count, Integer finished_threads, Integer total_threads, Integer successful_threads) {
+        CollectHistory collectHistory = new CollectHistory(session, new Request(collectRequest), processStart, processEnd, status, message, count, finished_threads, total_threads, successful_threads);
+        return collectInterface.save(collectHistory);
     }
 
     public CollectResponse alreadyExists(CollectRequest collectRequest) {
-        CollectHistory collectHistory = collectInterface.findCollectHistoryByQuery(collectRequestToString(collectRequest));
+        Request request = requestInterface.findByKeywordsAndBannedWordsAndLanguageAndSinceAndUntil(collectRequest.getAnd_list(), collectRequest.getNot_list(), collectRequest.getLang(), collectRequest.getFrom(), collectRequest.getUntil());
+        CollectHistory collectHistory = collectInterface.findCollectHistoryByRequest(request);
         if (collectHistory == null)
             return null;
         return new CollectResponse(collectHistory.getSession(), collectHistory.getStatus(), null, collectHistory.getProcessEnd());
@@ -95,8 +101,10 @@ public class CollectService {
     }
 
     public void updateCollectQuery(String session, CollectRequest collectRequest) {
-        String query = collectRequestToString(collectRequest);
-        collectInterface.updateCollectQuery(session, query);
+        CollectHistory collectHistory = collectInterface.findCollectHistoryBySession(session);
+        Request request = collectHistory.getRequest();
+        request.update(collectRequest);
+        requestInterface.save(request);
     }
 
     public void updateCollectProcessEnd(String session, Date date) {
@@ -172,10 +180,6 @@ public class CollectService {
 
     public void updateCollectCount(String session, Integer count) {
         collectInterface.updateCollectCount(session, count);
-    }
-
-    public Set<CollectHistory> findCollectHistoryByQueryContains(String str) {
-        return collectInterface.findCollectHistoryByQueryContains(str);
     }
 
     public void updateCollectFinishedThreads(String session, Integer finished_threads) {

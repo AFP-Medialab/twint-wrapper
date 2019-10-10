@@ -6,6 +6,7 @@ import java.util.SortedSet;
 import com.afp.medialab.weverify.social.constrains.LangConstrain;
 import com.afp.medialab.weverify.social.constrains.MediaConstrain;
 import com.afp.medialab.weverify.social.constrains.RetweetHandlingConstrain;
+import com.afp.medialab.weverify.social.dao.entity.Request;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -14,7 +15,9 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class CollectRequest {
 
-    private SearchModel search;
+
+    private SortedSet<String> and_list;
+    private SortedSet<String> not_list;
 
     @LangConstrain
     private String lang;
@@ -38,7 +41,8 @@ public class CollectRequest {
     }
 
     public CollectRequest(CollectRequest collectRequest) {
-        this.search = collectRequest.search;
+        this.and_list = collectRequest.and_list;
+        this.not_list = collectRequest.not_list;
         this.lang = collectRequest.lang;
         this.user_list = collectRequest.user_list;
         this.from = collectRequest.from;
@@ -47,13 +51,32 @@ public class CollectRequest {
         this.verified = collectRequest.verified;
         this.retweetsHandling = collectRequest.retweetsHandling;
     }
-
-    public SearchModel getSearch() {
-        return search;
+    public CollectRequest(Request request) {
+        this.and_list = request.getKeywords();
+        this.not_list = request.getBannedWords();
+        this.lang = request.getLanguage();
+        this.user_list = request.getUser_list();
+        this.from = request.getSince();
+        this.until = request.getUntil();
+        this.media = request.getMedia();
+        this.verified = request.getVerified();
+        this.retweetsHandling = request.getRetweetsHandling();
     }
 
-    public void setSearch(SearchModel search) {
-        this.search = search;
+    public SortedSet<String> getAnd_list() {
+        return and_list;
+    }
+
+    public void setAnd_list(SortedSet<String> and_list) {
+        this.and_list = and_list;
+    }
+
+    public SortedSet<String> getNot_list() {
+        return not_list;
+    }
+
+    public void setNot_list(SortedSet<String> not_list) {
+        this.not_list = not_list;
     }
 
     public Date getFrom() {
@@ -116,12 +139,18 @@ public class CollectRequest {
             return false;
         CollectRequest overRequest = (CollectRequest) overObject;
 
-        Boolean sameSearch;
-        if (this.search != null && overRequest.search != null)
-            sameSearch = this.search.equals(overRequest.search);
-        else if (this.search == null && overRequest.search == null)
-            sameSearch = true;
-        else
+        Boolean sameSearch = true;
+
+        SortedSet<String> andSet1 = this.and_list;
+        SortedSet<String> andSet2 = overRequest.and_list;
+
+        SortedSet<String> notSet1 = this.not_list;
+        SortedSet<String> notSet2 = overRequest.not_list;
+
+        if (!equalsSet(andSet1, andSet2))
+            sameSearch = false;
+
+        if (!equalsSet(notSet1, notSet2))
             sameSearch = false;
 
         Boolean sameLang;
@@ -133,5 +162,33 @@ public class CollectRequest {
             sameLang = false;
 
         return sameSearch && sameLang;
+    }
+
+    public  boolean isValid(){
+        if (this.and_list == null  && user_list.size() == 0)
+            return false;
+        if (this.and_list != null && this.and_list.size() == 0 && user_list.size() == 0)
+            return false;
+        if (this.from == null || this.until == null)
+            return false;
+        return true;
+    }
+
+    /**
+     * @func    Verifies if the two sets are equal
+     * @param   sortedSet1
+     * @param   sortedSet2
+     * @return
+     */
+    public Boolean equalsSet(SortedSet<String> sortedSet1, SortedSet<String> sortedSet2)
+    {
+        if (sortedSet1 == null && sortedSet2 == null)
+            return true;
+        if (sortedSet1 != null && sortedSet2 != null)
+        {
+            return sortedSet1.equals(sortedSet2);
+        }
+        else
+            return false;
     }
 }
