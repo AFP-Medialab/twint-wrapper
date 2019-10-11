@@ -1,6 +1,6 @@
 server:
   servlet:
-    context-path: /twitter-gateway
+    context-path: /twint-wrapper
 logging:
   level:
     root: INFO
