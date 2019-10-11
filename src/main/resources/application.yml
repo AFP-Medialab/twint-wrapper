@@ -1,6 +1,6 @@
 server:
   servlet:
-    context-path: /twitter-gateway
+    context-path: /twint-wrapper
 logging:
   level:
     root: INFO
@@ -35,7 +35,7 @@ spring:
     password: ${MYSQL_PASSWD:dev1}
     #driver-class-name: com.mysql.jdbc.Driver
   jpa:
-    hibernate.ddl-auto : create-drop
+    hibernate.ddl-auto : update
     generate-ddl: true
     show-sql: false
 
