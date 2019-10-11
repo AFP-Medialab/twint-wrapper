@@ -119,8 +119,8 @@ RUN cd twint && python setup.py install --prefix=/install/build
 FROM base
 
 COPY --from=builder /install/build /usr/local/
-COPY twitter-gateway.jar twitter-gateway.jar 
+COPY twint-wrapper.jar twint-wrapper.jar 
 
-ENTRYPOINT [ "/bin/bash", "-c", "java  -Djava.security.egd=file:/dev/./urandom -jar -Dspring.profiles.active=prod twitter-gateway.jar"]
+ENTRYPOINT [ "/bin/bash", "-c", "java  -Djava.security.egd=file:/dev/./urandom -jar -Dspring.profiles.active=prod twint-wrapper.jar"]
 
 CMD ["/bin/bash"]

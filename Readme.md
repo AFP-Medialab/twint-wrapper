@@ -1,8 +1,6 @@
-# Twitter Gateway
+# Twint Wrapper
 
-Twitter Gateway is a java Spring Boot application that expose operations in front of Twitter scraping tool.
-
-Supported scraping tool is [Twint](https://github.com/twintproject/twint)
+Twint Wrapper is a java Spring Boot application that expose operations in front of [Twint](https://github.com/twintproject/twint) scraping tool.
 
 
 This tool supported following operations:
@@ -12,7 +10,7 @@ This tool supported following operations:
 * collect-history => get request history
 * collect-update => re-process an existing scraping
 
-All operations are defined through swagger page **/twitter-gateway/swagger-ui.html**
+All operations are defined through swagger page **/twint-wrapper/swagger-ui.html**
 
 Target build is a Docker image that combine Twint image and the java Spring-Boot application.
 
@@ -67,15 +65,15 @@ Twitter-gateway can be run with different profiles (Default, dev & prod).
 
 default:
 
-	java -jar twitter-gateway.jar
+	java -jar twint-wrapper.jar
 	
 dev:
 
-	java -Dspring.profiles.active=dev -jar twitter-gateway.jar
+	java -Dspring.profiles.active=dev -jar twint-wrapper.jar
 	
 prod
 
-	java -Dspring.profiles.active=prod -jar twitter-gateway.jar
+	java -Dspring.profiles.active=prod -jar twint-wrapper.jar
 
  
 
