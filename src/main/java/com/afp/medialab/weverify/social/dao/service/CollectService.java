@@ -1,9 +1,9 @@
 package com.afp.medialab.weverify.social.dao.service;
 
 import java.io.IOException;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import com.afp.medialab.weverify.social.dao.entity.Request;
 import com.afp.medialab.weverify.social.dao.repository.RequestInterface;
@@ -62,7 +62,7 @@ public class CollectService {
     }
 
     public CollectResponse alreadyExists(CollectRequest collectRequest) {
-        Request request = requestInterface.findByKeywordsAndBannedWordsAndLanguageAndSinceAndUntil(collectRequest.getKeywords(), collectRequest.getBannedWords(), collectRequest.getLang(), collectRequest.getFrom(), collectRequest.getUntil());
+        Request request = null;
         CollectHistory collectHistory = collectInterface.findCollectHistoryByRequest(request);
         if (collectHistory != null)
             return new CollectResponse(collectHistory.getSession(), collectHistory.getStatus(), null, collectHistory.getProcessEnd());
@@ -194,10 +194,54 @@ public class CollectService {
         collectInterface.updateCollectSuccessful_threads(session, sucessful_threads);
     }
 
-    public CollectResponse isContained(CollectRequest collectRequest){
-        //comment
-        return null;
+    public Set<Request> isContainedKeywords(CollectRequest collectRequest){
+        Set<Request> matching_keyWords = new HashSet<Request>();
+        Set<String> keywords = collectRequest.getKeywordList();
+        if (keywords == null)
+            return null;
+        for (String keyword : keywords) {
+            List<Request> collected = requestInterface.my_findMatchingRequestByKeyword(keyword, keywords.size());
+            matching_keyWords.addAll(collected);
+        }
+
+        return matching_keyWords.stream().filter(e -> e.getKeywordList().stream().anyMatch(keywords::contains)).collect(Collectors.toSet());
     }
 
+    public Set<Request> isContainedBannedWords(CollectRequest collectRequest){
+        Set<Request> matching_bannedWords = new HashSet<Request>();
+        Set<String> bannedWords = collectRequest.getKeywordList();
+        if (bannedWords == null)
+            return null;
+        for (String bannedWord : bannedWords) {
+            List<Request> collected = requestInterface.my_findMatchingRequestByBannedWords(bannedWord, bannedWords.size());
+            matching_bannedWords.addAll(collected);
+        }
+        return matching_bannedWords.stream().filter(e -> e.getBannedWords().stream().anyMatch(bannedWords::contains)).collect(Collectors.toSet());
+    }
+
+    public Set<Request> isContainedUsers(CollectRequest collectRequest) {
+        Set<Request> matching_users = new HashSet<Request>();
+        Set<String> users = collectRequest.getUser_list();
+        if (users == null)
+            return new HashSet<>();
+        for (String user : users) {
+            List<Request> collected = requestInterface.my_findMatchingRequestByUsers(user, users.size());
+            matching_users.addAll(collected);
+        }
+        return matching_users.stream().filter(e -> e.getBannedWords().contains(users) || e.getUser_list().size() == 0).collect(Collectors.toSet());
+    }
+
+    public CollectHistory findCollectHistoryByRequest(Request request)
+    {
+        return collectInterface.findCollectHistoryByRequest(request);
+    }
+
+    public void save_collectHistory(CollectHistory collectHistory){
+        collectInterface.save(collectHistory);
+    }
+
+    public void save_request(Request request){
+        requestInterface.save(request);
+    }
 }
 

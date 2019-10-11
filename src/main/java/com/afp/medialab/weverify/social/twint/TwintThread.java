@@ -68,43 +68,39 @@ public class TwintThread {
 	}
 
 	@Async(value = "twintCallTaskExecutor")
-	public CompletableFuture<Integer> callTwint(CollectRequest request, String session, Integer cpt) {
+	public CompletableFuture<Integer> callTwint(CollectHistory collectHistory, CollectRequest request) {
 
-		Logger.debug("Started Thread n°" + cpt);
-
-		Integer result = callProcessUntilSuccess(request, session);
+		Integer result = callProcessUntilSuccess(request, collectHistory.getSession());
 
 		// update db to say this thread is finished
 		synchronized (lock) {
-			CollectHistory collectHistory = collectService.getCollectInfo(session);
-			int finished_thread = collectHistory.getFinished_threads() + 1;
-			collectService.updateCollectFinishedThreads(session, finished_thread);
-
+			collectHistory.setFinished_threads(collectHistory.getFinished_threads() + 1);
 			Integer old_count = collectHistory.getCount();
 			if (old_count == null || old_count == -1)
-				collectService.updateCollectCount(session, result);
+				collectHistory.setCount(result);
 			else
-				collectService.updateCollectCount(session, result + old_count);
+				collectHistory.setCount(result + old_count);
+			collectService.save_collectHistory(collectHistory);
 		}
 
 		if (result != -1) {
 			synchronized (lock) {
-				CollectHistory collectHistory = collectService.getCollectInfo(session);
-				int successful_threads = collectHistory.getSuccessful_threads() + 1;
-				collectService.updateCollectSuccessfulThreads(session, successful_threads);
+				collectHistory.setSuccessful_threads(collectHistory.getSuccessful_threads() + 1);
+				collectService.save_collectHistory(collectHistory);
 			}
 		}
+
 		synchronized (lock) {
-			CollectHistory collectHistory = collectService.getCollectInfo(session);
 			int finished_threads = collectHistory.getFinished_threads();
 			int successful_threads = collectHistory.getSuccessful_threads();
 			int total_threads = collectHistory.getTotal_threads();
 			if (finished_threads == total_threads) {
-				collectService.updateCollectStatus(session, Status.Done);
+				collectHistory.setStatus(Status.Done);
 				if (successful_threads == finished_threads)
-					collectService.updateCollectMessage(session, "Finished successfully");
+					collectHistory.setMessage("Finished successfully");
 				else
-					collectService.updateCollectMessage(session, "Parts of this search could not be found");
+					collectHistory.setMessage("Parts of this search could not be found");
+				collectService.save_collectHistory(collectHistory);
 			}
 		}
 		return CompletableFuture.completedFuture(result);

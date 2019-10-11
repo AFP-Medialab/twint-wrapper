@@ -5,24 +5,27 @@ import com.afp.medialab.weverify.social.model.CollectRequest;
 import javax.persistence.*;
 import java.io.Serializable;
 import java.util.Date;
+import java.util.Set;
 import java.util.SortedSet;
 
 @Entity
+@Table(name="request")
 public class Request implements Serializable {
     @Id
     @GeneratedValue
     @Column(name = "id", nullable = false, updatable = false)
+    @OneToOne(mappedBy = "collectHistory")
     private Integer id;
 
-    @Column(name = "keyWords", nullable = true, updatable = true)
+    @Column(name = "keywordList", nullable = true, updatable = true)
     @ElementCollection(targetClass=String.class)
     @OrderBy("sort ASC")
-    private SortedSet<String> keywords;
+    private Set<String> keywordList;
 
     @Column(name = "bannedWords", nullable = true, updatable = true)
     @ElementCollection(targetClass=String.class)
     @OrderBy("sort ASC")
-    private SortedSet<String> bannedWords;
+    private Set<String> bannedWords;
 
     @Column(name = "language")
     private String language;
@@ -30,7 +33,7 @@ public class Request implements Serializable {
     @Column(name = "user_list", nullable = true, updatable = true)
     @ElementCollection(targetClass=String.class)
     @OrderBy("sort ASC")
-    private SortedSet<String> user_list;
+    private Set<String> user_list;
 
     @Column(name = "since")
     private Date since;
@@ -49,8 +52,8 @@ public class Request implements Serializable {
 
     public Request(){}
 
-    public Request(SortedSet<String> keywords, SortedSet<String> bannedWords, String language, SortedSet<String> user_list, Date since, Date until, String media) {
-        this.keywords = keywords;
+    public Request(SortedSet<String> keywordList, SortedSet<String> bannedWords, String language, SortedSet<String> user_list, Date since, Date until, String media) {
+        this.keywordList = keywordList;
         this.bannedWords = bannedWords;
         this.language = language;
         this.user_list = user_list;
@@ -60,7 +63,7 @@ public class Request implements Serializable {
     }
 
     public Request(CollectRequest collectRequest){
-        this.keywords = collectRequest.getKeywords();
+        this.keywordList = collectRequest.getKeywordList();
         this.bannedWords = collectRequest.getBannedWords();
         this.language = collectRequest.getLang();
         this.user_list = collectRequest.getUser_list();
@@ -70,7 +73,7 @@ public class Request implements Serializable {
     }
 
     public void update(CollectRequest collectRequest){
-        this.keywords = collectRequest.getKeywords();
+        this.keywordList = collectRequest.getKeywordList();
         this.bannedWords = collectRequest.getBannedWords();
         this.language = collectRequest.getLang();
         this.user_list = collectRequest.getUser_list();
@@ -87,15 +90,15 @@ public class Request implements Serializable {
         this.id = id;
     }
 
-    public SortedSet<String> getKeywords() {
-        return keywords;
+    public Set<String> getKeywordList() {
+        return keywordList;
     }
 
-    public void setKeywords(SortedSet<String> keywords) {
-        this.keywords = keywords;
+    public void setKeywordList(SortedSet<String> keywordList) {
+        this.keywordList = keywordList;
     }
 
-    public SortedSet<String> getBannedWords() {
+    public Set<String> getBannedWords() {
         return bannedWords;
     }
 
@@ -111,7 +114,7 @@ public class Request implements Serializable {
         this.language = language;
     }
 
-    public SortedSet<String> getUser_list() {
+    public Set<String> getUser_list() {
         return user_list;
     }
 

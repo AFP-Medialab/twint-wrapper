@@ -30,8 +30,8 @@ public class TwintRequestGenerator {
 			return null;
 		StringBuilder sb = new StringBuilder("");
 
-		if (collectRequest.getKeywords() != null) {
-			ArrayList<String> and = new ArrayList<String>(collectRequest.getKeywords());
+		if (collectRequest.getKeywordList() != null) {
+			ArrayList<String> and = new ArrayList<String>(collectRequest.getKeywordList());
 			sb.append(and.get(0));
 			for (int i = 1; i < and.size(); i++) {
 				sb.append(" AND " + and.get(i));

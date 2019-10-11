@@ -1,6 +1,7 @@
 package com.afp.medialab.weverify.social.model;
 
 import java.util.Date;
+import java.util.Set;
 import java.util.SortedSet;
 
 import com.afp.medialab.weverify.social.constrains.LangConstrain;
@@ -16,12 +17,12 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 public class CollectRequest {
 
 
-    private SortedSet<String> keywords;
-    private SortedSet<String> bannedWords;
+    private Set<String> keywordList;
+    private Set<String> bannedWords;
 
     @LangConstrain
     private String lang;
-    private SortedSet<String> user_list;
+    private Set<String> user_list;
     @JsonProperty("from")@JsonDeserialize(using =  MultiDateDeserializer.class)
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date from;
@@ -41,7 +42,7 @@ public class CollectRequest {
     }
 
     public CollectRequest(CollectRequest collectRequest) {
-        this.keywords = collectRequest.keywords;
+        this.keywordList = collectRequest.keywordList;
         this.bannedWords = collectRequest.bannedWords;
         this.lang = collectRequest.lang;
         this.user_list = collectRequest.user_list;
@@ -52,7 +53,7 @@ public class CollectRequest {
         this.retweetsHandling = collectRequest.retweetsHandling;
     }
     public CollectRequest(Request request) {
-        this.keywords = request.getKeywords();
+        this.keywordList = request.getKeywordList();
         this.bannedWords = request.getBannedWords();
         this.lang = request.getLanguage();
         this.user_list = request.getUser_list();
@@ -63,15 +64,15 @@ public class CollectRequest {
         this.retweetsHandling = request.getRetweetsHandling();
     }
 
-    public SortedSet<String> getKeywords() {
-        return keywords;
+    public Set<String> getKeywordList() {
+        return keywordList;
     }
 
-    public void setKeywords(SortedSet<String> keywords) {
-        this.keywords = keywords;
+    public void setKeywordList(SortedSet<String> keywordList) {
+        this.keywordList = keywordList;
     }
 
-    public SortedSet<String> getBannedWords() {
+    public Set<String> getBannedWords() {
         return bannedWords;
     }
 
@@ -99,7 +100,7 @@ public class CollectRequest {
         return lang;
     }
 
-    public SortedSet<String> getUser_list() {
+    public Set<String> getUser_list() {
         return user_list;
     }
 
@@ -141,11 +142,11 @@ public class CollectRequest {
 
         Boolean sameSearch = true;
 
-        SortedSet<String> andSet1 = this.keywords;
-        SortedSet<String> andSet2 = overRequest.keywords;
+        Set<String> andSet1 = this.keywordList;
+        Set<String> andSet2 = overRequest.keywordList;
 
-        SortedSet<String> notSet1 = this.bannedWords;
-        SortedSet<String> notSet2 = overRequest.bannedWords;
+        Set<String> notSet1 = this.bannedWords;
+        Set<String> notSet2 = overRequest.bannedWords;
 
         if (!equalsSet(andSet1, andSet2))
             sameSearch = false;
@@ -165,9 +166,9 @@ public class CollectRequest {
     }
 
     public  boolean isValid(){
-        if (this.keywords == null  && user_list.size() == 0)
+        if (this.keywordList == null  && user_list.size() == 0)
             return false;
-        if (this.keywords != null && this.keywords.size() == 0 && user_list.size() == 0)
+        if (this.keywordList != null && this.keywordList.size() == 0 && user_list.size() == 0)
             return false;
         if (this.from == null || this.until == null)
             return false;
@@ -180,7 +181,7 @@ public class CollectRequest {
      * @param   sortedSet2
      * @return
      */
-    public Boolean equalsSet(SortedSet<String> sortedSet1, SortedSet<String> sortedSet2)
+    public Boolean equalsSet(Set<String> sortedSet1, Set<String> sortedSet2)
     {
         if (sortedSet1 == null && sortedSet2 == null)
             return true;

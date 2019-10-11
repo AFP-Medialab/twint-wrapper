@@ -9,6 +9,7 @@ import javax.persistence.*;
 import com.afp.medialab.weverify.social.model.Status;
 
 @Entity
+@Table(name="collectHistory")
 public class CollectHistory implements Serializable {
 
     /**
