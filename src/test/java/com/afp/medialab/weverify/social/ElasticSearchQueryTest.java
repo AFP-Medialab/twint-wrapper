@@ -19,8 +19,8 @@ import org.springframework.data.elasticsearch.core.query.SearchQuery;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import com.afp.medialab.weverify.social.config.ESConfiguration;
 import com.afp.medialab.weverify.social.model.twint.TwintModel;
-import com.afp.medialab.weverify.social.twint.ESConfiguration;
 
 @SpringBootTest
 @RunWith(SpringRunner.class)
@@ -29,6 +29,8 @@ public class ElasticSearchQueryTest {
 
 	@Autowired
 	private ElasticsearchOperations esOperation;
+	
+	
 
 	@Test
 	public void lastInsert() {
@@ -41,5 +43,13 @@ public class ElasticSearchQueryTest {
 		final List<TwintModel> model = esOperation.queryForList(searchQuery, TwintModel.class);
 
 		System.out.println("ok " + model.size());
+	}
+	
+	@Test
+	public void allTweetContent() {
+		QueryBuilder builder = matchQuery("essid", "d4ac692d-f1a8-4775-b591-76df1f15efa5");
+		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(builder).build().setPageable(PageRequest.of(0, 2000));
+		final List<TwintModel> hits = esOperation.queryForList(searchQuery, TwintModel.class);
+		System.out.println("hits " + hits.size());
 	}
 }

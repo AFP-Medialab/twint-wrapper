@@ -38,7 +38,7 @@ public class TwintThreadGroup {
 
     @Autowired
     CollectService collectService;
-
+    
     @Autowired
     private TwintThread tt;
 
@@ -116,4 +116,5 @@ public class TwintThreadGroup {
             e.printStackTrace();
         }
     }
+    
 }

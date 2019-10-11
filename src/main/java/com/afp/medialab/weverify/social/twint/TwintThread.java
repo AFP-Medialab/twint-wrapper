@@ -1,27 +1,16 @@
 package com.afp.medialab.weverify.social.twint;
 
-import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
-import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
-import static org.elasticsearch.index.query.QueryBuilders.rangeQuery;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-import org.elasticsearch.index.query.QueryBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
-import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
-import org.springframework.data.elasticsearch.core.query.SearchQuery;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -30,6 +19,8 @@ import com.afp.medialab.weverify.social.dao.service.CollectService;
 import com.afp.medialab.weverify.social.model.CollectRequest;
 import com.afp.medialab.weverify.social.model.Status;
 import com.afp.medialab.weverify.social.model.twint.TwintModel;
+import com.afp.medialab.weverify.social.postprocessing.ESService;
+import com.afp.medialab.weverify.social.postprocessing.GateProcessing;
 
 /**
  * Run twint command in a asynchronous thread
@@ -51,12 +42,13 @@ public class TwintThread {
 	private Long restart_time;
 
 	@Autowired
-	private ElasticsearchOperations esOperation;
+	private ESService esService;
 
 	@Autowired
-	CollectService collectService;
+	private CollectService collectService;
 
-	private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+	@Autowired
+	private GateProcessing gateProcessing;
 
 	private Object lock = new Object();
 
@@ -106,8 +98,13 @@ public class TwintThread {
 				else
 					collectService.updateCollectMessage(session, "Parts of this search could not be found");
 			}
+			enrichContent(request, session, result);
 		}
 		return CompletableFuture.completedFuture(result);
+	}
+
+	private void enrichContent(CollectRequest request, String session, int tweets) {
+		gateProcessing.processTweetWithTwitIE(request, session, tweets);
 	}
 
 	private ProcessBuilder createProcessBuilder(CollectRequest request, String session) {
@@ -193,16 +190,7 @@ public class TwintThread {
 	 * @return
 	 */
 	private Date findWhereIndexingStopped(CollectRequest request, String session) {
-
-		String sinceStr = dateFormat.format(request.getFrom());
-		String untilStr = dateFormat.format(request.getUntil());
-
-		QueryBuilder builder = boolQuery().must(matchQuery("essid", session)).filter(
-				rangeQuery("date").format("yyyy-MM-dd HH:mm:ss||yyyy-MM-dd||epoch_millis").gte(sinceStr).lte(untilStr));
-		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(builder).build()
-				.addSort(Sort.by("date").ascending()).setPageable(PageRequest.of(0, 1));
-		final List<TwintModel> hits = esOperation.queryForList(searchQuery, TwintModel.class);
-
+		final List<TwintModel> hits = esService.getTweet(request, session, 1);
 		if (hits.size() < 1) {
 			Logger.error("No tweets found");
 			return null;

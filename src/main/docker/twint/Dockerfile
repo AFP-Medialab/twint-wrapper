@@ -1,5 +1,5 @@
 FROM python:3.6-slim as base
-
+## Build Twint Docker image.
 FROM base as builder
 
 MAINTAINER Bertrand Goupil (bertrand.goupil@afp.com)

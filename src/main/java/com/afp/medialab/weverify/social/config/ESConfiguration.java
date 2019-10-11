@@ -1,4 +1,4 @@
-package com.afp.medialab.weverify.social.twint;
+package com.afp.medialab.weverify.social.config;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;

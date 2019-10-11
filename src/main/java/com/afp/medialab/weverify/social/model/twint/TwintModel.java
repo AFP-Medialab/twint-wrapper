@@ -18,6 +18,19 @@ public class TwintModel {
 	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
 	private Date date;
 	private String timezone, place, tweet;
+	
+	private String[] hashtags, cashtags;
+	private String user_id_str, username, name;
+	private int day;
+	private String hour, link;
+
+	private boolean retweet;
+	private String essid;
+	private int nlikes, nreplies, nretweets;
+	private String quote_url;
+	private int video;
+	private String search, near;
+	private String[] photos, videos;
 
 	public String[] getHashtags() {
 		return hashtags;
@@ -170,19 +183,6 @@ public class TwintModel {
 	public void setVideos(String[] videos) {
 		this.videos = videos;
 	}
-
-	private String[] hashtags, cashtags;
-	private String user_id_str, username, name;
-	private int day;
-	private String hour, link;
-
-	private boolean retweet;
-	private String essid;
-	private int nlikes, nreplies, nretweets;
-	private String quote_url;
-	private int video;
-	private String search, near;
-	private String[] photos, videos;
 
 	public String getId() {
 		return id;
