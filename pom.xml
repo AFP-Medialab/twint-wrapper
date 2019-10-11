@@ -10,7 +10,7 @@
 		<relativePath /> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.afp.medialab.weverify.social</groupId>
-	<artifactId>twitter-gateway</artifactId>
+	<artifactId>twint-wrapper</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>twint-wrapper</name>
 	<description>Twitter scraper wrapper</description>

@@ -44,7 +44,7 @@ services:
         MYSQL_ROOT_PASSWORD: devpass123
         MYSQL_USER: dev1
         MYSQL_PASSWORD: dev1
-        MYSQL_DATABASE: twitter-gateway
+        MYSQL_DATABASE: twint-wrapper
     container_name: mysql
     volumes:
       - mysqldata1:/usr/share/mysql/data

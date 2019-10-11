@@ -53,7 +53,7 @@ services:
         MYSQL_ROOT_PASSWORD: devpass123
         MYSQL_USER: dev1
         MYSQL_PASSWORD: dev1
-        MYSQL_DATABASE: twitter-gateway
+        MYSQL_DATABASE: twint-wrapper
     container_name: mysql
     volumes:
       - mysqldata1:/usr/share/mysql/data
@@ -63,19 +63,19 @@ services:
       - esnet
       
   twint-gateway:
-    image: medialab.registry.afp.com/twint-gateway:1.0.2
-    container_name: twint-gateway
+    image: medialab.registry.afp.com/twint-wrapper:1.0.2
+    container_name: twint-wrapper
     restart: on-failure
     depends_on:
       - mysql
     networks:
       - esnet
     ports:
-      - 8080:8080
+      - 8081:8080
     expose:
-      - 8080
+      - 8081
     environment:
-      MYSQL_URL: "jdbc:mysql://mysql:3306/twitter-gateway?serverTimeZone=CET&useSSL=false"
+      MYSQL_URL: "jdbc:mysql://mysql:3306/twint-wrapper?serverTimeZone=CET&useSSL=false"
       ES_URL: elasticsearch:9200
       ES_HOST: elasticsearch
 volumes:
