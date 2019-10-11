@@ -66,10 +66,9 @@ public class TwitterGatewayServiceController {
     @RequestMapping(path = "/collect", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public @ResponseBody
     CollectResponse collect(@RequestBody @Valid CollectRequest collectRequest, BindingResult result) {
-        String session = UUID.randomUUID().toString();
 
         if (!collectRequest.isValid())
-            return new CollectResponse(session, Status.Error, "and_list or user_list must be given, from and until are mandatory", null);
+            return new CollectResponse(null, Status.Error, "and_list or user_list must be given, from and until are mandatory", null);
 
         Logger.debug(result.getAllErrors().toString());
         if (result.hasErrors()) {
@@ -78,12 +77,11 @@ public class TwitterGatewayServiceController {
                 str += r.getDefaultMessage() + "; ";
             }
             Logger.info(str);
-            return new CollectResponse(session, Status.Error, str, null);
+            return new CollectResponse(null, Status.Error, str, null);
         }
 
         SortedSet<String> and_list = collectRequest.getKeywords();
         SortedSet<String> not_ist = collectRequest.getBannedWords();
-
         if (and_list != null)
             Logger.debug("and_list : " + and_list.toString());
         if (not_ist != null)
@@ -96,7 +94,7 @@ public class TwitterGatewayServiceController {
         Logger.debug("Retweets : " + collectRequest.getRetweetsHandling());
         Logger.debug("Media : " + collectRequest.getMedia());
 
-        return caching(collectRequest, session);
+        return useCache(collectRequest);
     }
 
 
@@ -140,44 +138,35 @@ public class TwitterGatewayServiceController {
     }
 
     /**
-     * @param newCollectRequest collect request asked.
-     * @param session           of the request.
+     * @param collectRequest collect request asked.
      * @return
      * @func Verifies if the request has already been done.
      * If not creates a new session and gives a CollectResponse accordingly.
      */
-    private CollectResponse caching(CollectRequest newCollectRequest, String session) {
-        // Check if this request has already been done
-        CollectResponse alreadyDone = collectService.alreadyExists(newCollectRequest);
+    private CollectResponse useCache(CollectRequest collectRequest) {
+        // Check if this exact request has already been done
+        CollectResponse alreadyDone = collectService.alreadyExists(collectRequest);
         if (alreadyDone != null) {
             Logger.info("This request has already been done sessionId: " + alreadyDone.getSession());
             return alreadyDone;
         }
-
-        alreadyDone = alreadyDone(newCollectRequest, session);
+        // Check if this request is contained in a previous one
+        alreadyDone = collectService.isContained(collectRequest);
         if (alreadyDone != null) {
-            Logger.info("This request has already been done sessionId: " + alreadyDone.getSession());
+            Logger.info("This request is contained in a already done request,  sessionId: " + alreadyDone.getSession());
             return alreadyDone;
         }
 
         // Creation of a brand new  CollectHistory
-        CollectHistory collectedInfo =  collectService.saveCollectInfo(session, newCollectRequest, null, null, Status.Pending, null, null, 0, 0, 0);
+        String session = UUID.randomUUID().toString();
+        CollectHistory collectedInfo =  collectService.saveCollectInfo(session, collectRequest, null, null, Status.Pending, null, null, 0, 0, 0);
 
-        ttg.callTwintMultiThreaded(newCollectRequest, session);;
+        ttg.callTwintMultiThreaded(collectRequest, session);;
 
         if (collectedInfo.getStatus() != Status.Done)
             return new CollectResponse(session, collectedInfo.getStatus(), null, collectedInfo.getProcessEnd());
         return new CollectResponse(session, collectedInfo.getStatus(), collectedInfo.getMessage(), collectedInfo.getProcessEnd());
     }
-
-    public CollectResponse alreadyDone(CollectRequest collectRequest, String session){
-        // Make a list off collectHistories where the queries are less or as specific as collectRequest
-        Set<CollectHistory> collectHistories = Collections.emptySet();
-
-            // Make a list Regarding the AND field in search
-        return null;
-    }
-
 
     /**
      * @param session

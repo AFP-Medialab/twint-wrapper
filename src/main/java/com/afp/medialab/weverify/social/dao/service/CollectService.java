@@ -64,9 +64,10 @@ public class CollectService {
     public CollectResponse alreadyExists(CollectRequest collectRequest) {
         Request request = requestInterface.findByKeywordsAndBannedWordsAndLanguageAndSinceAndUntil(collectRequest.getKeywords(), collectRequest.getBannedWords(), collectRequest.getLang(), collectRequest.getFrom(), collectRequest.getUntil());
         CollectHistory collectHistory = collectInterface.findCollectHistoryByRequest(request);
-        if (collectHistory == null)
-            return null;
-        return new CollectResponse(collectHistory.getSession(), collectHistory.getStatus(), null, collectHistory.getProcessEnd());
+        if (collectHistory != null)
+            return new CollectResponse(collectHistory.getSession(), collectHistory.getStatus(), null, collectHistory.getProcessEnd());
+        return null;
+
     }
 
     public Boolean updateCollectStatus(String session, Status newStatus) {
@@ -191,6 +192,10 @@ public class CollectService {
 
     public void updateCollectSuccessfulThreads(String session, Integer sucessful_threads) {
         collectInterface.updateCollectSuccessful_threads(session, sucessful_threads);
+    }
+
+    public CollectResponse isContained(CollectRequest collectRequest){
+        return null;
     }
 
 }
