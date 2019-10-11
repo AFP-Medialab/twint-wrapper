@@ -7,7 +7,6 @@ import java.util.List;
 
 import com.afp.medialab.weverify.social.dao.entity.Request;
 import com.afp.medialab.weverify.social.dao.repository.RequestInterface;
-import org.elasticsearch.common.recycler.Recycler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -63,7 +62,7 @@ public class CollectService {
     }
 
     public CollectResponse alreadyExists(CollectRequest collectRequest) {
-        Request request = requestInterface.findByKeywordsAndBannedWordsAndLanguageAndSinceAndUntil(collectRequest.getAnd_list(), collectRequest.getNot_list(), collectRequest.getLang(), collectRequest.getFrom(), collectRequest.getUntil());
+        Request request = requestInterface.findByKeywordsAndBannedWordsAndLanguageAndSinceAndUntil(collectRequest.getKeywords(), collectRequest.getBannedWords(), collectRequest.getLang(), collectRequest.getFrom(), collectRequest.getUntil());
         CollectHistory collectHistory = collectInterface.findCollectHistoryByRequest(request);
         if (collectHistory == null)
             return null;

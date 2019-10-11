@@ -27,7 +27,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.afp.medialab.weverify.social.dao.entity.CollectHistory;
 import com.afp.medialab.weverify.social.dao.service.CollectService;
-import com.afp.medialab.weverify.social.twint.TwintRequestGenerator;
 import com.afp.medialab.weverify.social.twint.TwintThreadGroup;
 
 import io.swagger.annotations.Api;
@@ -82,8 +81,8 @@ public class TwitterGatewayServiceController {
             return new CollectResponse(session, Status.Error, str, null);
         }
 
-        SortedSet<String> and_list = collectRequest.getAnd_list();
-        SortedSet<String> not_ist = collectRequest.getNot_list();
+        SortedSet<String> and_list = collectRequest.getKeywords();
+        SortedSet<String> not_ist = collectRequest.getBannedWords();
 
         if (and_list != null)
             Logger.debug("and_list : " + and_list.toString());

@@ -30,16 +30,16 @@ public class TwintRequestGenerator {
 			return null;
 		StringBuilder sb = new StringBuilder("");
 
-		if (collectRequest.getAnd_list() != null) {
-			ArrayList<String> and = new ArrayList<String>(collectRequest.getAnd_list());
+		if (collectRequest.getKeywords() != null) {
+			ArrayList<String> and = new ArrayList<String>(collectRequest.getKeywords());
 			sb.append(and.get(0));
 			for (int i = 1; i < and.size(); i++) {
 				sb.append(" AND " + and.get(i));
 			}
 		}
 
-		if (collectRequest.getNot_list() != null)
-			for (String s : collectRequest.getNot_list()) {
+		if (collectRequest.getBannedWords() != null)
+			for (String s : collectRequest.getBannedWords()) {
 				sb.append(" -" + s);
 			}
 		return sb.toString();

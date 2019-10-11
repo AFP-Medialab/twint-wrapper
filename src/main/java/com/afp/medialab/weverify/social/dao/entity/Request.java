@@ -60,8 +60,8 @@ public class Request implements Serializable {
     }
 
     public Request(CollectRequest collectRequest){
-        this.keywords = collectRequest.getAnd_list();
-        this.bannedWords = collectRequest.getNot_list();
+        this.keywords = collectRequest.getKeywords();
+        this.bannedWords = collectRequest.getBannedWords();
         this.language = collectRequest.getLang();
         this.user_list = collectRequest.getUser_list();
         this.since = collectRequest.getFrom();
@@ -70,8 +70,8 @@ public class Request implements Serializable {
     }
 
     public void update(CollectRequest collectRequest){
-        this.keywords = collectRequest.getAnd_list();
-        this.bannedWords = collectRequest.getNot_list();
+        this.keywords = collectRequest.getKeywords();
+        this.bannedWords = collectRequest.getBannedWords();
         this.language = collectRequest.getLang();
         this.user_list = collectRequest.getUser_list();
         this.since = collectRequest.getFrom();

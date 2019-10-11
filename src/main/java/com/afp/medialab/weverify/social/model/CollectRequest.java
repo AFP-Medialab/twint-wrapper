@@ -16,8 +16,8 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 public class CollectRequest {
 
 
-    private SortedSet<String> and_list;
-    private SortedSet<String> not_list;
+    private SortedSet<String> keywords;
+    private SortedSet<String> bannedWords;
 
     @LangConstrain
     private String lang;
@@ -41,8 +41,8 @@ public class CollectRequest {
     }
 
     public CollectRequest(CollectRequest collectRequest) {
-        this.and_list = collectRequest.and_list;
-        this.not_list = collectRequest.not_list;
+        this.keywords = collectRequest.keywords;
+        this.bannedWords = collectRequest.bannedWords;
         this.lang = collectRequest.lang;
         this.user_list = collectRequest.user_list;
         this.from = collectRequest.from;
@@ -52,8 +52,8 @@ public class CollectRequest {
         this.retweetsHandling = collectRequest.retweetsHandling;
     }
     public CollectRequest(Request request) {
-        this.and_list = request.getKeywords();
-        this.not_list = request.getBannedWords();
+        this.keywords = request.getKeywords();
+        this.bannedWords = request.getBannedWords();
         this.lang = request.getLanguage();
         this.user_list = request.getUser_list();
         this.from = request.getSince();
@@ -63,20 +63,20 @@ public class CollectRequest {
         this.retweetsHandling = request.getRetweetsHandling();
     }
 
-    public SortedSet<String> getAnd_list() {
-        return and_list;
+    public SortedSet<String> getKeywords() {
+        return keywords;
     }
 
-    public void setAnd_list(SortedSet<String> and_list) {
-        this.and_list = and_list;
+    public void setKeywords(SortedSet<String> keywords) {
+        this.keywords = keywords;
     }
 
-    public SortedSet<String> getNot_list() {
-        return not_list;
+    public SortedSet<String> getBannedWords() {
+        return bannedWords;
     }
 
-    public void setNot_list(SortedSet<String> not_list) {
-        this.not_list = not_list;
+    public void setBannedWords(SortedSet<String> bannedWords) {
+        this.bannedWords = bannedWords;
     }
 
     public Date getFrom() {
@@ -141,11 +141,11 @@ public class CollectRequest {
 
         Boolean sameSearch = true;
 
-        SortedSet<String> andSet1 = this.and_list;
-        SortedSet<String> andSet2 = overRequest.and_list;
+        SortedSet<String> andSet1 = this.keywords;
+        SortedSet<String> andSet2 = overRequest.keywords;
 
-        SortedSet<String> notSet1 = this.not_list;
-        SortedSet<String> notSet2 = overRequest.not_list;
+        SortedSet<String> notSet1 = this.bannedWords;
+        SortedSet<String> notSet2 = overRequest.bannedWords;
 
         if (!equalsSet(andSet1, andSet2))
             sameSearch = false;
@@ -165,9 +165,9 @@ public class CollectRequest {
     }
 
     public  boolean isValid(){
-        if (this.and_list == null  && user_list.size() == 0)
+        if (this.keywords == null  && user_list.size() == 0)
             return false;
-        if (this.and_list != null && this.and_list.size() == 0 && user_list.size() == 0)
+        if (this.keywords != null && this.keywords.size() == 0 && user_list.size() == 0)
             return false;
         if (this.from == null || this.until == null)
             return false;
