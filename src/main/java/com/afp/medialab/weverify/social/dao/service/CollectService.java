@@ -198,7 +198,7 @@ public class CollectService {
      * @return Set<Request> or null if the given list is empty or null
      * @function isContainedKeywords : This gives the list of requests that contains the same or less words than given list.
      */
-    public Set<Request> isContainedKeywords(Set<String> keywords) {
+    public Set<Request> requestsContainingOnlySomeOfTheKeywords(Set<String> keywords) {
         Set<Request> matching_keyWords = new HashSet<Request>();
         if (keywords == null || keywords.size() == 0)
             return null;
@@ -215,7 +215,7 @@ public class CollectService {
      * @return Set<Request> or null if the given list is empty or null
      * @function isContainedBannedWords : This gives the list of requests that contains the same or less words than given list.
      */
-    public Set<Request> isContainedBannedWords(Set<String> bannedWords) {
+    public Set<Request> requestContainingOnlySomeOfTheBannedWords(Set<String> bannedWords) {
         Set<Request> matching_bannedWords = new HashSet<Request>();
         if (bannedWords == null || bannedWords.size() == 0)
             return null;
@@ -228,7 +228,7 @@ public class CollectService {
         return matching_bannedWords;
     }
 
-    public Set<Request> isContainedUsers(Set<String> users) {
+    public Set<Request> requestContainingAllTheUsers(Set<String> users) {
         Set<Request> matching_users = new HashSet<Request>();
         if (users == null || users.size() == 0)
             return null;
@@ -251,6 +251,40 @@ public class CollectService {
 
     public void save_request(Request request) {
         requestInterface.save(request);
+    }
+
+    public Set<Request> requestsContainingAllTheKeywords(Set<String> keywordList) {
+        Set<Request> matchingRequests = new HashSet<Request>();
+        if (keywordList == null || keywordList.size() == 0)
+            return null;
+        for (String keyword : keywordList) {
+            List<Request> collected = requestInterface.my_findSmallerRequestByKeyword(keyword, keywordList.size());
+            matchingRequests.addAll(collected);
+        }
+        return matchingRequests.stream().filter(e -> e.getKeywordList().containsAll(keywordList)).collect(Collectors.toSet());
+    }
+
+    public Set<Request> requestContainingAllTheBannedWords(Set<String> bannedWords) {
+        Set<Request> matchingRequests = new HashSet<Request>();
+        if (bannedWords == null || bannedWords.size() == 0)
+            return null;
+        for (String keyword : bannedWords) {
+            List<Request> collected = requestInterface.my_findSmallerRequestByBannedWords(keyword, bannedWords.size());
+            matchingRequests.addAll(collected);
+        }
+        return matchingRequests.stream().filter(e -> e.getKeywordList().containsAll(bannedWords)).collect(Collectors.toSet());
+    }
+
+    public Set<Request> requestsContainingOnlySomeOfTheUsers(Set<String> userList) {
+        Set<Request> matching_users = new HashSet<Request>();
+        if (userList == null || userList.size() == 0)
+            return null;
+        for (String user : userList) {
+            List<Request> collected = requestInterface.my_findSmallerRequestByUsers(user);
+            matching_users.addAll(collected);
+        }
+        matching_users = matching_users.stream().filter(e -> e.getBannedWords().stream().anyMatch(userList::contains)).collect(Collectors.toSet());
+        return matching_users;
     }
 }
 

@@ -139,15 +139,34 @@ public class TwitterGatewayServiceController {
 
 
     public Set<Request> requestIsInCache(CollectRequest collectRequest) {
-        Set<Request> keywords = collectService.isContainedKeywords(collectRequest.getKeywordList());
-        Set<Request> banned_words = collectService.isContainedBannedWords(collectRequest.getBannedWords());
-        Set<Request> users = collectService.isContainedUsers(collectRequest.getUserList());
+        Set<Request> keywords = collectService.requestsContainingOnlySomeOfTheKeywords(collectRequest.getKeywordList());
+        Set<Request> banned_words = collectService.requestContainingOnlySomeOfTheBannedWords(collectRequest.getBannedWords());
+        Set<Request> users = collectService.requestContainingAllTheUsers(collectRequest.getUserList());
 
         Set<Request> maching_requests = new HashSet<Request>();
         if (keywords != null){
             maching_requests.addAll(keywords);
             if(banned_words != null)
                 maching_requests.retainAll(banned_words);
+            if (users != null)
+                maching_requests.retainAll(users);
+        }
+        else{
+            maching_requests = users;
+        }
+        return maching_requests;
+    }
+
+    public Set<Request> similarInCache(CollectRequest collectRequest){
+        Set<Request> keywords = collectService.requestsContainingAllTheKeywords(collectRequest.getKeywordList());
+        Set<Request> bannedWords = collectService.requestContainingAllTheBannedWords(collectRequest.getBannedWords());
+        Set<Request> users = collectService.requestsContainingOnlySomeOfTheUsers(collectRequest.getUserList());
+
+        Set<Request> maching_requests;
+        if (keywords != null){
+            maching_requests = new HashSet<Request>(keywords);
+            if(bannedWords != null)
+                maching_requests.retainAll(bannedWords);
             if (users != null)
                 maching_requests.retainAll(users);
         }
@@ -174,12 +193,22 @@ public class TwitterGatewayServiceController {
      * If not creates a new session and gives a CollectResponse accordingly.
      */
     private CollectResponse useCache(CollectRequest collectRequest) {
-        // Check if this request is contained in a previous one
-        CollectResponse alreadyDone = makeRequestFromList(collectRequest, requestIsInCache(collectRequest));
+        // Find previous request that are larger than @collectRequest.
+        Set<Request> previousMatch = requestIsInCache(collectRequest);
+        CollectResponse alreadyDone = makeRequestFromList(collectRequest, previousMatch);
         if (alreadyDone != null) {
-            Logger.info("This request is contained in a already done request,  sessionId: " + alreadyDone.getSession());
+            Logger.info("This request is contained in an already done request,  sessionId: " + alreadyDone.getSession());
             return alreadyDone;
         }
+        // Find previous request that are smaller than @collectRequest but similar.
+        previousMatch = similarInCache(collectRequest);
+        alreadyDone = makeRequestFromList(collectRequest, previousMatch);
+        if (alreadyDone != null) {
+            Logger.info("This request extends an already done request,  sessionId: " + alreadyDone.getSession());
+            return alreadyDone;
+        }
+
+
 
         // Creation of a brand new  CollectHistory
         String session = UUID.randomUUID().toString();

@@ -30,4 +30,18 @@ public interface RequestInterface extends JpaRepository<Request, Integer> {
 
     List<Request> findRequestByUserListIsNull();
 
+    @Modifying(clearAutomatically = true)
+    @Transactional
+    @Query("select r from Request r where :my_keyword member of r.keywordList and size(r.keywordList) >= :my_length")
+    List<Request> my_findSmallerRequestByKeyword(@Param("my_keyword") String my_keyword, @Param("my_length") Integer my_length);
+
+    @Modifying(clearAutomatically = true)
+    @Transactional
+    @Query("select r from Request r where :my_keyword member of r.bannedWords and size(r.bannedWords) >= :my_length")
+    List<Request> my_findSmallerRequestByBannedWords(@Param("my_keyword") String my_keyword, @Param("my_length") Integer my_length);
+
+    @Modifying(clearAutomatically = true)
+    @Transactional
+    @Query("select r from Request r where :my_keyword member of r.userList")
+    List<Request> my_findSmallerRequestByUsers(@Param("my_keyword") String user);
 }
