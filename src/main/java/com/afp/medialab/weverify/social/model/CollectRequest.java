@@ -22,11 +22,13 @@ public class CollectRequest {
 
     @LangConstrain
     private String lang;
-    private Set<String> user_list;
-    @JsonProperty("from")@JsonDeserialize(using =  MultiDateDeserializer.class)
+    private Set<String> userList;
+    @JsonProperty("from")
+    @JsonDeserialize(using = MultiDateDeserializer.class)
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date from;
-    @JsonProperty("until")@JsonDeserialize(using =  MultiDateDeserializer.class)
+    @JsonProperty("until")
+    @JsonDeserialize(using = MultiDateDeserializer.class)
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date until;
 
@@ -45,18 +47,19 @@ public class CollectRequest {
         this.keywordList = collectRequest.keywordList;
         this.bannedWords = collectRequest.bannedWords;
         this.lang = collectRequest.lang;
-        this.user_list = collectRequest.user_list;
+        this.userList = collectRequest.userList;
         this.from = collectRequest.from;
         this.until = collectRequest.until;
         this.media = collectRequest.media;
         this.verified = collectRequest.verified;
         this.retweetsHandling = collectRequest.retweetsHandling;
     }
+
     public CollectRequest(Request request) {
         this.keywordList = request.getKeywordList();
         this.bannedWords = request.getBannedWords();
         this.lang = request.getLanguage();
-        this.user_list = request.getUser_list();
+        this.userList = request.getUserList();
         this.from = request.getSince();
         this.until = request.getUntil();
         this.media = request.getMedia();
@@ -100,12 +103,12 @@ public class CollectRequest {
         return lang;
     }
 
-    public Set<String> getUser_list() {
-        return user_list;
+    public Set<String> getUserList() {
+        return userList;
     }
 
-    public void setUser_list(SortedSet<String> user_list) {
-        this.user_list = user_list;
+    public void setUserList(SortedSet<String> userList) {
+        this.userList = userList;
     }
 
     public String getMedia() {
@@ -129,10 +132,10 @@ public class CollectRequest {
     }
 
     /**
-     * @func    Overrides the equals function of the CollectRequest object.
-     *          Checks that the attributes : search and lang are the same
-     * @param   overObject
+     * @param overObject
      * @return
+     * @func Overrides the equals function of the CollectRequest object.
+     * Checks that the attributes : search and lang are the same
      */
     @Override
     public boolean equals(Object overObject) {
@@ -165,10 +168,10 @@ public class CollectRequest {
         return sameSearch && sameLang;
     }
 
-    public  boolean isValid(){
-        if (this.keywordList == null  && user_list.size() == 0)
+    public boolean isValid() {
+        if (this.keywordList == null && userList.size() == 0)
             return false;
-        if (this.keywordList != null && this.keywordList.size() == 0 && user_list.size() == 0)
+        if (this.keywordList != null && this.keywordList.size() == 0 && userList.size() == 0)
             return false;
         if (this.from == null || this.until == null)
             return false;
@@ -176,20 +179,17 @@ public class CollectRequest {
     }
 
     /**
-     * @func    Verifies if the two sets are equal
-     * @param   sortedSet1
-     * @param   sortedSet2
+     * @param sortedSet1
+     * @param sortedSet2
      * @return
+     * @func Verifies if the two sets are equal
      */
-    public Boolean equalsSet(Set<String> sortedSet1, Set<String> sortedSet2)
-    {
+    public Boolean equalsSet(Set<String> sortedSet1, Set<String> sortedSet2) {
         if (sortedSet1 == null && sortedSet2 == null)
             return true;
-        if (sortedSet1 != null && sortedSet2 != null)
-        {
+        if (sortedSet1 != null && sortedSet2 != null) {
             return sortedSet1.equals(sortedSet2);
-        }
-        else
+        } else
             return false;
     }
 }

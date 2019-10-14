@@ -9,7 +9,7 @@ import javax.persistence.*;
 import com.afp.medialab.weverify.social.model.Status;
 
 @Entity
-@Table(name="collectHistory")
+@Table(name = "collectHistory")
 public class CollectHistory implements Serializable {
 
     /**
@@ -23,9 +23,10 @@ public class CollectHistory implements Serializable {
     @Column(name = "session")
     private String session;
 
-    @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "request_id", referencedColumnName = "id")
-    Request request;
+    @OneToOne(fetch = FetchType.LAZY)
+    @MapsId
+    private Request request;
+
     @Column(name = "processStart", nullable = true)
     private Date processStart;
     @Column(name = "processEnd", nullable = true)

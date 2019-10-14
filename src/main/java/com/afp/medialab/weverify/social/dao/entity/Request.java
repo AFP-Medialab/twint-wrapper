@@ -8,32 +8,27 @@ import java.util.Date;
 import java.util.Set;
 import java.util.SortedSet;
 
-@Entity
-@Table(name="request")
+@Entity(name = "Request")
+@Table(name = "request")
 public class Request implements Serializable {
     @Id
     @GeneratedValue
-    @Column(name = "id", nullable = false, updatable = false)
-    @OneToOne(mappedBy = "collectHistory")
     private Integer id;
 
     @Column(name = "keywordList", nullable = true, updatable = true)
-    @ElementCollection(targetClass=String.class)
-    @OrderBy("sort ASC")
+    @ElementCollection(targetClass = String.class)
     private Set<String> keywordList;
 
     @Column(name = "bannedWords", nullable = true, updatable = true)
-    @ElementCollection(targetClass=String.class)
-    @OrderBy("sort ASC")
+    @ElementCollection(targetClass = String.class)
     private Set<String> bannedWords;
 
     @Column(name = "language")
     private String language;
 
-    @Column(name = "user_list", nullable = true, updatable = true)
-    @ElementCollection(targetClass=String.class)
-    @OrderBy("sort ASC")
-    private Set<String> user_list;
+    @Column(name = "userList", nullable = true, updatable = true)
+    @ElementCollection(targetClass = String.class)
+    private Set<String> userList;
 
     @Column(name = "since")
     private Date since;
@@ -50,33 +45,34 @@ public class Request implements Serializable {
     @Column(name = "retweetsHandling")
     private String retweetsHandling;
 
-    public Request(){}
+    public Request() {
+    }
 
-    public Request(SortedSet<String> keywordList, SortedSet<String> bannedWords, String language, SortedSet<String> user_list, Date since, Date until, String media) {
+    public Request(SortedSet<String> keywordList, SortedSet<String> bannedWords, String language, SortedSet<String> userList, Date since, Date until, String media) {
         this.keywordList = keywordList;
         this.bannedWords = bannedWords;
         this.language = language;
-        this.user_list = user_list;
+        this.userList = userList;
         this.since = since;
         this.until = until;
         this.media = media;
     }
 
-    public Request(CollectRequest collectRequest){
+    public Request(CollectRequest collectRequest) {
         this.keywordList = collectRequest.getKeywordList();
         this.bannedWords = collectRequest.getBannedWords();
         this.language = collectRequest.getLang();
-        this.user_list = collectRequest.getUser_list();
+        this.userList = collectRequest.getUserList();
         this.since = collectRequest.getFrom();
         this.until = collectRequest.getUntil();
         this.media = collectRequest.getMedia();
     }
 
-    public void update(CollectRequest collectRequest){
+    public void update(CollectRequest collectRequest) {
         this.keywordList = collectRequest.getKeywordList();
         this.bannedWords = collectRequest.getBannedWords();
         this.language = collectRequest.getLang();
-        this.user_list = collectRequest.getUser_list();
+        this.userList = collectRequest.getUserList();
         this.since = collectRequest.getFrom();
         this.until = collectRequest.getUntil();
         this.media = collectRequest.getMedia();
@@ -114,12 +110,12 @@ public class Request implements Serializable {
         this.language = language;
     }
 
-    public Set<String> getUser_list() {
-        return user_list;
+    public Set<String> getUserList() {
+        return userList;
     }
 
-    public void setUser_list(SortedSet<String> user_list) {
-        this.user_list = user_list;
+    public void setUserList(SortedSet<String> userList) {
+        this.userList = userList;
     }
 
     public Date getSince() {

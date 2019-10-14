@@ -89,7 +89,7 @@ public class TwitterGatewayServiceController {
         Logger.debug("from : " + collectRequest.getFrom().toString());
         Logger.debug("until : " + collectRequest.getUntil().toString());
         Logger.debug("language : " + collectRequest.getLang());
-        Logger.debug("user : " + collectRequest.getUser_list());
+        Logger.debug("user : " + collectRequest.getUserList());
         Logger.debug("verified : " + collectRequest.isVerified());
         Logger.debug("Retweets : " + collectRequest.getRetweetsHandling());
         Logger.debug("Media : " + collectRequest.getMedia());
@@ -138,22 +138,33 @@ public class TwitterGatewayServiceController {
     }
 
 
-    public CollectResponse isContained(CollectRequest collectRequest) {
-        Set<Request> keywords = collectService.isContainedKeywords(collectRequest);
-        Set<Request> banned_words = collectService.isContainedBannedWords(collectRequest);
-        Set<Request> users = collectService.isContainedUsers(collectRequest);
+    public Set<Request> requestIsInCache(CollectRequest collectRequest) {
+        Set<Request> keywords = collectService.isContainedKeywords(collectRequest.getKeywordList());
+        Set<Request> banned_words = collectService.isContainedBannedWords(collectRequest.getBannedWords());
+        Set<Request> users = collectService.isContainedUsers(collectRequest.getUserList());
 
-        Set<Request> maching_requests = new HashSet<Request>(keywords);
-        maching_requests.retainAll(banned_words);
-        maching_requests.retainAll(users);
+        Set<Request> maching_requests = new HashSet<Request>();
+        if (keywords != null){
+            maching_requests.addAll(keywords);
+            if(banned_words != null)
+                maching_requests.retainAll(banned_words);
+            if (users != null)
+                maching_requests.retainAll(users);
+        }
+        else{
+            maching_requests = users;
+        }
+        return maching_requests;
+    }
 
-        CollectResponse result = null;
-        for (Request request : maching_requests) {
+    public CollectResponse makeRequestFromList(CollectRequest collectRequest, Set<Request> requests)
+    {
+        for (Request request : requests) {
+            CollectResponse result = makeRequestIfDatesAreLarger(collectRequest, request);
             if (result != null)
                 return result;
-            result = completingOldRequest(collectRequest, request);
         }
-        return result;
+        return null;
     }
 
     /**
@@ -164,7 +175,7 @@ public class TwitterGatewayServiceController {
      */
     private CollectResponse useCache(CollectRequest collectRequest) {
         // Check if this request is contained in a previous one
-        CollectResponse alreadyDone = isContained(collectRequest);
+        CollectResponse alreadyDone = makeRequestFromList(collectRequest, requestIsInCache(collectRequest));
         if (alreadyDone != null) {
             Logger.info("This request is contained in a already done request,  sessionId: " + alreadyDone.getSession());
             return alreadyDone;
@@ -191,9 +202,7 @@ public class TwitterGatewayServiceController {
      * if the 	newCollectRequest does not match,
      * It makes a new CollectHistory
      */
-    private CollectResponse completingOldRequest(CollectRequest newCollectRequest, Request oldCollectRequest) {
-
-        CollectRequest resultingCollectRequest = newCollectRequest;
+    private CollectResponse makeRequestIfDatesAreLarger(CollectRequest newCollectRequest, Request oldCollectRequest) {
         CollectHistory collectHistory = collectService.findCollectHistoryByRequest(oldCollectRequest);
         collectHistory.setMessage("Completing the research. This research has already been done from " + oldCollectRequest.getSince() + " to " + oldCollectRequest.getUntil());
 
@@ -207,8 +216,8 @@ public class TwitterGatewayServiceController {
             collectHistory.setStatus(Status.Pending);
             oldCollectRequest.setSince(newCollectRequest.getFrom());
             oldCollectRequest.setUntil(newCollectRequest.getUntil());
-            collectService.save_collectHistory(collectHistory);
             collectService.save_request(oldCollectRequest);
+            collectService.save_collectHistory(collectHistory);
 
             callTwintOnInterval(collectHistory, oldCollectRequest, newCollectRequest.getFrom(), oldCollectRequest.getSince());
             callTwintOnInterval(collectHistory, oldCollectRequest, oldCollectRequest.getUntil(), newCollectRequest.getUntil());
@@ -218,7 +227,7 @@ public class TwitterGatewayServiceController {
         else if (newCollectRequest.getFrom().compareTo(oldCollectRequest.getSince()) >= 0
                 && newCollectRequest.getUntil().compareTo(oldCollectRequest.getUntil()) <= 0) {
             // Return the existing research
-            String messageDone = "This research has already been done.";
+            collectHistory.setMessage("This research has already been done.");
             return new CollectResponse(collectHistory);
         }
         // The new request covers before and a part of the old request
