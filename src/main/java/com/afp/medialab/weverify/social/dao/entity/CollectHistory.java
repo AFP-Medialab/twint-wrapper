@@ -7,6 +7,7 @@ import java.util.SortedSet;
 import javax.persistence.*;
 
 import com.afp.medialab.weverify.social.model.Status;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @Entity
 @Table(name = "collectHistory")
@@ -23,6 +24,7 @@ public class CollectHistory implements Serializable {
     @Column(name = "session")
     private String session;
 
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     @OneToOne(fetch = FetchType.LAZY)
     @MapsId
     private Request request;
