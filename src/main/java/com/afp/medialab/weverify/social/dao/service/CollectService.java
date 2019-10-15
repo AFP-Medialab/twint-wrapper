@@ -241,6 +241,14 @@ public class CollectService {
         return matching_users;
     }
 
+    public Set<Request> requestContainingEmptyUsers() {
+        return new HashSet<Request>(requestInterface.findRequestByUserListIsNull());
+    }
+
+    public Set<Request> requestContainingEmptyBannedWords() {
+        return new HashSet<Request>(requestInterface.findRequestByBannedWordsIsNull());
+    }
+
     public CollectHistory findCollectHistoryByRequest(Request request) {
         return collectInterface.findCollectHistoryByRequest(request);
     }

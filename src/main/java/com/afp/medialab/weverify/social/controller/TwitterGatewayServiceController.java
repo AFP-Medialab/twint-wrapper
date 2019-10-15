@@ -148,8 +148,12 @@ public class TwitterGatewayServiceController {
             maching_requests.addAll(keywords);
             if(banned_words != null)
                 maching_requests.retainAll(banned_words);
+            else
+                maching_requests.retainAll(collectService.requestContainingEmptyBannedWords());
             if (users != null)
                 maching_requests.retainAll(users);
+            else
+                maching_requests.retainAll(collectService.requestContainingEmptyUsers());
         }
         else{
             maching_requests = users;
@@ -176,13 +180,95 @@ public class TwitterGatewayServiceController {
         return maching_requests;
     }
 
-    public CollectResponse makeRequestFromList(CollectRequest collectRequest, Set<Request> requests)
+    public CollectResponse makeRequestFromListAndCompleteTime(CollectRequest collectRequest, Set<Request> requests)
     {
         for (Request request : requests) {
             CollectResponse result = makeRequestIfDatesAreLarger(collectRequest, request);
             if (result != null)
                 return result;
         }
+        return null;
+    }
+
+    public CollectResponse makeLargerRequestFromListAndCompleteTime(CollectRequest collectRequest, Set<Request> requests)
+    {
+        for (Request request : requests) {
+            CollectResponse result = makeLargerRequestIfDatesAreLarger(collectRequest, request);
+            if (result != null)
+                return result;
+        }
+        return null;
+    }
+
+    private CollectResponse makeLargerRequestIfDatesAreLarger(CollectRequest newCollectRequest, Request oldRequest) {
+        CollectHistory collectHistory = collectService.findCollectHistoryByRequest(oldRequest);
+        collectHistory.setMessage("Completing the research done from " + oldRequest.getSince() + " to " + oldRequest.getUntil());
+
+
+        // The new request covers all the old request and more
+        if (newCollectRequest.getFrom().compareTo(oldRequest.getSince()) < 0
+                && newCollectRequest.getUntil().compareTo(oldRequest.getUntil()) > 0) {
+            // Make a Twint collection from newCollectRequest.getFrom() to newCollectRequest.getUntil()
+            // And from  oldRequest.getUntil() to newCollectRequest.getUntil()
+
+            collectHistory.setStatus(Status.Pending);
+            oldRequest.update(newCollectRequest);
+            collectService.save_request(oldRequest);
+            collectService.save_collectHistory(collectHistory);
+
+            ttg.callTwintMultiThreaded(collectHistory, newCollectRequest);
+            return getCollectResponseFromTwintCall(collectHistory);
+        }
+        // The new request covers all the old request or less
+        else if (newCollectRequest.getFrom().compareTo(oldRequest.getSince()) >= 0
+                && newCollectRequest.getUntil().compareTo(oldRequest.getUntil()) <= 0) {
+            // Research the old request
+            collectHistory.setMessage("Completing the research");
+            collectHistory.setStatus(Status.Pending);
+            newCollectRequest.setFrom(oldRequest.getSince());
+            newCollectRequest.setUntil(oldRequest.getUntil());
+            oldRequest.update(newCollectRequest);
+            collectService.save_request(oldRequest);
+            collectService.save_collectHistory(collectHistory);
+
+            ttg.callTwintMultiThreaded(collectHistory, newCollectRequest);
+            return new CollectResponse(collectHistory);
+        }
+        // The new request covers before and a part of the old request
+        else if (newCollectRequest.getFrom().compareTo(oldRequest.getSince()) < 0
+                && newCollectRequest.getUntil().compareTo(oldRequest.getUntil()) <= 0
+                && newCollectRequest.getUntil().compareTo(oldRequest.getSince()) >= 0) {
+            // make a search from newCollectRequest.getFrom to oldRequest.getUntil()
+            collectHistory.setStatus(Status.Pending);
+            newCollectRequest.setUntil(oldRequest.getUntil());
+            oldRequest.update(newCollectRequest);
+            collectService.save_request(oldRequest);
+            collectService.save_collectHistory(collectHistory);
+
+            ttg.callTwintMultiThreaded(collectHistory, newCollectRequest);
+            return new CollectResponse(collectHistory);
+
+        }
+        // The new request covers after and a part of the old request
+        else if (newCollectRequest.getUntil().compareTo(oldRequest.getUntil()) > 0
+                && newCollectRequest.getFrom().compareTo(oldRequest.getSince()) >= 0
+                && newCollectRequest.getFrom().compareTo(oldRequest.getUntil()) <= 0) {
+            // make a search from oldRequest.getFrom() to newCollectRequest.getUntil()
+
+            collectHistory.setStatus(Status.Pending);
+            newCollectRequest.setFrom(oldRequest.getSince());
+            oldRequest.update(newCollectRequest);
+            collectService.save_request(oldRequest);
+            collectService.save_collectHistory(collectHistory);
+
+            ttg.callTwintMultiThreaded(collectHistory, newCollectRequest);
+            return new CollectResponse(collectHistory);
+        }
+        // else {
+        // The new request covers no days in common with the old one
+        // Undefined case yet so it's ignored for now.
+        // This collect request will have a new session Id even thought it matched the research criteria.
+        // }
         return null;
     }
 
@@ -195,17 +281,17 @@ public class TwitterGatewayServiceController {
     private CollectResponse useCache(CollectRequest collectRequest) {
         // Find previous request that are larger than @collectRequest.
         Set<Request> previousMatch = requestIsInCache(collectRequest);
-        CollectResponse alreadyDone = makeRequestFromList(collectRequest, previousMatch);
+        CollectResponse alreadyDone = makeRequestFromListAndCompleteTime(collectRequest, previousMatch);
         if (alreadyDone != null) {
             Logger.info("This request is contained in an already done request,  sessionId: " + alreadyDone.getSession());
             return alreadyDone;
         }
         // Find previous request that are smaller than @collectRequest but similar.
         previousMatch = similarInCache(collectRequest);
-        alreadyDone = makeRequestFromList(collectRequest, previousMatch);
-        if (alreadyDone != null) {
+        CollectResponse completing = makeLargerRequestFromListAndCompleteTime(collectRequest, previousMatch);
+        if (completing != null) {
             Logger.info("This request extends an already done request,  sessionId: " + alreadyDone.getSession());
-            return alreadyDone;
+            return completing;
         }
 
 
