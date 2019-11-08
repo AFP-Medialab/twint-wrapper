@@ -12,9 +12,11 @@ import java.util.Date;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
+import com.afp.medialab.weverify.social.model.*;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.bridge.SLF4JBridgeHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
@@ -27,8 +29,6 @@ import org.springframework.stereotype.Service;
 
 import com.afp.medialab.weverify.social.dao.entity.CollectHistory;
 import com.afp.medialab.weverify.social.dao.service.CollectService;
-import com.afp.medialab.weverify.social.model.CollectRequest;
-import com.afp.medialab.weverify.social.model.Status;
 import com.afp.medialab.weverify.social.model.twint.TwintModel;
 
 /**
@@ -68,11 +68,14 @@ public class TwintThread {
 	}
 
 	@Async(value = "twintCallTaskExecutor")
-	public CompletableFuture<Integer> callTwint(CollectRequest request, String session, Integer cpt) {
+	public CompletableFuture<Integer> callTwint(Object request, String session, Integer cpt) {
 
 		Logger.debug("Started Thread n°" + cpt);
-
-		Integer result = callProcessUntilSuccess(request, session);
+		Integer result = -1;
+		if (request instanceof CollectRequest)
+		 	result = callProcessUntilSuccess((CollectRequest)request, session);
+		if (request instanceof CollectFollowsRequest)
+			result = callFollowProcessUntilSuccess((CollectFollowsRequest)request, session);
 
 		// update db to say this thread is finished
 		synchronized (lock) {
@@ -110,9 +113,21 @@ public class TwintThread {
 		return CompletableFuture.completedFuture(result);
 	}
 
+	private ProcessBuilder createProcessBuilderFollows(CollectFollowsRequest request, String session, String type){
+		boolean isDocker = isDockerCommand(twintCall);
+		String twintRequest = TwintRequestGenerator.getInstance().generateFollowRequest(request.getUser(), session, type, isDocker, esURL);
+
+		ProcessBuilder processBuilder = new ProcessBuilder("/bin/bash", "-c", twintCall + twintRequest);
+		processBuilder.environment().put("PATH", "/usr/bin:/usr/local/bin:/bin");
+		Logger.info(twintCall + twintRequest);
+		return processBuilder;
+
+	}
 	private ProcessBuilder createProcessBuilder(CollectRequest request, String session) {
 		boolean isDocker = isDockerCommand(twintCall);
+
 		String twintRequest = TwintRequestGenerator.getInstance().generateRequest(request, session, isDocker, esURL);
+
 
 		ProcessBuilder processBuilder = new ProcessBuilder("/bin/bash", "-c", twintCall + twintRequest);
 		processBuilder.environment().put("PATH", "/usr/bin:/usr/local/bin:/bin");
@@ -120,7 +135,7 @@ public class TwintThread {
 		return processBuilder;
 	}
 
-	private Integer callProcess(ProcessBuilder processBuilder) throws IOException {
+	private Integer callProcess(ProcessBuilder processBuilder, String got) throws IOException {
 		Process process = processBuilder.start();
 		BufferedReader stdInput = new BufferedReader(new InputStreamReader(process.getInputStream()));
 		BufferedReader stdError = new BufferedReader(new InputStreamReader(process.getErrorStream()));
@@ -129,8 +144,9 @@ public class TwintThread {
 		Boolean error_occurred = false;
 
 		while ((LoggerString = stdError.readLine()) != null) {
+
 			Logger.error(LoggerString);
-			error_occurred = true;
+			//error_occurred = true;
 		}
 
 		Integer nb_tweets = -1;
@@ -138,8 +154,10 @@ public class TwintThread {
 
 			if (LoggerString.contains("Successfully collected")) {
 				String str = LoggerString.split("Successfully collected ")[1].split(" ")[0];
+				if (str.equals("all"))
+					str = LoggerString.split("Successfully collected ")[1].split(" ")[1];
 				nb_tweets = Integer.parseInt(str);
-				Logger.info("Successfully collected: " + nb_tweets + " tweets");
+				Logger.info("Successfully collected: " + nb_tweets + " " + got);
 			}
 		}
 		stdInput.close();
@@ -149,21 +167,41 @@ public class TwintThread {
 		return nb_tweets;
 	}
 
+	private Integer callTwintFollowsProcess(CollectFollowsRequest request, String session){
+		Integer result = -1;
+		try {
+			ProcessBuilder processBuilderFollowers = createProcessBuilderFollows(request, session, "followers");
+		//	ProcessBuilder processBuilderFollowing = createProcessBuilderFollows(request, session, "following");
+			result = callProcess(processBuilderFollowers, "users");// + callProcess(processBuilderFollowing);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return result;
+
+	}
+
+	private Integer callFollowProcessUntilSuccess(CollectFollowsRequest request, String session) {
+		// could add a request subdivision on error
+		Integer nb_tweets = -1;
+		for (int i = 0; i < restart_time && nb_tweets == -1; i++) {
+			nb_tweets = callTwintFollowsProcess(request, session);
+			if (nb_tweets == -1) {
+				Logger.info("Error reprocessing ");
+			}
+		}
+		return nb_tweets;
+	}
+
+
 	private Integer callTwintProcess(CollectRequest request, String session) {
 
 		Integer result = -1;
+		ProcessBuilder processBuilder = createProcessBuilder(request, session);
 		try {
-			ProcessBuilder processBuilder = createProcessBuilder(request, session);
-			try {
 
-				result = callProcess(processBuilder);
+			result = callProcess(processBuilder, "tweets");
 
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-
-		} catch (Exception e) {
-			Logger.error(e.getMessage());
+		} catch (IOException e) {
 			e.printStackTrace();
 		}
 		return result;

@@ -12,7 +12,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-public class CollectRequest {
+public class CollectRequest{
 
     private SearchModel search;
 

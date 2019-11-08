@@ -1,15 +1,13 @@
 package com.afp.medialab.weverify.social.controller;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
 import javax.validation.Valid;
 
+import com.afp.medialab.weverify.social.model.*;
+import com.afp.medialab.weverify.social.twint.TwintThread;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,15 +28,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.afp.medialab.weverify.social.dao.entity.CollectHistory;
 import com.afp.medialab.weverify.social.dao.service.CollectService;
-import com.afp.medialab.weverify.social.model.CollectRequest;
-import com.afp.medialab.weverify.social.model.CollectResponse;
-import com.afp.medialab.weverify.social.model.CollectUpdateRequest;
-import com.afp.medialab.weverify.social.model.HistoryRequest;
-import com.afp.medialab.weverify.social.model.HistoryResponse;
-import com.afp.medialab.weverify.social.model.NotFoundException;
-import com.afp.medialab.weverify.social.model.Status;
-import com.afp.medialab.weverify.social.model.StatusRequest;
-import com.afp.medialab.weverify.social.model.StatusResponse;
 import com.afp.medialab.weverify.social.twint.TwintRequestGenerator;
 import com.afp.medialab.weverify.social.twint.TwintThreadGroup;
 
@@ -73,6 +62,29 @@ public class TwitterGatewayServiceController {
     public String handleResourceNotFoundException() {
         return "This session could not be found";
     }
+    @ApiOperation(value = "Trigger a Twitter Scraping follows")
+    @RequestMapping(path = "/collect-follows", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    public @ResponseBody
+    CollectResponse collectFollows(@RequestBody CollectFollowsRequest collectRequest, BindingResult result) {
+
+        String session = UUID.randomUUID().toString();
+        Logger.debug(result.getAllErrors().toString());
+        if (result.hasErrors()) {
+            String str = "";
+            for (ObjectError r : result.getAllErrors()) {
+                str += r.getDefaultMessage() + "; ";
+            }
+            Logger.info(str);
+            return new CollectResponse(session, Status.Error, str, null);
+        }
+
+        Logger.debug("user : " + collectRequest.getUser());
+
+
+        return caching(collectRequest, session);
+       // return caching(collectRequest, session);
+    }
+
 
 
     @ApiOperation(value = "Trigger a Twitter Scraping")
@@ -150,7 +162,7 @@ public class TwitterGatewayServiceController {
      * @func Verifies if the request has already been done.
      * If not creates a new session and gives a CollectResponse accordingly.
      */
-    private CollectResponse caching(CollectRequest newCollectRequest, String session) {
+    private CollectResponse caching(Object newCollectRequest, String session) {
         // Check if this request has already been done
         CollectResponse alreadyDone = collectService.alreadyExists(newCollectRequest);
         if (alreadyDone != null) {
@@ -158,19 +170,21 @@ public class TwitterGatewayServiceController {
             return alreadyDone;
         }
 
-        //Search for all matching queries regardless of the date
-        Set<CollectHistory> collectHistories = collectService.findCollectHistoryByQueryContains(TwintRequestGenerator.getInstance().generateSearch(newCollectRequest.getSearch()));
-        for (CollectHistory c : collectHistories) {
-            if (alreadyDone != null)
-                break;
-            alreadyDone = completingOldRequest(c.getSession(), newCollectRequest, collectService.stringToCollectRequest(c.getQuery()));
-        }
+        if (newCollectRequest instanceof CollectRequest) {
+            //Search for all matching queries regardless of the date
+            Set<CollectHistory> collectHistories = collectService.findCollectHistoryByQueryContains(TwintRequestGenerator.getInstance().generateSearch(((CollectRequest)newCollectRequest).getSearch()));
 
-        if (alreadyDone != null) {
-            Logger.info("This request has already been done sessionId: " + alreadyDone.getSession());
-            return alreadyDone;
-        }
+            for (CollectHistory c : collectHistories) {
+                if (alreadyDone != null)
+                    break;
+                alreadyDone = completingOldRequest(c.getSession(), (CollectRequest)newCollectRequest, collectService.stringToCollectRequest(c.getQuery()));
+            }
 
+            if (alreadyDone != null) {
+                Logger.info("This request has already been done sessionId: " + alreadyDone.getSession());
+                return alreadyDone;
+            }
+        }
         // Creation of a brand new  CollectHistory
         collectService.saveCollectInfo(session, newCollectRequest, null, null, Status.Pending, null, null, 0, 0, 0);
 

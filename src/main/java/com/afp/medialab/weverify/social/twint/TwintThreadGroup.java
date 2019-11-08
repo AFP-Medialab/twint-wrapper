@@ -51,44 +51,52 @@ public class TwintThreadGroup {
     }
 
 
-    private ArrayList<CollectRequest> createListOfCollectRequest(CollectRequest request) {
+    private ArrayList<Object> createListOfCollectRequest(Object genRequest) {
 
-        Long maximum_duration = days_limit * 86400000;
-        ArrayList<CollectRequest> collectRequestList = new ArrayList<CollectRequest>();
-        Long request_duration = request.getUntil().getTime() - request.getFrom().getTime();
+        ArrayList<Object> collectRequestList = new ArrayList<>();
+        if (genRequest instanceof CollectRequest) {
+            CollectRequest request = (CollectRequest)genRequest;
 
-        if (request_duration < maximum_duration) {
-            collectRequestList.add(request);
+            Long maximum_duration = days_limit * 86400000;
+            Long request_duration = request.getUntil().getTime() - request.getFrom().getTime();
+
+            if (request_duration < maximum_duration) {
+                collectRequestList.add(request);
+                return collectRequestList;
+            }
+
+            Duration interval_size = Duration.ofSeconds(request_duration / subdivisions / 1000);
+            Date new_from_date = request.getFrom();
+            Date final_until = request.getUntil();
+            Date new_until_date = addDuration(new_from_date, interval_size);
+
+            /* while from < until */
+            while (new_until_date.compareTo(final_until) < 0) {
+                CollectRequest new_collectRequest = new CollectRequest(request);
+                new_collectRequest.setFrom(new_from_date);
+                new_collectRequest.setUntil(new_until_date);
+                collectRequestList.add(new_collectRequest);
+                new_from_date = new_until_date;
+                new_until_date = addDuration(new_from_date, interval_size);
+            }
+            /* if stopped early replace the last date by final_until*/
+            if (new_from_date.compareTo(final_until) < 0) {
+                CollectRequest new_collectRequest = new CollectRequest((CollectRequest)collectRequestList.get(collectRequestList.size() - 1));
+                new_collectRequest.setUntil(final_until);
+                collectRequestList.set(collectRequestList.size() - 1, new_collectRequest);
+            }
             return collectRequestList;
         }
-
-        Duration interval_size = Duration.ofSeconds(request_duration / subdivisions / 1000);
-        Date new_from_date = request.getFrom();
-        Date final_until = request.getUntil();
-        Date new_until_date = addDuration(new_from_date, interval_size);
-
-        /* while from < until */
-        while (new_until_date.compareTo(final_until) < 0) {
-            CollectRequest new_collectRequest = new CollectRequest(request);
-            new_collectRequest.setFrom(new_from_date);
-            new_collectRequest.setUntil(new_until_date);
-            collectRequestList.add(new_collectRequest);
-            new_from_date = new_until_date;
-            new_until_date = addDuration(new_from_date, interval_size);
+        else
+        {
+            collectRequestList.add(genRequest);
+            return collectRequestList;
         }
-        /* if stopped early replace the last date by final_until*/
-        if (new_from_date.compareTo(final_until) < 0) {
-            CollectRequest new_collectRequest = new CollectRequest(collectRequestList.get(collectRequestList.size()-1));
-            new_collectRequest.setUntil(final_until);
-            collectRequestList.set(collectRequestList.size()-1, new_collectRequest);
-        }
-        return collectRequestList;
     }
 
     @Async(value ="twintCallGroupTaskExecutor")
-    public CompletableFuture<ArrayList<CompletableFuture<Integer>>> callTwintMultiThreaded(CollectRequest request, String session) {
-
-        ArrayList<CollectRequest> collectRequestList = createListOfCollectRequest(request);
+    public CompletableFuture<ArrayList<CompletableFuture<Integer>>> callTwintMultiThreaded(Object request, String session) {
+        ArrayList<Object> collectRequestList = createListOfCollectRequest(request);
         CollectHistory collectHistory = collectService.getCollectInfo(session);
 
         collectService.updateCollectTotalThreads(session, collectHistory.getTotal_threads() + collectRequestList.size());
@@ -98,7 +106,7 @@ public class TwintThreadGroup {
         collectService.updateCollectStatus(session, Status.Running);
         Logger.debug("launch thread group");
         Integer cpt = 0;
-        for (CollectRequest collectRequest : collectRequestList) {
+        for (Object collectRequest : collectRequestList) {
             result.add(tt.callTwint(collectRequest, session, cpt));
             cpt++;
         }

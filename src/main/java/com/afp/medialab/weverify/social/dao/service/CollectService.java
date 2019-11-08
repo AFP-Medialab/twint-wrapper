@@ -6,14 +6,12 @@ import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
+import com.afp.medialab.weverify.social.model.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.afp.medialab.weverify.social.dao.entity.CollectHistory;
 import com.afp.medialab.weverify.social.dao.repository.CollectInterface;
-import com.afp.medialab.weverify.social.model.CollectRequest;
-import com.afp.medialab.weverify.social.model.CollectResponse;
-import com.afp.medialab.weverify.social.model.Status;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -27,7 +25,7 @@ public class CollectService {
     CollectInterface collectInterface;
 
 
-    private String collectRequestToString(CollectRequest collectRequest) {
+    private String collectRequestToString(Object collectRequest) {
         ObjectMapper mapper = new ObjectMapper();
         try {
             return mapper.writeValueAsString(collectRequest);
@@ -52,12 +50,13 @@ public class CollectService {
         return null;
     }
 
-    public void saveCollectInfo(String session, CollectRequest collectRequest, Date processStart, Date processEnd, Status status, String message, Integer count, Integer finished_threads, Integer total_threads, Integer successful_threads) {
+
+    public void saveCollectInfo(String session, Object collectRequest, Date processStart, Date processEnd, Status status, String message, Integer count, Integer finished_threads, Integer total_threads, Integer successful_threads) {
         CollectHistory collectHistory = new CollectHistory(session, collectRequestToString(collectRequest), processStart, processEnd, status, message, count, finished_threads, total_threads, successful_threads);
         collectInterface.save(collectHistory);
     }
 
-    public CollectResponse alreadyExists(CollectRequest collectRequest) {
+    public CollectResponse alreadyExists(Object collectRequest) {
         CollectHistory collectHistory = collectInterface.findCollectHistoryByQuery(collectRequestToString(collectRequest));
         if (collectHistory == null)
             return null;
@@ -94,7 +93,7 @@ public class CollectService {
         return false;
     }
 
-    public void updateCollectQuery(String session, CollectRequest collectRequest) {
+    public void updateCollectQuery(String session, Object collectRequest) {
         String query = collectRequestToString(collectRequest);
         collectInterface.updateCollectQuery(session, query);
     }
