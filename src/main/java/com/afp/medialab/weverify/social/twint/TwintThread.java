@@ -1,5 +1,6 @@
 package com.afp.medialab.weverify.social.twint;
 
+import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
 import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
 import static org.elasticsearch.index.query.QueryBuilders.rangeQuery;
@@ -8,15 +9,19 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 import com.afp.medialab.weverify.social.model.*;
+import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequest;
+import org.elasticsearch.action.update.UpdateRequest;
+import org.elasticsearch.common.xcontent.XContentBuilder;
+import org.elasticsearch.common.xcontent.XContentFactory;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.bridge.SLF4JBridgeHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
@@ -24,6 +29,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.SearchQuery;
+import org.springframework.data.elasticsearch.core.query.UpdateQuery;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -51,7 +57,7 @@ public class TwintThread {
 	private Long restart_time;
 
 	@Autowired
-	private ElasticsearchOperations esOperation;
+	private ESOperations esOperation;
 
 	@Autowired
 	CollectService collectService;
@@ -158,6 +164,8 @@ public class TwintThread {
 					str = LoggerString.split("Successfully collected ")[1].split(" ")[1];
 				nb_tweets = Integer.parseInt(str);
 				Logger.info("Successfully collected: " + nb_tweets + " " + got);
+
+
 			}
 		}
 		stdInput.close();
@@ -214,41 +222,15 @@ public class TwintThread {
 			nb_tweets = callTwintProcess(request, session);
 			if (nb_tweets == -1) {
 				Logger.info("Error reprocessing ");
-				Date collected_to = findWhereIndexingStopped(request, session);
-				if (collected_to != null)
+				Date collected_to = esOperation.findWhereIndexingStopped(request, session);
+				if (collected_to != null) {
 					request.setUntil(collected_to);
+				}
 			}
 		}
 		return nb_tweets;
 	}
 
-	/**
-	 * Get the latest tweet extracted for this session. (Oldest tweet is always
-	 * searched)
-	 * 
-	 * @param request
-	 * @param session
-	 * @return
-	 */
-	private Date findWhereIndexingStopped(CollectRequest request, String session) {
 
-		String sinceStr = dateFormat.format(request.getFrom());
-		String untilStr = dateFormat.format(request.getUntil());
-
-		QueryBuilder builder = boolQuery().must(matchQuery("essid", session)).filter(
-				rangeQuery("date").format("yyyy-MM-dd HH:mm:ss||yyyy-MM-dd||epoch_millis").gte(sinceStr).lte(untilStr));
-		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(builder).build()
-				.addSort(Sort.by("date").ascending()).setPageable(PageRequest.of(0, 1));
-		final List<TwintModel> hits = esOperation.queryForList(searchQuery, TwintModel.class);
-
-		if (hits.size() < 1) {
-			Logger.error("No tweets found");
-			return null;
-		}
-		TwintModel twintModel = hits.get(0);
-
-		return twintModel.getDate();
-
-	}
 
 }
