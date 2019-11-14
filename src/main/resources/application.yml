@@ -30,7 +30,7 @@ spring:
       FAIL_ON_UNKNOWN_PROPERTIES: true
 
   datasource:
-    url: ${MYSQL_URL:jdbc:mysql://localhost:3308/twitter-gateway?serverTimeZone=CET&useSSL=false}
+    url: ${MYSQL_URL:jdbc:mysql://localhost:3308/twint-wrapper?serverTimeZone=CET&useSSL=false}
     username: ${MYSQL_USER:dev1}
     password: ${MYSQL_PASSWD:dev1}
     #driver-class-name: com.mysql.jdbc.Driver

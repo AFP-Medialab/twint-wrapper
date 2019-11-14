@@ -8,8 +8,8 @@ import org.springframework.context.annotation.ComponentScan;
 import com.afp.medialab.weverify.social.dao.repository.CollectInterface;
 import com.afp.medialab.weverify.social.dao.service.CollectService;
 
-@SpringBootConfiguration
-@ComponentScan(value = {"com.afp.medialab.weverify.social"})
+//@SpringBootConfiguration
+//@ComponentScan(value = {"com.afp.medialab.weverify.social"})
 public class EndpointMockConfiguration {
 
 

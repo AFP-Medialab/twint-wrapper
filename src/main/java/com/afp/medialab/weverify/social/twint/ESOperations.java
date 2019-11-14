@@ -2,27 +2,48 @@ package com.afp.medialab.weverify.social.twint;
 
 import com.afp.medialab.weverify.social.model.CollectRequest;
 import com.afp.medialab.weverify.social.model.twint.TwintModel;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.elasticsearch.action.DocWriteResponse;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequest;
+import org.elasticsearch.action.index.IndexRequest;
+import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.update.UpdateRequest;
+import org.elasticsearch.action.update.UpdateResponse;
+import org.elasticsearch.client.Client;
+import org.elasticsearch.common.settings.Settings;
+import org.elasticsearch.common.transport.TransportAddress;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
+import org.elasticsearch.common.xcontent.XContentType;
+import org.elasticsearch.index.Index;
 import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.transport.client.PreBuiltTransportClient;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
+import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.SearchQuery;
 import org.springframework.data.elasticsearch.core.query.UpdateQuery;
 import org.springframework.stereotype.Component;
 
 import javax.transaction.Transactional;
-import java.io.Console;
-import java.io.IOException;
+import java.io.*;
+import java.net.HttpURLConnection;
+import java.net.InetAddress;
+import java.net.URL;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -35,6 +56,13 @@ public class ESOperations {
 
     @Autowired
     private ElasticsearchOperations esOperation;
+
+
+    @Autowired
+    private ESConfiguration esConfiguration;
+
+    @Value("${application.elasticsearch.url}")
+    private String esURL;
 
     private static Logger Logger = LoggerFactory.getLogger(TwintThread.class);
 
@@ -82,63 +110,34 @@ public class ESOperations {
     }
 
 
-    public void indexWordsObj(String session, String from, String until) throws IOException {
+    public void indexWordsObj(List<TwintModel> tms) {
+        tms.forEach(tm -> {
+            if (tm.getWit() == null) {
+                try {
+                    TwintModelAdapter.buildWit(tm);
 
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        Logger.info("INDEXING session "  + session);
-        String sinceStr = from; //dateFormat.format(from);
-        String untilStr = until; //dateFormat.format(until);
+                    ObjectMapper mapper = new ObjectMapper();
+                    String b = "{\"wit\": " + mapper.writeValueAsString(tm.getWit()) + "}";
+                    System.out.println("ID: " + tm.getId());
+                    IndexRequest indexRequest = new IndexRequest("twinttweets");
+                    indexRequest.id(tm.getId());
+                    indexRequest.type("_doc");
 
-        List<TwintModel> hits =
-                getModels(session, from, until);
+                    UpdateRequest updateRequest = new UpdateRequest();
+                    updateRequest.index("twinttweets");
+                    updateRequest.type("_doc");
+                    updateRequest.id(tm.getId());
 
-        hits.forEach(hit -> {
-          //  hit.setWit();
+                    updateRequest.doc(b, XContentType.JSON);
+
+                    UpdateResponse response = esConfiguration.elasticsearchClient().update(updateRequest);
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
         });
-       /* QueryBuilder builder = boolQuery().must(matchQuery("essid", session)).filter(
-                rangeQuery("date").format("yyyy-MM-dd HH:mm:ss||yyyy-MM-dd||epoch_millis").gte(sinceStr).lte(untilStr));
-        SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(builder).build();
 
-        final List<TwintModel> hits = esOperation.queryForList(searchQuery, TwintModel.class);
-
-        PutMappingRequest req = new PutMappingRequest("twinttweets");
-        XContentBuilder build = XContentFactory.jsonBuilder();
-        build.startObject();
-        {
-            build.startObject("named_words");
-            {
-                build.field("word", "word");
-                build.field("nbOccurences", 3);
-                build.field("entity", "organization");
-            }
-            build.endObject();
-        }
-        build.endObject();
-        req.source(build);
-        hits.forEach(hit -> {
-            UpdateRequest upReq = new UpdateRequest();
-            upReq.index("twinttweets");
-            upReq.type("_doc");
-            upReq.id(hit.getId());
-            try {
-                upReq.doc(jsonBuilder()
-                        .startObject()
-                        .startObject("named_words")
-                        .field("word", "SuperWord")
-                        .endObject()
-                        .endObject());
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            UpdateQuery query = new UpdateQuery();
-            query.setIndexName("twinttweets");
-            query.setId(hit.getId());
-            query.setType("_doc");
-            query.setUpdateRequest(upReq);
-            esOperation.update(query);
-            esOperation.queryForList(searchQuery, TwintModel.class).forEach(tm -> {
-            });
-        });*/
     }
 
 }
