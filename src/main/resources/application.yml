@@ -21,6 +21,8 @@ application:
     url: ${ES_URL:elasticsearch:9200}
     host: ${ES_HOST:localhost}
     port: ${ES_PORT:9200}
+  twittie:
+    url: ${TWITTIE_URL:http://185.249.140.38/weverify-twitie/process?annotations=:Person,:UserID,:Location,:Organization}
     
 
 

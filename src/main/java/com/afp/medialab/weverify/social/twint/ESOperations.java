@@ -5,6 +5,8 @@ import com.afp.medialab.weverify.social.model.twint.TwintModel;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.elasticsearch.action.DocWriteResponse;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequest;
+import org.elasticsearch.action.bulk.BulkRequest;
+import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.update.UpdateRequest;
@@ -17,6 +19,9 @@ import org.elasticsearch.common.xcontent.XContentFactory;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.Index;
 import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.search.aggregations.AbstractAggregationBuilder;
+import org.elasticsearch.search.aggregations.AggregationBuilder;
+import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.transport.client.PreBuiltTransportClient;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -61,18 +66,21 @@ public class ESOperations {
     @Autowired
     private ESConfiguration esConfiguration;
 
-    @Value("${application.elasticsearch.url}")
-    private String esURL;
+    @Autowired
+    private TwintModelAdapter twintModelAdapter;
+
 
     private static Logger Logger = LoggerFactory.getLogger(TwintThread.class);
 
     public List<TwintModel> getModels(String essid, String start, String end) {
-        QueryBuilder builder = boolQuery().must(matchQuery("essid", essid))
-                .filter(rangeQuery("date").format("yyyy-MM-dd HH:mm:ss||yyyy-MM-dd||epoch_millis")
-                        .gte(start).lte(end));
+       // esOperation.refresh(TwintModel.class);
+        QueryBuilder builder = boolQuery().must(matchQuery("essid", essid));
+             //   .filter(rangeQuery("date").format("yyyy-MM-dd HH:mm:ss||yyyy-MM-dd||epoch_millis")
+               //         .gte(start).lte(end));
 
-        SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(builder).build()
-                .addSort(Sort.by("date").ascending());
+        SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(builder).build().setPageable(PageRequest.of(0, 10000));;
+              //  .addSort(Sort.by("date").ascending());
+
         final List<TwintModel> model = esOperation.queryForList(searchQuery, TwintModel.class);
         System.out.println(model.size());
         return model;
@@ -110,33 +118,54 @@ public class ESOperations {
     }
 
 
-    public void indexWordsObj(List<TwintModel> tms) {
-        tms.forEach(tm -> {
-            if (tm.getWit() == null) {
+    public void indexWordsObj(List<TwintModel> tms) throws IOException {
+        BulkRequest requests = new BulkRequest();
+
+        for (TwintModel tm : tms) {
+                       // if (tm.getWit() == null) {
                 try {
-                    TwintModelAdapter.buildWit(tm);
+                    twintModelAdapter.buildWit(tm);
+
 
                     ObjectMapper mapper = new ObjectMapper();
                     String b = "{\"wit\": " + mapper.writeValueAsString(tm.getWit()) + "}";
-                    System.out.println("ID: " + tm.getId());
+
+                    String tw = "{\"twittieTweet\": \"" + twintModelAdapter.getTweet() + "\"}";
+
+                    System.out.println(twintModelAdapter.getTweet());
                     IndexRequest indexRequest = new IndexRequest("twinttweets");
                     indexRequest.id(tm.getId());
                     indexRequest.type("_doc");
+
+                    UpdateRequest updateTweet = new UpdateRequest();
+                    updateTweet.index("twinttweets");
+                    updateTweet.type("_doc");
+                    updateTweet.id(tm.getId());
 
                     UpdateRequest updateRequest = new UpdateRequest();
                     updateRequest.index("twinttweets");
                     updateRequest.type("_doc");
                     updateRequest.id(tm.getId());
 
+
+
+                    updateTweet.doc(tw, XContentType.JSON);
                     updateRequest.doc(b, XContentType.JSON);
 
-                    UpdateResponse response = esConfiguration.elasticsearchClient().update(updateRequest);
+                    System.out.println(tw);
+                    requests.add(updateTweet);
+                    requests.add(updateRequest);
+                    //Bulk
 
+                  //  esConfiguration.elasticsearchClient().update(updateRequest);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-            }
-        });
+          //  }
+        }
+
+        BulkResponse response = esConfiguration.elasticsearchClient().bulk(requests);
+       // System.out.println(response);
 
     }
 

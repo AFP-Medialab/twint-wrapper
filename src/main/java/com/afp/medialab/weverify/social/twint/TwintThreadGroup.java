@@ -2,6 +2,7 @@ package com.afp.medialab.weverify.social.twint;
 
 import static java.lang.Math.toIntExact;
 
+import java.io.IOException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -95,7 +96,7 @@ public class TwintThreadGroup {
     }
 
     @Async(value ="twintCallGroupTaskExecutor")
-    public CompletableFuture<ArrayList<CompletableFuture<Integer>>> callTwintMultiThreaded(Object request, String session) {
+    public CompletableFuture<ArrayList<CompletableFuture<Integer>>> callTwintMultiThreaded(Object request, String session) throws IOException {
         ArrayList<Object> collectRequestList = createListOfCollectRequest(request);
         CollectHistory collectHistory = collectService.getCollectInfo(session);
 

@@ -1,140 +1,170 @@
 package com.afp.medialab.weverify.social.twint;
 
+import com.afp.medialab.weverify.social.model.twint.StopWords;
 import com.afp.medialab.weverify.social.model.twint.TwintModel;
+import com.afp.medialab.weverify.social.model.twint.TwittieDeserializer;
+import com.afp.medialab.weverify.social.model.twint.TwittieResponse;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.RestTemplate;
 
+import javax.annotation.PostConstruct;
 import java.io.*;
-import java.net.HttpURLConnection;
-import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.*;
 
+@Configuration
 public class TwintModelAdapter {
-    private static String getTweetLang(String text, String[] langs, JSONObject stopwords) {
+
+    @Autowired
+    private RestTemplate restTemplate;
+
+    @Value("${application.twittie.url}")
+    private String twitieURL;
+
+    private Map<String, List<String>> stopwords;
+    private List<String> regExps;
+
+    private String tweet;
+
+    @PostConstruct
+    private void stopWordsFile() throws IOException {
+        ObjectMapper mapper = new ObjectMapper();
+
+        stopwords = mapper.readValue(new File("src/main/resources/stopwords.json"), Map.class);
+
+    }
+
+    @PostConstruct
+    private void regExps() throws IOException {
+        FileReader fr = new FileReader("src/main/resources/regexp.txt");
+        regExps = new ArrayList<>();
+        BufferedReader br = new BufferedReader(fr);
+        String str;
+        while((str = br.readLine())!= null)
+            regExps.add(str);
+
+    }
+
+    private String getTweetLang(String text, String[] langs) {
         Map<String, Float> percents = new TreeMap<>();
+
         Arrays.stream(langs).forEach(lang -> {
             percents.put(lang, 0f);
-            for (Object stopword : (JSONArray) stopwords.get(lang)) {
-                String word = (String) stopword;
+            for (String stopword : stopwords.get(lang)) {
+                String word = stopword;
                 if (text.contains(" " + word + " "))
                     percents.put(lang, percents.get(lang) + 1);
             }
-            percents.put(lang, percents.get(lang) / ((JSONArray) stopwords.get(lang)).size());//Arrays.stream((Array) stopwords.get(lang))
+            percents.put(lang, percents.get(lang) / (stopwords.get(lang)).size());
         });
+
         return percents.entrySet().stream().max((entry1, entry2) -> entry1.getValue() > entry2.getValue() ? 1 : -1).get().getKey();
 
     }
 
-    private static Map<String, String> callTwittie(String tweet) throws IOException, InterruptedException, ParseException {
-        URL url = new URL("http://185.249.140.38/weverify-twitie/process?annotations=:Person,:UserID,:Location,:Organization");
-        HttpURLConnection con = (HttpURLConnection) url.openConnection();
-        con.setDoOutput(true);
-        con.setRequestMethod("POST");
-        con.setRequestProperty("Content-Type", "text/plain");
+    private Map<String, String> callTwittie() throws IOException, InterruptedException, ParseException {
 
-        OutputStream os = con.getOutputStream();
-        os.write(tweet.getBytes());
-        os.flush();
+        //HTTPConnexion Timeout
 
-        if (con.getResponseCode() != HttpURLConnection.HTTP_OK) {
-           // throw new RuntimeException("Failed : HTTP error code : "
-             //       + con.getResponseCode());
-            return null;
-        }
-        BufferedReader br = new BufferedReader(new InputStreamReader(
-                (con.getInputStream())));
+        ResponseEntity<String> response = restTemplate.postForEntity("http://185.249.140.38/weverify-twitie/process?annotations=:Person,:UserID,:Location,:Organization", tweet, String.class);
 
+        ObjectMapper mapper = new ObjectMapper();
 
-        String output;
-        String fullOut = "";
-        while ((output = br.readLine()) != null) {
-            fullOut += output;
-        }
-        JSONParser parser = new JSONParser();
-        JSONObject json = (JSONObject) parser.parse(fullOut);
+        JsonNode root = mapper.readTree(response.getBody());
+        JsonNode annotations = root.get("response").get("annotations");
 
-        JSONObject annotations = (JSONObject) ((JSONObject) json.get("response")).get("annotations");
+        TwittieResponse twittieResponse = mapper.treeToValue(annotations, TwittieResponse.class);
         Map<String, String> tokenJSON = new HashMap<>();
 
-        JSONArray orgaTwittieJSON = (JSONArray) annotations.get(":Organization");
-        List<String> orgaJSON = new ArrayList<>();
-        for (Object orga : orgaTwittieJSON)
-        {
-            String p = (String) ((JSONObject)((JSONObject) orga).get("features")).get("string");
-            tokenJSON.put(p, "Organization");
-        }
+        twittieResponse.getPerson().forEach(p -> {
+            String per = p.getFeatures().getString();
+            String n_per = per.toLowerCase().replaceAll(" ", "_");
+            tweet = tweet.replaceAll(per, n_per);
 
-        JSONArray locTwittieJSON = (JSONArray) annotations.get(":Location");
-        List<String> locJSON = new ArrayList<>();
-        for (Object loc : locTwittieJSON)
-        {
-            String p = (String) ((JSONObject)((JSONObject) loc).get("features")).get("string");
-            tokenJSON.put(p, "Location");
-        }
+            tokenJSON.put(n_per, "Person");
+        });
+        twittieResponse.getUserID().forEach(p -> {
+            tweet = tweet.replaceAll(p.getFeatures().getString(), p.getFeatures().getString().toLowerCase());
+            tokenJSON.put(p.getFeatures().getString().toLowerCase(), "UserID");
+        });
+        twittieResponse.getLocation().forEach(p -> {
+            String per = p.getFeatures().getString();
+            String n_per = per.toLowerCase().replaceAll(" ", "_");
+            tweet = tweet.replaceAll(per, n_per);
+            tokenJSON.put(n_per, "Location");
+        });
+        twittieResponse.getOrganization().forEach(p -> {
+            String per = p.getFeatures().getString();
+            String n_per = per.toLowerCase().replaceAll(" ", "_");
+            tweet = tweet.replaceAll(per, n_per);
+            System.out.println(per);
+            tokenJSON.put(n_per, "Organization");
+        });
 
-        JSONArray personTwittieJSON = (JSONArray) annotations.get(":Person");
-        List<String> personJSON = new ArrayList<>();
-        for (Object person : personTwittieJSON)
-        {
-            String p = (String) ((JSONObject)((JSONObject) person).get("features")).get("string");
-            tokenJSON.put(p, "Person");
-        }
-
-        JSONArray idsTwittieJSON = (JSONArray) annotations.get(":UserID");
-        List<String> idsJSON = new ArrayList<>();
-        for (Object id : idsTwittieJSON)
-        {
-            String p = (String) ((JSONObject)((JSONObject) id).get("features")).get("string");
-            tokenJSON.put(p, "UserID");
-        }
-
-        con.disconnect();
         return tokenJSON;
     }
 
-    public static void buildWit(TwintModel tm) throws InterruptedException, ParseException, IOException {
-        Map<String, String> tokensNamed = callTwittie(tm.getTweet());
-        JSONParser jp = new JSONParser();
-        try (FileReader fr = new FileReader("src/main/resources/stopwords.json"))
-        {
-            Object obj =  jp.parse(fr);
-            final JSONObject stopwords = (JSONObject) obj;
+    public void buildWit(TwintModel tm) throws InterruptedException, ParseException, IOException {
 
-            String[] langs = new String[]{"fr", "en"};
-            List<String> words = Arrays.asList(tm.getTweet().toLowerCase()
-                    .replaceAll("https?:\\/\\/(www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{1,256}\\.[a-zA-Z0-9()]{1,6}\\b([-a-zA-Z0-9()@:%_\\+.~#?&//=]*)|pic\\.twitter\\.com\\/([-a-zA-Z0-9()@:%_\\+.~#?&//=]*)", "")
-                    .replaceAll("[\\.\\(\\)0-9\\!\\?\\'\\’\\‘\\\"\\:\\,\\/\\\\\\%\\>\\<\\«\\»\\'\\#\\ \\;\\-\\&\\|]+|\\u00a9|\\u00ae|[\\u2000-\\u3300]|\\ud83c[\\ud000-\\udfff]|\\ud83d[\\ud000-\\udfff]|\\ud83e[\\ud000-\\udfff]", " ")
-                    .split(" "));
+        tweet = tm.getTweet();
+        Map<String, String> tokensNamed = callTwittie();
 
-            Map<String, Integer> occurences = new HashMap<>();
+        System.out.println(tokensNamed);
+        String[] langs = new String[]{"fr", "en"};
 
-            words.stream().forEach((word) -> {
-                JSONArray stopLang = (JSONArray) stopwords.get(getTweetLang(tm.getTweet(), langs, stopwords));
-                JSONArray stopGlob = (JSONArray) stopwords.get("glob");
+        //String tweet = tm.getTweet();
 
-                if (!stopLang.contains(word) && !stopGlob.contains(word))
-                    if (occurences.get(word) == null)
-                        occurences.put(word, 1);
-                    else
-                        occurences.put(word, occurences.get(word)+1);
-            });
-           // word, occ,
-           List<TwintModel.WordsInTweet> wit = new ArrayList<>();
-            occurences.forEach((word, occ) -> {
-                TwintModel.WordsInTweet w = new TwintModel.WordsInTweet();//word, occ, (tokensNamed != null)?tokensNamed.get(word):null);
-                w.setWord(word); w.setNbOccurences(occ); w.setEntity((tokensNamed != null)?tokensNamed.get(word):null);
-                wit.add(w);
-            });
-
-
-            tm.setWit(wit);
-        } catch (Exception e) {
-            e.printStackTrace();
+        for (String regExp : regExps) {
+            tweet = tweet.replaceAll(regExp, " ");
         }
+        System.out.println(tweet);
+        List<String> words = Arrays.asList(tweet.toLowerCase().split(" "));
 
+        Map<String, Integer> occurences = new HashMap<>();
 
+        words.stream().forEach((word) -> {
+            List<String> stopLang = stopwords.get(getTweetLang(tm.getTweet(), langs));
+            List<String> stopGlob = stopwords.get("glob");
+
+            if (!stopLang.contains(word) && !stopGlob.contains(word))
+                if (occurences.get(word) == null)
+                    occurences.put(word, 1);
+                else
+                    occurences.put(word, occurences.get(word)+1);
+        });
+
+       List<TwintModel.WordsInTweet> wit = new ArrayList<>();
+        occurences.forEach((word, occ) -> {
+            TwintModel.WordsInTweet w = new TwintModel.WordsInTweet();
+            w.setWord(word);
+            w.setNbOccurences(occ);
+            w.setEntity((tokensNamed != null)? tokensNamed.get(word) : null);
+            wit.add(w);
+        });
+
+        tm.setTwittieTweet(tweet);
+        tm.setWit(wit);
     }
 
+    @Bean
+    public RestTemplate restTemplate()
+    {
+        return new RestTemplate();
+    }
+
+    public String getTweet() {
+        return tweet;
+    }
 }

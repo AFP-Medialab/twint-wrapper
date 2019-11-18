@@ -8,6 +8,7 @@ import static org.elasticsearch.index.query.QueryBuilders.rangeQuery;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -74,7 +75,7 @@ public class TwintThread {
 	}
 
 	@Async(value = "twintCallTaskExecutor")
-	public CompletableFuture<Integer> callTwint(Object request, String session, Integer cpt) {
+	public CompletableFuture<Integer> callTwint(Object request, String session, Integer cpt) throws IOException {
 
 		Logger.debug("Started Thread n°" + cpt);
 		Integer result = -1;
@@ -215,7 +216,7 @@ public class TwintThread {
 		return result;
 	}
 
-	private Integer callProcessUntilSuccess(CollectRequest request, String session) {
+	private Integer callProcessUntilSuccess(CollectRequest request, String session) throws IOException {
 		// could add a request subdivision on error
 		Integer nb_tweets = -1;
 		for (int i = 0; i < restart_time && nb_tweets == -1; i++) {
@@ -228,6 +229,12 @@ public class TwintThread {
 				}
 			}
 		}
+
+		Logger.info("Nb tweets: " + nb_tweets);
+			DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
+			esOperation.indexWordsObj(esOperation.getModels(session, dateFormat.format(request.getFrom()), dateFormat.format(request.getUntil())));
+
 		return nb_tweets;
 	}
 

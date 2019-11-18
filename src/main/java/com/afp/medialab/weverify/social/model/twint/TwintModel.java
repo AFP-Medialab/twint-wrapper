@@ -27,7 +27,7 @@ public class TwintModel {
 
 	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
 	private Date date;
-	private String timezone, place, tweet;
+	private String timezone, place, tweet, twittieTweet;
 
 	public String[] getHashtags() {
 		return hashtags;
@@ -259,6 +259,14 @@ public class TwintModel {
 
 	public void setWit(List<WordsInTweet> wit) {
 		this.wit = wit;
+	}
+
+	public String getTwittieTweet() {
+		return twittieTweet;
+	}
+
+	public void setTwittieTweet(String twittieTweet) {
+		this.twittieTweet = twittieTweet;
 	}
 
 

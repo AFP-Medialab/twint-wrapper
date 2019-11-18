@@ -1,5 +1,6 @@
 package com.afp.medialab.weverify.social.controller;
 
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -65,7 +66,7 @@ public class TwitterGatewayServiceController {
     @ApiOperation(value = "Trigger a Twitter Scraping follows")
     @RequestMapping(path = "/collect-follows", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public @ResponseBody
-    CollectResponse collectFollows(@RequestBody CollectFollowsRequest collectRequest, BindingResult result) {
+    CollectResponse collectFollows(@RequestBody CollectFollowsRequest collectRequest, BindingResult result) throws IOException {
 
         String session = UUID.randomUUID().toString();
         Logger.debug(result.getAllErrors().toString());
@@ -90,7 +91,7 @@ public class TwitterGatewayServiceController {
     @ApiOperation(value = "Trigger a Twitter Scraping")
     @RequestMapping(path = "/collect", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public @ResponseBody
-    CollectResponse collect(@RequestBody @Valid CollectRequest collectRequest, BindingResult result) {
+    CollectResponse collect(@RequestBody @Valid CollectRequest collectRequest, BindingResult result) throws IOException {
 
         String session = UUID.randomUUID().toString();
         Logger.debug(result.getAllErrors().toString());
@@ -162,7 +163,7 @@ public class TwitterGatewayServiceController {
      * @func Verifies if the request has already been done.
      * If not creates a new session and gives a CollectResponse accordingly.
      */
-    private CollectResponse caching(Object newCollectRequest, String session) {
+    private CollectResponse caching(Object newCollectRequest, String session) throws IOException {
         // Check if this request has already been done
         CollectResponse alreadyDone = collectService.alreadyExists(newCollectRequest);
         if (alreadyDone != null) {
@@ -209,7 +210,7 @@ public class TwitterGatewayServiceController {
      * if the 	newCollectRequest does not match,
      * It makes a new CollectHistory
      */
-    private CollectResponse completingOldRequest(String session, CollectRequest newCollectRequest, CollectRequest oldCollectRequest) {
+    private CollectResponse completingOldRequest(String session, CollectRequest newCollectRequest, CollectRequest oldCollectRequest) throws IOException {
 
         CollectRequest resultingCollectRequest = newCollectRequest;
         String message = "Completing the research. This research has already been done from " + oldCollectRequest.getFrom() + " to " + oldCollectRequest.getUntil();
@@ -291,7 +292,7 @@ public class TwitterGatewayServiceController {
      * @func callTwintOnInterval overload with only one date interval.
      * call Twint on the interval and append the result to the elastic search session
      */
-    private CompletableFuture<ArrayList<CompletableFuture<Integer>>> callTwintOnInterval(CollectRequest collectRequest, String session, Date from, Date until) {
+    private CompletableFuture<ArrayList<CompletableFuture<Integer>>> callTwintOnInterval(CollectRequest collectRequest, String session, Date from, Date until) throws IOException {
         CollectRequest newCollectRequest = new CollectRequest(collectRequest);
         newCollectRequest.setFrom(from);
         newCollectRequest.setUntil(until);
@@ -344,14 +345,14 @@ public class TwitterGatewayServiceController {
     @ApiOperation(value = "Update an old request")
     @RequestMapping(path = "/collect-update/{id}", method = RequestMethod.GET)
     public @ResponseBody
-    StatusResponse collectUpdate(@PathVariable("id") String id) throws ExecutionException, InterruptedException {
+    StatusResponse collectUpdate(@PathVariable("id") String id) throws ExecutionException, InterruptedException, IOException {
         return collectUpdateFunction(id);
     }
 
     @ApiOperation(value = "Update an old request")
     @RequestMapping(path = "/collect-update", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public @ResponseBody
-    StatusResponse collectUpdate(@RequestBody @Valid CollectUpdateRequest collectUpdateRequest) throws ExecutionException, InterruptedException {
+    StatusResponse collectUpdate(@RequestBody @Valid CollectUpdateRequest collectUpdateRequest) throws ExecutionException, InterruptedException, IOException {
         String id = collectUpdateRequest.getSession();
         return collectUpdateFunction(id);
     }
@@ -363,7 +364,7 @@ public class TwitterGatewayServiceController {
      * @func Calls Twint on the time interval of a session. The result replaces the old ones un elastic search.
      * @return Status response or the corresponding session
      */
-   private StatusResponse collectUpdateFunction(String session) throws ExecutionException, InterruptedException {
+   private StatusResponse collectUpdateFunction(String session) throws ExecutionException, InterruptedException, IOException {
         Logger.info("Collect-Update " + session);
 
         CollectHistory collectHistory = collectService.getCollectInfo(session);
