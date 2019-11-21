@@ -40,6 +40,7 @@ import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.SearchQuery;
 import org.springframework.data.elasticsearch.core.query.UpdateQuery;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 import javax.transaction.Transactional;
@@ -72,7 +73,10 @@ public class ESOperations {
 
     private static Logger Logger = LoggerFactory.getLogger(TwintThread.class);
 
-    public List<TwintModel> getModels(String essid, String start, String end) {
+
+    public List<TwintModel> getModels(String essid, String start, String end) throws InterruptedException {
+
+        wait();
        // esOperation.refresh(TwintModel.class);
         QueryBuilder builder = boolQuery().must(matchQuery("essid", essid));
              //   .filter(rangeQuery("date").format("yyyy-MM-dd HH:mm:ss||yyyy-MM-dd||epoch_millis")
@@ -117,30 +121,32 @@ public class ESOperations {
 
     }
 
-
-    public void indexWordsObj(List<TwintModel> tms) throws IOException {
+    public void indexWordsObj(List<TwintModel> tms) throws IOException, InterruptedException {
         BulkRequest requests = new BulkRequest();
 
+        int i = 0;
         for (TwintModel tm : tms) {
-                       // if (tm.getWit() == null) {
+
+            if (tm.getWit() == null) {
                 try {
+                    Logger.info("Builtin wit : " + i++ + "/" + tms.size());
                     twintModelAdapter.buildWit(tm);
 
 
                     ObjectMapper mapper = new ObjectMapper();
                     String b = "{\"wit\": " + mapper.writeValueAsString(tm.getWit()) + "}";
 
-                    String tw = "{\"twittieTweet\": \"" + twintModelAdapter.getTweet() + "\"}";
+              //      String tw = "{\"twittieTweet\": \"" + twintModelAdapter.getTweet() + "\"}";
 
-                    System.out.println(twintModelAdapter.getTweet());
+                   // System.out.println(tw);
                     IndexRequest indexRequest = new IndexRequest("twinttweets");
                     indexRequest.id(tm.getId());
                     indexRequest.type("_doc");
 
-                    UpdateRequest updateTweet = new UpdateRequest();
+                  /*  UpdateRequest updateTweet = new UpdateRequest();
                     updateTweet.index("twinttweets");
                     updateTweet.type("_doc");
-                    updateTweet.id(tm.getId());
+                    updateTweet.id(tm.getId());*/
 
                     UpdateRequest updateRequest = new UpdateRequest();
                     updateRequest.index("twinttweets");
@@ -149,23 +155,24 @@ public class ESOperations {
 
 
 
-                    updateTweet.doc(tw, XContentType.JSON);
+                //    updateTweet.doc(tw, XContentType.JSON);
                     updateRequest.doc(b, XContentType.JSON);
 
-                    System.out.println(tw);
-                    requests.add(updateTweet);
+                   // System.out.println(tw);
+                   // requests.add(updateTweet);
                     requests.add(updateRequest);
                     //Bulk
 
+                    Logger.info("Added Requests");
                   //  esConfiguration.elasticsearchClient().update(updateRequest);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-          //  }
+            }
         }
 
         BulkResponse response = esConfiguration.elasticsearchClient().bulk(requests);
-       // System.out.println(response);
+       Logger.info(response.toString());
 
     }
 

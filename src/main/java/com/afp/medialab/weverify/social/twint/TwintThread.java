@@ -79,8 +79,9 @@ public class TwintThread {
 
 		Logger.debug("Started Thread n°" + cpt);
 		Integer result = -1;
-		if (request instanceof CollectRequest)
-		 	result = callProcessUntilSuccess((CollectRequest)request, session);
+		if (request instanceof CollectRequest) {
+			result = callProcessUntilSuccess((CollectRequest) request, session);
+		}
 		if (request instanceof CollectFollowsRequest)
 			result = callFollowProcessUntilSuccess((CollectFollowsRequest)request, session);
 
@@ -159,6 +160,7 @@ public class TwintThread {
 		Integer nb_tweets = -1;
 		while ((LoggerString = stdInput.readLine()) != null) {
 
+			Logger.info("WAITING");
 			if (LoggerString.contains("Successfully collected")) {
 				String str = LoggerString.split("Successfully collected ")[1].split(" ")[0];
 				if (str.equals("all"))
@@ -208,8 +210,9 @@ public class TwintThread {
 		ProcessBuilder processBuilder = createProcessBuilder(request, session);
 		try {
 
-			result = callProcess(processBuilder, "tweets");
+			Logger.info("Call Process");
 
+			result = callProcess(processBuilder, "tweets");
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -220,6 +223,8 @@ public class TwintThread {
 		// could add a request subdivision on error
 		Integer nb_tweets = -1;
 		for (int i = 0; i < restart_time && nb_tweets == -1; i++) {
+			Logger.info("Call Process Until success");
+
 			nb_tweets = callTwintProcess(request, session);
 			if (nb_tweets == -1) {
 				Logger.info("Error reprocessing ");
@@ -231,9 +236,7 @@ public class TwintThread {
 		}
 
 		Logger.info("Nb tweets: " + nb_tweets);
-			DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
-			esOperation.indexWordsObj(esOperation.getModels(session, dateFormat.format(request.getFrom()), dateFormat.format(request.getUntil())));
 
 		return nb_tweets;
 	}

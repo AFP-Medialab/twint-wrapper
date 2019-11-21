@@ -1,6 +1,8 @@
 package com.afp.medialab.weverify.social.controller;
 
 import java.io.IOException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -8,7 +10,9 @@ import java.util.concurrent.ExecutionException;
 import javax.validation.Valid;
 
 import com.afp.medialab.weverify.social.model.*;
+import com.afp.medialab.weverify.social.twint.ESOperations;
 import com.afp.medialab.weverify.social.twint.TwintThread;
+import io.netty.util.concurrent.CompleteFuture;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,6 +48,10 @@ public class TwitterGatewayServiceController {
     @Autowired
     private CollectService collectService;
 
+
+    @Autowired
+    private ESOperations esOperation;
+
     @Autowired
     private TwintThreadGroup ttg;
 
@@ -66,7 +74,7 @@ public class TwitterGatewayServiceController {
     @ApiOperation(value = "Trigger a Twitter Scraping follows")
     @RequestMapping(path = "/collect-follows", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public @ResponseBody
-    CollectResponse collectFollows(@RequestBody CollectFollowsRequest collectRequest, BindingResult result) throws IOException {
+    CollectResponse collectFollows(@RequestBody CollectFollowsRequest collectRequest, BindingResult result) throws IOException, ExecutionException, InterruptedException {
 
         String session = UUID.randomUUID().toString();
         Logger.debug(result.getAllErrors().toString());
@@ -91,7 +99,7 @@ public class TwitterGatewayServiceController {
     @ApiOperation(value = "Trigger a Twitter Scraping")
     @RequestMapping(path = "/collect", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public @ResponseBody
-    CollectResponse collect(@RequestBody @Valid CollectRequest collectRequest, BindingResult result) throws IOException {
+    CollectResponse collect(@RequestBody @Valid CollectRequest collectRequest, BindingResult result) throws IOException, ExecutionException, InterruptedException {
 
         String session = UUID.randomUUID().toString();
         Logger.debug(result.getAllErrors().toString());
@@ -163,7 +171,7 @@ public class TwitterGatewayServiceController {
      * @func Verifies if the request has already been done.
      * If not creates a new session and gives a CollectResponse accordingly.
      */
-    private CollectResponse caching(Object newCollectRequest, String session) throws IOException {
+    private CollectResponse caching(Object newCollectRequest, String session) throws IOException, ExecutionException, InterruptedException {
         // Check if this request has already been done
         CollectResponse alreadyDone = collectService.alreadyExists(newCollectRequest);
         if (alreadyDone != null) {
@@ -189,8 +197,14 @@ public class TwitterGatewayServiceController {
         // Creation of a brand new  CollectHistory
         collectService.saveCollectInfo(session, newCollectRequest, null, null, Status.Pending, null, null, 0, 0, 0);
 
+        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         
         ttg.callTwintMultiThreaded(newCollectRequest, session);
+              esOperation.indexWordsObj(
+                        esOperation.getModels(session,
+                                dateFormat.format(((CollectRequest)newCollectRequest).getFrom()),
+                                dateFormat.format(((CollectRequest)newCollectRequest).getUntil()))
+              );
 
         CollectHistory collectedInfo = collectService.getCollectInfo(session);
 

@@ -10,11 +10,14 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.PostConstruct;
@@ -26,6 +29,8 @@ import java.util.*;
 
 @Configuration
 public class TwintModelAdapter {
+
+    private static org.slf4j.Logger Logger = LoggerFactory.getLogger(TwintThread.class);
 
     @Autowired
     private RestTemplate restTemplate;
@@ -57,14 +62,14 @@ public class TwintModelAdapter {
 
     }
 
-    private String getTweetLang(String text, String[] langs) {
+    private String getTweetLang(String[] langs) {
         Map<String, Float> percents = new TreeMap<>();
 
         Arrays.stream(langs).forEach(lang -> {
             percents.put(lang, 0f);
             for (String stopword : stopwords.get(lang)) {
                 String word = stopword;
-                if (text.contains(" " + word + " "))
+                if (tweet.toLowerCase().contains(" " + word + " "))
                     percents.put(lang, percents.get(lang) + 1);
             }
             percents.put(lang, percents.get(lang) / (stopwords.get(lang)).size());
@@ -77,9 +82,16 @@ public class TwintModelAdapter {
     private Map<String, String> callTwittie() throws IOException, InterruptedException, ParseException {
 
         //HTTPConnexion Timeout
+        ResponseEntity<String> response = null;
+        try {
+           response = restTemplate.postForEntity("http://185.249.140.38/weverify-twitie/process?annotations=:Person,:UserID,:Location,:Organization", tweet, String.class);
 
-        ResponseEntity<String> response = restTemplate.postForEntity("http://185.249.140.38/weverify-twitie/process?annotations=:Person,:UserID,:Location,:Organization", tweet, String.class);
-
+        }
+        catch (Exception e){
+            Logger.error("FAILED CALLING TWITTIE : " + response.getStatusCodeValue());
+            return null;
+        }
+        Logger.info("SUCCESSFULLY CALLED TWITTIE");
         ObjectMapper mapper = new ObjectMapper();
 
         JsonNode root = mapper.readTree(response.getBody());
@@ -90,29 +102,29 @@ public class TwintModelAdapter {
 
         twittieResponse.getPerson().forEach(p -> {
             String per = p.getFeatures().getString();
-            String n_per = per.toLowerCase().replaceAll(" ", "_");
+            String n_per = per.toLowerCase().replaceAll(" |/.", "_");
             tweet = tweet.replaceAll(per, n_per);
 
             tokenJSON.put(n_per, "Person");
         });
         twittieResponse.getUserID().forEach(p -> {
-            tweet = tweet.replaceAll(p.getFeatures().getString(), p.getFeatures().getString().toLowerCase());
-            tokenJSON.put(p.getFeatures().getString().toLowerCase(), "UserID");
+            tweet = tweet.replaceAll(p.getFeatures().getString(), p.getFeatures().getString().toLowerCase().replaceAll("@", ""));
+            tokenJSON.put("@" + p.getFeatures().getString().toLowerCase(), "UserID");
         });
         twittieResponse.getLocation().forEach(p -> {
             String per = p.getFeatures().getString();
-            String n_per = per.toLowerCase().replaceAll(" ", "_");
+            String n_per = per.toLowerCase().replaceAll(" |/.", "_");
             tweet = tweet.replaceAll(per, n_per);
             tokenJSON.put(n_per, "Location");
         });
         twittieResponse.getOrganization().forEach(p -> {
             String per = p.getFeatures().getString();
-            String n_per = per.toLowerCase().replaceAll(" ", "_");
+            String n_per = per.toLowerCase().replaceAll(" |/.", "_");
             tweet = tweet.replaceAll(per, n_per);
-            System.out.println(per);
             tokenJSON.put(n_per, "Organization");
         });
 
+       // Logger.info("TOKENS JSON: " + tokenJSON.toString());
         return tokenJSON;
     }
 
@@ -121,47 +133,63 @@ public class TwintModelAdapter {
         tweet = tm.getTweet();
         Map<String, String> tokensNamed = callTwittie();
 
-        System.out.println(tokensNamed);
         String[] langs = new String[]{"fr", "en"};
 
+        List<String> stopLang = stopwords.get(getTweetLang(langs));
+        List<String> stopGlob = stopwords.get("glob");
+
+        stopGlob.addAll(Arrays.asList(tm.getSearch().split(" ")));
         //String tweet = tm.getTweet();
 
         for (String regExp : regExps) {
             tweet = tweet.replaceAll(regExp, " ");
         }
-        System.out.println(tweet);
-        List<String> words = Arrays.asList(tweet.toLowerCase().split(" "));
+           List<String> words = Arrays.asList(tweet.toLowerCase().split(" "));
 
-        Map<String, Integer> occurences = new HashMap<>();
+            Map<String, Integer> occurences = new HashMap<>();
 
-        words.stream().forEach((word) -> {
-            List<String> stopLang = stopwords.get(getTweetLang(tm.getTweet(), langs));
-            List<String> stopGlob = stopwords.get("glob");
+            words.stream().forEach((word) -> {
 
-            if (!stopLang.contains(word) && !stopGlob.contains(word))
-                if (occurences.get(word) == null)
-                    occurences.put(word, 1);
-                else
-                    occurences.put(word, occurences.get(word)+1);
-        });
+                if (!stopLang.contains(word) && !stopGlob.contains(word))
+                    if (occurences.get(word) == null)
+                        occurences.put(word, 1);
+                    else
+                        occurences.put(word, occurences.get(word) + 1);
+            });
 
-       List<TwintModel.WordsInTweet> wit = new ArrayList<>();
-        occurences.forEach((word, occ) -> {
-            TwintModel.WordsInTweet w = new TwintModel.WordsInTweet();
-            w.setWord(word);
-            w.setNbOccurences(occ);
-            w.setEntity((tokensNamed != null)? tokensNamed.get(word) : null);
-            wit.add(w);
-        });
+            List<TwintModel.WordsInTweet> wit = new ArrayList<>();
+           // Logger.info(tokensNamed.toString());
+            occurences.forEach((word, occ) -> {
+                TwintModel.WordsInTweet w = new TwintModel.WordsInTweet();
+                w.setWord(word);
+                w.setNbOccurences(occ);
+                w.setEntity((tokensNamed != null && tokensNamed.get(word) != null)? tokensNamed.get(word) : null);
 
-        tm.setTwittieTweet(tweet);
-        tm.setWit(wit);
+               // Logger.info(" WORD : " + w.getWord());
+
+              //  if (tokensNamed.get(word) != null) {
+                  //  Logger.info(" ENTITY : " + w.getEntity());
+                //}
+                wit.add(w);
+            });
+
+            tm.setTwittieTweet(tweet);
+            tm.setWit(wit);
+
+            Logger.info("WIT SET");
     }
 
     @Bean
     public RestTemplate restTemplate()
     {
-        return new RestTemplate();
+        SimpleClientHttpRequestFactory clientHttpRequestFactory
+                = new SimpleClientHttpRequestFactory();
+        //Connect timeout
+        clientHttpRequestFactory.setConnectTimeout(5_000);
+
+        //Read timeout
+        clientHttpRequestFactory.setReadTimeout(5_000);
+        return new RestTemplate(clientHttpRequestFactory);
     }
 
     public String getTweet() {

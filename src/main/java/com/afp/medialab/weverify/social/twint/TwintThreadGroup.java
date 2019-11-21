@@ -108,7 +108,9 @@ public class TwintThreadGroup {
         Logger.debug("launch thread group");
         Integer cpt = 0;
         for (Object collectRequest : collectRequestList) {
-            result.add(tt.callTwint(collectRequest, session, cpt));
+            CompletableFuture<Integer> res = tt.callTwint(collectRequest, session, cpt);
+          //  Logger.info(res);
+            result.add(res);
             cpt++;
         }
         getOnAllList(result);
@@ -116,13 +118,17 @@ public class TwintThreadGroup {
     }
 
     private void getOnAllList(List<CompletableFuture<Integer>> list) {
-        try {
-            for (CompletableFuture<Integer> thread : list)
-                thread.get();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } catch (ExecutionException e) {
-            e.printStackTrace();
-        }
+            for (CompletableFuture<Integer> thread : list) {
+                try {
+                    Integer res = thread.get();
+                    Logger.info("result : " + res);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                } catch (ExecutionException e) {
+                    e.printStackTrace();
+                }
+            }
+
+        notifyAll();
     }
 }
