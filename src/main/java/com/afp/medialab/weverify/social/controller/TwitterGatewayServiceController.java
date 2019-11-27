@@ -77,17 +77,14 @@ public class TwitterGatewayServiceController {
     CollectResponse collectFollows(@RequestBody CollectFollowsRequest collectRequest, BindingResult result) throws IOException, ExecutionException, InterruptedException {
 
         String session = UUID.randomUUID().toString();
-        Logger.debug(result.getAllErrors().toString());
         if (result.hasErrors()) {
             String str = "";
             for (ObjectError r : result.getAllErrors()) {
                 str += r.getDefaultMessage() + "; ";
             }
-            Logger.info(str);
             return new CollectResponse(session, Status.Error, str, null);
         }
 
-        Logger.debug("user : " + collectRequest.getUser());
 
 
         return caching(collectRequest, session);

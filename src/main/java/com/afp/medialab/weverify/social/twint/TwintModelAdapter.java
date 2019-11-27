@@ -88,7 +88,7 @@ public class TwintModelAdapter {
 
         }
         catch (Exception e){
-            Logger.error("FAILED CALLING TWITTIE : " + response.getStatusCodeValue());
+            Logger.error("FAILED CALLING TWITTIE" );
             return null;
         }
         Logger.info("SUCCESSFULLY CALLED TWITTIE");
@@ -124,7 +124,6 @@ public class TwintModelAdapter {
             tokenJSON.put(n_per, "Organization");
         });
 
-       // Logger.info("TOKENS JSON: " + tokenJSON.toString());
         return tokenJSON;
     }
 
@@ -158,25 +157,18 @@ public class TwintModelAdapter {
             });
 
             List<TwintModel.WordsInTweet> wit = new ArrayList<>();
-           // Logger.info(tokensNamed.toString());
+
             occurences.forEach((word, occ) -> {
                 TwintModel.WordsInTweet w = new TwintModel.WordsInTweet();
                 w.setWord(word);
                 w.setNbOccurences(occ);
                 w.setEntity((tokensNamed != null && tokensNamed.get(word) != null)? tokensNamed.get(word) : null);
 
-               // Logger.info(" WORD : " + w.getWord());
-
-              //  if (tokensNamed.get(word) != null) {
-                  //  Logger.info(" ENTITY : " + w.getEntity());
-                //}
                 wit.add(w);
             });
 
             tm.setTwittieTweet(tweet);
             tm.setWit(wit);
-
-            Logger.info("WIT SET");
     }
 
     @Bean

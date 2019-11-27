@@ -109,7 +109,6 @@ public class TwintThreadGroup {
         Integer cpt = 0;
         for (Object collectRequest : collectRequestList) {
             CompletableFuture<Integer> res = tt.callTwint(collectRequest, session, cpt);
-          //  Logger.info(res);
             result.add(res);
             cpt++;
         }

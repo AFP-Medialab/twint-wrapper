@@ -135,35 +135,19 @@ public class ESOperations {
                     ObjectMapper mapper = new ObjectMapper();
                     String b = "{\"wit\": " + mapper.writeValueAsString(tm.getWit()) + "}";
 
-              //      String tw = "{\"twittieTweet\": \"" + twintModelAdapter.getTweet() + "\"}";
-
-                   // System.out.println(tw);
                     IndexRequest indexRequest = new IndexRequest("twinttweets");
                     indexRequest.id(tm.getId());
                     indexRequest.type("_doc");
-
-                  /*  UpdateRequest updateTweet = new UpdateRequest();
-                    updateTweet.index("twinttweets");
-                    updateTweet.type("_doc");
-                    updateTweet.id(tm.getId());*/
 
                     UpdateRequest updateRequest = new UpdateRequest();
                     updateRequest.index("twinttweets");
                     updateRequest.type("_doc");
                     updateRequest.id(tm.getId());
 
-
-
-                //    updateTweet.doc(tw, XContentType.JSON);
                     updateRequest.doc(b, XContentType.JSON);
 
-                   // System.out.println(tw);
-                   // requests.add(updateTweet);
                     requests.add(updateRequest);
-                    //Bulk
 
-                    Logger.info("Added Requests");
-                  //  esConfiguration.elasticsearchClient().update(updateRequest);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
