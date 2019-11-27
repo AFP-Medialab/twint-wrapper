@@ -76,7 +76,6 @@ public class ESOperations {
 
     public List<TwintModel> getModels(String essid, String start, String end) throws InterruptedException {
 
-        wait();
        // esOperation.refresh(TwintModel.class);
         QueryBuilder builder = boolQuery().must(matchQuery("essid", essid));
              //   .filter(rangeQuery("date").format("yyyy-MM-dd HH:mm:ss||yyyy-MM-dd||epoch_millis")

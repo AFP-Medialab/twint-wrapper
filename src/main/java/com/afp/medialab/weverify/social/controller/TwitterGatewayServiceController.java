@@ -198,13 +198,8 @@ public class TwitterGatewayServiceController {
         collectService.saveCollectInfo(session, newCollectRequest, null, null, Status.Pending, null, null, 0, 0, 0);
 
         DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        
+
         ttg.callTwintMultiThreaded(newCollectRequest, session);
-              esOperation.indexWordsObj(
-                        esOperation.getModels(session,
-                                dateFormat.format(((CollectRequest)newCollectRequest).getFrom()),
-                                dateFormat.format(((CollectRequest)newCollectRequest).getUntil()))
-              );
 
         CollectHistory collectedInfo = collectService.getCollectInfo(session);
 
@@ -224,7 +219,7 @@ public class TwitterGatewayServiceController {
      * if the 	newCollectRequest does not match,
      * It makes a new CollectHistory
      */
-    private CollectResponse completingOldRequest(String session, CollectRequest newCollectRequest, CollectRequest oldCollectRequest) throws IOException {
+    private CollectResponse completingOldRequest(String session, CollectRequest newCollectRequest, CollectRequest oldCollectRequest) throws IOException, InterruptedException {
 
         CollectRequest resultingCollectRequest = newCollectRequest;
         String message = "Completing the research. This research has already been done from " + oldCollectRequest.getFrom() + " to " + oldCollectRequest.getUntil();
@@ -306,7 +301,7 @@ public class TwitterGatewayServiceController {
      * @func callTwintOnInterval overload with only one date interval.
      * call Twint on the interval and append the result to the elastic search session
      */
-    private CompletableFuture<ArrayList<CompletableFuture<Integer>>> callTwintOnInterval(CollectRequest collectRequest, String session, Date from, Date until) throws IOException {
+    private CompletableFuture<ArrayList<CompletableFuture<Integer>>> callTwintOnInterval(CollectRequest collectRequest, String session, Date from, Date until) throws IOException, InterruptedException {
         CollectRequest newCollectRequest = new CollectRequest(collectRequest);
         newCollectRequest.setFrom(from);
         newCollectRequest.setUntil(until);

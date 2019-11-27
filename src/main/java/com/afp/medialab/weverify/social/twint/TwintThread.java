@@ -111,8 +111,19 @@ public class TwintThread {
 			int successful_threads = collectHistory.getSuccessful_threads();
 			int total_threads = collectHistory.getTotal_threads();
 			if (finished_threads == total_threads) {
+				try {
+					esOperation.indexWordsObj(
+							esOperation.getModels(session,
+									dateFormat.format(((CollectRequest)request).getFrom()),
+									dateFormat.format(((CollectRequest)request).getUntil()))
+					);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+
 				collectService.updateCollectStatus(session, Status.Done);
 				if (successful_threads == finished_threads)
+
 					collectService.updateCollectMessage(session, "Finished successfully");
 				else
 					collectService.updateCollectMessage(session, "Parts of this search could not be found");

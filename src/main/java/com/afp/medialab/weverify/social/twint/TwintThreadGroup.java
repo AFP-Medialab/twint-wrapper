@@ -96,7 +96,7 @@ public class TwintThreadGroup {
     }
 
     @Async(value ="twintCallGroupTaskExecutor")
-    public CompletableFuture<ArrayList<CompletableFuture<Integer>>> callTwintMultiThreaded(Object request, String session) throws IOException {
+    public CompletableFuture<ArrayList<CompletableFuture<Integer>>> callTwintMultiThreaded(Object request, String session) throws IOException, InterruptedException {
         ArrayList<Object> collectRequestList = createListOfCollectRequest(request);
         CollectHistory collectHistory = collectService.getCollectInfo(session);
 
