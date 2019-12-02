@@ -3,6 +3,7 @@ package com.afp.medialab.weverify.social.model;
 import java.util.Date;
 
 
+import com.afp.medialab.weverify.social.dao.entity.CollectHistory;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -18,6 +19,13 @@ public class CollectResponse {
 		this.status = status;
 		this.message = message;
 		this.lastSearch = lastSearch;
+	}
+
+	public CollectResponse(CollectHistory collectHistory){
+		this.session = collectHistory.getSession();
+		this.status = collectHistory.getStatus();
+		this.message = collectHistory.getMessage();
+		this.lastSearch = collectHistory.getProcessEnd();
 	}
 
 	public String getSession() {

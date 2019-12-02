@@ -1,11 +1,13 @@
 package com.afp.medialab.weverify.social.model;
 
 import java.util.Date;
+import java.util.Set;
 import java.util.SortedSet;
 
 import com.afp.medialab.weverify.social.constrains.LangConstrain;
 import com.afp.medialab.weverify.social.constrains.MediaConstrain;
 import com.afp.medialab.weverify.social.constrains.RetweetHandlingConstrain;
+import com.afp.medialab.weverify.social.dao.entity.Request;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -14,15 +16,19 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class CollectRequest {
 
-    private SearchModel search;
+
+    private Set<String> keywordList;
+    private Set<String> bannedWords;
 
     @LangConstrain
     private String lang;
-    private SortedSet<String> user_list;
-    @JsonProperty("from")@JsonDeserialize(using =  MultiDateDeserializer.class)
+    private Set<String> userList;
+    @JsonProperty("from")
+    @JsonDeserialize(using = MultiDateDeserializer.class)
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date from;
-    @JsonProperty("until")@JsonDeserialize(using =  MultiDateDeserializer.class)
+    @JsonProperty("until")
+    @JsonDeserialize(using = MultiDateDeserializer.class)
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date until;
 
@@ -38,9 +44,10 @@ public class CollectRequest {
     }
 
     public CollectRequest(CollectRequest collectRequest) {
-        this.search = collectRequest.search;
+        this.keywordList = collectRequest.keywordList;
+        this.bannedWords = collectRequest.bannedWords;
         this.lang = collectRequest.lang;
-        this.user_list = collectRequest.user_list;
+        this.userList = collectRequest.userList;
         this.from = collectRequest.from;
         this.until = collectRequest.until;
         this.media = collectRequest.media;
@@ -48,12 +55,32 @@ public class CollectRequest {
         this.retweetsHandling = collectRequest.retweetsHandling;
     }
 
-    public SearchModel getSearch() {
-        return search;
+    public CollectRequest(Request request) {
+        this.keywordList = request.getKeywordList();
+        this.bannedWords = request.getBannedWords();
+        this.lang = request.getLanguage();
+        this.userList = request.getUserList();
+        this.from = request.getSince();
+        this.until = request.getUntil();
+        this.media = request.getMedia();
+        this.verified = request.getVerified();
+        this.retweetsHandling = request.getRetweetsHandling();
     }
 
-    public void setSearch(SearchModel search) {
-        this.search = search;
+    public Set<String> getKeywordList() {
+        return keywordList;
+    }
+
+    public void setKeywordList(SortedSet<String> keywordList) {
+        this.keywordList = keywordList;
+    }
+
+    public Set<String> getBannedWords() {
+        return bannedWords;
+    }
+
+    public void setBannedWords(SortedSet<String> bannedWords) {
+        this.bannedWords = bannedWords;
     }
 
     public Date getFrom() {
@@ -76,12 +103,12 @@ public class CollectRequest {
         return lang;
     }
 
-    public SortedSet<String> getUser_list() {
-        return user_list;
+    public Set<String> getUserList() {
+        return userList;
     }
 
-    public void setUser_list(SortedSet<String> user_list) {
-        this.user_list = user_list;
+    public void setUserList(SortedSet<String> userList) {
+        this.userList = userList;
     }
 
     public String getMedia() {
@@ -105,10 +132,10 @@ public class CollectRequest {
     }
 
     /**
-     * @func    Overrides the equals function of the CollectRequest object.
-     *          Checks that the attributes : search and lang are the same
-     * @param   overObject
+     * @param overObject
      * @return
+     * @func Overrides the equals function of the CollectRequest object.
+     * Checks that the attributes : search and lang are the same
      */
     @Override
     public boolean equals(Object overObject) {
@@ -116,12 +143,18 @@ public class CollectRequest {
             return false;
         CollectRequest overRequest = (CollectRequest) overObject;
 
-        Boolean sameSearch;
-        if (this.search != null && overRequest.search != null)
-            sameSearch = this.search.equals(overRequest.search);
-        else if (this.search == null && overRequest.search == null)
-            sameSearch = true;
-        else
+        Boolean sameSearch = true;
+
+        Set<String> andSet1 = this.keywordList;
+        Set<String> andSet2 = overRequest.keywordList;
+
+        Set<String> notSet1 = this.bannedWords;
+        Set<String> notSet2 = overRequest.bannedWords;
+
+        if (!equalsSet(andSet1, andSet2))
+            sameSearch = false;
+
+        if (!equalsSet(notSet1, notSet2))
             sameSearch = false;
 
         Boolean sameLang;
@@ -133,5 +166,30 @@ public class CollectRequest {
             sameLang = false;
 
         return sameSearch && sameLang;
+    }
+
+    public boolean isValid() {
+        if (this.keywordList == null && userList.size() == 0)
+            return false;
+        if (this.keywordList != null && this.keywordList.size() == 0 && userList.size() == 0)
+            return false;
+        if (this.from == null || this.until == null)
+            return false;
+        return true;
+    }
+
+    /**
+     * @param sortedSet1
+     * @param sortedSet2
+     * @return
+     * @func Verifies if the two sets are equal
+     */
+    public Boolean equalsSet(Set<String> sortedSet1, Set<String> sortedSet2) {
+        if (sortedSet1 == null && sortedSet2 == null)
+            return true;
+        if (sortedSet1 != null && sortedSet2 != null) {
+            return sortedSet1.equals(sortedSet2);
+        } else
+            return false;
     }
 }

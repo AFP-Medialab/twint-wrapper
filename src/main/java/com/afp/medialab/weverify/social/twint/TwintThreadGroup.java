@@ -86,24 +86,20 @@ public class TwintThreadGroup {
     }
 
     @Async(value ="twintCallGroupTaskExecutor")
-    public CompletableFuture<ArrayList<CompletableFuture<Integer>>> callTwintMultiThreaded(CollectRequest request, String session) {
+    public void callTwintMultiThreaded(CollectHistory collectHistory, CollectRequest request) {
 
         ArrayList<CollectRequest> collectRequestList = createListOfCollectRequest(request);
-        CollectHistory collectHistory = collectService.getCollectInfo(session);
 
-        collectService.updateCollectTotalThreads(session, collectHistory.getTotal_threads() + collectRequestList.size());
-
+        collectHistory.setTotal_threads(collectHistory.getTotal_threads() + collectRequestList.size());
+        collectHistory.setStatus(Status.Running);
+        collectService.save_collectHistory(collectHistory);
         ArrayList<CompletableFuture<Integer>> result = new ArrayList<CompletableFuture<Integer>>();
 
-        collectService.updateCollectStatus(session, Status.Running);
         Logger.debug("launch thread group");
-        Integer cpt = 0;
         for (CollectRequest collectRequest : collectRequestList) {
-            result.add(tt.callTwint(collectRequest, session, cpt));
-            cpt++;
+            result.add(tt.callTwint(collectHistory, collectRequest));
         }
         getOnAllList(result);
-        return CompletableFuture.completedFuture(result);
     }
 
     private void getOnAllList(List<CompletableFuture<Integer>> list) {
