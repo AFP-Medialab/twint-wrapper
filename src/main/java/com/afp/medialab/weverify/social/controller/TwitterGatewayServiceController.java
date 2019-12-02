@@ -290,7 +290,7 @@ public class TwitterGatewayServiceController {
         previousMatch = similarInCache(collectRequest);
         CollectResponse completing = makeLargerRequestFromListAndCompleteTime(collectRequest, previousMatch);
         if (completing != null) {
-            Logger.info("This request extends an already done request,  sessionId: " + alreadyDone.getSession());
+            Logger.info("This request extends an already done request,  sessionId: " + completing.getSession());
             return completing;
         }
 
@@ -298,6 +298,8 @@ public class TwitterGatewayServiceController {
 
         // Creation of a brand new  CollectHistory
         String session = UUID.randomUUID().toString();
+        Logger.debug(session);
+        Logger.debug(collectRequest.toString());
         CollectHistory collectHistory = collectService.saveCollectInfo(session, collectRequest, null, null, Status.Pending, null, null, 0, 0, 0);
         ttg.callTwintMultiThreaded(collectHistory, collectRequest);
         ;
