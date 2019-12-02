@@ -120,14 +120,16 @@ public class ESOperations {
 
     }
 
-    public void indexWordsObj(List<TwintModel> tms) throws IOException, InterruptedException {
+    public void indexWordsObj(List<TwintModel> tms) throws IOException {
         BulkRequest requests = new BulkRequest();
 
         int i = 0;
+        boolean allNull = true;
         for (TwintModel tm : tms) {
 
             if (tm.getWit() == null) {
                 try {
+                    allNull = false;
                     Logger.info("Builtin wit : " + i++ + "/" + tms.size());
                     twintModelAdapter.buildWit(tm);
 
@@ -154,8 +156,8 @@ public class ESOperations {
             }
         }
 
-        BulkResponse response = esConfiguration.elasticsearchClient().bulk(requests);
-       Logger.info(response.toString());
+        if (!allNull)
+            esConfiguration.elasticsearchClient().bulk(requests);
 
     }
 
