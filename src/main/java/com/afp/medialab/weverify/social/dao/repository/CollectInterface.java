@@ -2,10 +2,11 @@ package com.afp.medialab.weverify.social.dao.repository;
 
 import java.util.Date;
 import java.util.List;
-import java.util.Set;
+import java.util.SortedSet;
 
 import javax.transaction.Transactional;
 
+import com.afp.medialab.weverify.social.dao.entity.Request;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -16,10 +17,6 @@ import com.afp.medialab.weverify.social.dao.entity.CollectHistory;
 public interface CollectInterface extends JpaRepository<CollectHistory, Integer> {
 
     CollectHistory findCollectHistoryBySession(String session);
-
-    CollectHistory findCollectHistoryByQuery(String query);
-
-    Set<CollectHistory> findCollectHistoryByQueryContains(String str);
 
     List<CollectHistory> findCollectHistoryByStatus(String status);
 
@@ -34,6 +31,9 @@ public interface CollectInterface extends JpaRepository<CollectHistory, Integer>
     List<CollectHistory> findCollectHistoryByProcessEndLessThan(Date processEnd);
 
     List<CollectHistory> findAll();
+
+    CollectHistory findCollectHistoryByRequest(Request request);
+
 
 
     @Modifying(clearAutomatically = true)
@@ -50,11 +50,6 @@ public interface CollectInterface extends JpaRepository<CollectHistory, Integer>
     @Transactional
     @Query("update CollectHistory collect set collect.processEnd = :processEnd where collect.session = :session")
     void updateCollectProcessEnd(@Param("session") String session, @Param("processEnd") Date processEnd);
-
-    @Modifying
-    @Transactional
-    @Query("update CollectHistory collect set collect.query = :query where collect.session = :session")
-    void updateCollectQuery(@Param("session") String session, @Param("query") String query);
 
     @Modifying
     @Transactional
@@ -80,5 +75,4 @@ public interface CollectInterface extends JpaRepository<CollectHistory, Integer>
     @Transactional
     @Query("update CollectHistory collect set collect.successful_threads = :int where collect.session = :session")
     void updateCollectSuccessful_threads(@Param("session") String session, @Param("int") Integer successful_threads);
-
 }

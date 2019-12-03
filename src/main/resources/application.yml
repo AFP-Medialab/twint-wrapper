@@ -46,7 +46,9 @@ command:
  
 ---
 spring:
-  profiles: dev    
+  profiles: dev
+  jpa:
+    hibernate.ddl-auto: create-drop
  
 ---
 spring:

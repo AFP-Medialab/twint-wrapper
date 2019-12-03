@@ -79,7 +79,7 @@ public class TwintModelAdapter {
 
     }
 
-    private Map<String, String> callTwittie() throws IOException, InterruptedException, ParseException {
+    private Map<String, String> callTwittie() throws IOException {
 
         //HTTPConnexion Timeout
         ResponseEntity<String> response = null;

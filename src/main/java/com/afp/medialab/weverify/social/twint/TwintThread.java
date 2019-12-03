@@ -75,58 +75,54 @@ public class TwintThread {
 	}
 
 	@Async(value = "twintCallTaskExecutor")
-	public CompletableFuture<Integer> callTwint(Object request, String session, Integer cpt) throws IOException {
+	public CompletableFuture<Integer> callTwint(CollectHistory collectHistory, CollectRequest request) {
 
-		Logger.debug("Started Thread n°" + cpt);
-		Integer result = -1;
-		if (request instanceof CollectRequest) {
-			result = callProcessUntilSuccess((CollectRequest) request, session);
+		Integer result = null;
+		try {
+			result = callProcessUntilSuccess(request, collectHistory.getSession());
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
-		if (request instanceof CollectFollowsRequest)
-			result = callFollowProcessUntilSuccess((CollectFollowsRequest)request, session);
 
 		// update db to say this thread is finished
 		synchronized (lock) {
-			CollectHistory collectHistory = collectService.getCollectInfo(session);
-			int finished_thread = collectHistory.getFinished_threads() + 1;
-			collectService.updateCollectFinishedThreads(session, finished_thread);
-
+			collectHistory.setFinished_threads(collectHistory.getFinished_threads() + 1);
 			Integer old_count = collectHistory.getCount();
 			if (old_count == null || old_count == -1)
-				collectService.updateCollectCount(session, result);
+				collectHistory.setCount(result);
 			else
-				collectService.updateCollectCount(session, result + old_count);
+				collectHistory.setCount(result + old_count);
+			collectService.save_collectHistory(collectHistory);
 		}
 
 		if (result != -1) {
 			synchronized (lock) {
-				CollectHistory collectHistory = collectService.getCollectInfo(session);
-				int successful_threads = collectHistory.getSuccessful_threads() + 1;
-				collectService.updateCollectSuccessfulThreads(session, successful_threads);
+				collectHistory.setSuccessful_threads(collectHistory.getSuccessful_threads() + 1);
+				collectService.save_collectHistory(collectHistory);
 			}
 		}
+
 		synchronized (lock) {
-			CollectHistory collectHistory = collectService.getCollectInfo(session);
 			int finished_threads = collectHistory.getFinished_threads();
 			int successful_threads = collectHistory.getSuccessful_threads();
 			int total_threads = collectHistory.getTotal_threads();
 			if (finished_threads == total_threads) {
 				try {
 					esOperation.indexWordsObj(
-							esOperation.getModels(session,
+							esOperation.getModels(collectHistory.getSession(),
 									dateFormat.format(((CollectRequest)request).getFrom()),
 									dateFormat.format(((CollectRequest)request).getUntil()))
 					);
-				} catch (InterruptedException e) {
+				} catch (InterruptedException | IOException e) {
 					e.printStackTrace();
 				}
 
-				collectService.updateCollectStatus(session, Status.Done);
+				collectHistory.setStatus(Status.Done);
 				if (successful_threads == finished_threads)
-
-					collectService.updateCollectMessage(session, "Finished successfully");
+					collectHistory.setMessage("Finished successfully");
 				else
-					collectService.updateCollectMessage(session, "Parts of this search could not be found");
+					collectHistory.setMessage("Parts of this search could not be found");
+				collectService.save_collectHistory(collectHistory);
 			}
 		}
 		return CompletableFuture.completedFuture(result);
