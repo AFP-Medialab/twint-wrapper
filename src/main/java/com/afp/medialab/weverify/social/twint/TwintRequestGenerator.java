@@ -100,17 +100,4 @@ public class TwintRequestGenerator {
         return call;
     }
 
-	public String generateFollowRequest(String username, String id, String type,  boolean isDocker, String esURL)
-	{
-		SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-
-		String call = "twint --count -u " + username + " --" + type;
-		call += " --essid " + id + " -es " + esURL;
-		if (isDocker)
-			call = " \"" + call + "\"";
-
-		Logger.debug("Twint command: " + call);
-		return call;
-	}
-
 }

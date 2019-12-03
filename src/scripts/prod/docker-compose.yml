@@ -75,7 +75,7 @@ services:
       - esnet
       
   twint-wrapper:
-    image: medialab.registry.afp.com/twint-wrapper:1.0.2
+    image: medialab.registry.afp.com/twint-wrapper:1.0.3
     container_name: twint-wrapper
     restart: on-failure
     depends_on:

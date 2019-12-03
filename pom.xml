@@ -11,7 +11,7 @@
 	</parent>
 	<groupId>com.afp.medialab.weverify.social</groupId>
 	<artifactId>twint-wrapper</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>1.0.3-SNAPSHOT</version>
 	<name>twint-wrapper</name>
 	<description>Twitter scraper wrapper</description>
 
@@ -109,7 +109,7 @@
 			<properties>
 				<docker.path>src/main/docker/delivery</docker.path>
 				<docker.image.name>twint-wrapper</docker.image.name>
-				<docker.image.tag>1.0.2</docker.image.tag>
+				<docker.image.tag>1.0.3</docker.image.tag>
 			</properties>
 			<build>
 				<plugins>

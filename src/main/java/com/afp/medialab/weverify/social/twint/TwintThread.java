@@ -1,42 +1,23 @@
 package com.afp.medialab.weverify.social.twint;
 
-import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
-import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
-import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
-import static org.elasticsearch.index.query.QueryBuilders.rangeQuery;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-import com.afp.medialab.weverify.social.model.*;
-import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequest;
-import org.elasticsearch.action.update.UpdateRequest;
-import org.elasticsearch.common.xcontent.XContentBuilder;
-import org.elasticsearch.common.xcontent.XContentFactory;
-import org.elasticsearch.index.query.QueryBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
-import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
-import org.springframework.data.elasticsearch.core.query.SearchQuery;
-import org.springframework.data.elasticsearch.core.query.UpdateQuery;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import com.afp.medialab.weverify.social.dao.entity.CollectHistory;
 import com.afp.medialab.weverify.social.dao.service.CollectService;
-import com.afp.medialab.weverify.social.model.twint.TwintModel;
+import com.afp.medialab.weverify.social.model.CollectRequest;
+import com.afp.medialab.weverify.social.model.Status;
 
 /**
  * Run twint command in a asynchronous thread
@@ -128,16 +109,6 @@ public class TwintThread {
 		return CompletableFuture.completedFuture(result);
 	}
 
-	private ProcessBuilder createProcessBuilderFollows(CollectFollowsRequest request, String session, String type){
-		boolean isDocker = isDockerCommand(twintCall);
-		String twintRequest = TwintRequestGenerator.getInstance().generateFollowRequest(request.getUser(), session, type, isDocker, esURL);
-
-		ProcessBuilder processBuilder = new ProcessBuilder("/bin/bash", "-c", twintCall + twintRequest);
-		processBuilder.environment().put("PATH", "/usr/bin:/usr/local/bin:/bin");
-		Logger.info(twintCall + twintRequest);
-		return processBuilder;
-
-	}
 	private ProcessBuilder createProcessBuilder(CollectRequest request, String session) {
 		boolean isDocker = isDockerCommand(twintCall);
 
@@ -183,32 +154,6 @@ public class TwintThread {
 			return -1;
 		return nb_tweets;
 	}
-
-	private Integer callTwintFollowsProcess(CollectFollowsRequest request, String session){
-		Integer result = -1;
-		try {
-			ProcessBuilder processBuilderFollowers = createProcessBuilderFollows(request, session, "followers");
-		//	ProcessBuilder processBuilderFollowing = createProcessBuilderFollows(request, session, "following");
-			result = callProcess(processBuilderFollowers, "users");// + callProcess(processBuilderFollowing);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		return result;
-
-	}
-
-	private Integer callFollowProcessUntilSuccess(CollectFollowsRequest request, String session) {
-		// could add a request subdivision on error
-		Integer nb_tweets = -1;
-		for (int i = 0; i < restart_time && nb_tweets == -1; i++) {
-			nb_tweets = callTwintFollowsProcess(request, session);
-			if (nb_tweets == -1) {
-				Logger.info("Error reprocessing ");
-			}
-		}
-		return nb_tweets;
-	}
-
 
 	private Integer callTwintProcess(CollectRequest request, String session) {
 

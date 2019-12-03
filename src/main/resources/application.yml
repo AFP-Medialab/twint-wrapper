@@ -23,8 +23,6 @@ application:
     port: ${ES_PORT:9200}
   twittie:
     url: ${TWITTIE_URL:http://185.249.140.38/weverify-twitie/process?annotations=:Person,:UserID,:Location,:Organization}
-    
-
 
 spring:
   jackson:
