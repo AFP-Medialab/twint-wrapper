@@ -24,6 +24,12 @@ services:
       - 9200:9200
     networks:
       - esnet
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "200k"
+        max-size: "200k"
+        labels: "elk1"
   elasticsearch2:
     image: docker.elastic.co/elasticsearch/elasticsearch:7.3.1
     container_name: elasticsearch2
@@ -44,6 +50,12 @@ services:
       - esdata2:/usr/share/elasticsearch/data
     networks:
       - esnet
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "200k"
+        max-size: "200k"
+        labels: "elk2"
   
   mysql:
     image: mysql:5.7
@@ -62,7 +74,7 @@ services:
     networks:
       - esnet
       
-  twint-gateway:
+  twint-wrapper:
     image: medialab.registry.afp.com/twint-wrapper:1.0.2
     container_name: twint-wrapper
     restart: on-failure
@@ -78,6 +90,12 @@ services:
       MYSQL_URL: "jdbc:mysql://mysql:3306/twint-wrapper?serverTimeZone=CET&useSSL=false"
       ES_URL: elasticsearch:9200
       ES_HOST: elasticsearch
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "200k"
+        max-size: "200k"
+        labels: "twint-wrapper"
 volumes:
   esdata1: {}
   esdata2: {}  

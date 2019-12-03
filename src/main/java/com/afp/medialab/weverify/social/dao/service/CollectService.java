@@ -1,19 +1,24 @@
 package com.afp.medialab.weverify.social.dao.service;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.afp.medialab.weverify.social.model.*;
-import com.afp.medialab.weverify.social.dao.entity.Request;
-import com.afp.medialab.weverify.social.dao.repository.RequestInterface;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.afp.medialab.weverify.social.dao.entity.CollectHistory;
+import com.afp.medialab.weverify.social.dao.entity.Request;
 import com.afp.medialab.weverify.social.dao.repository.CollectInterface;
+import com.afp.medialab.weverify.social.dao.repository.RequestInterface;
+import com.afp.medialab.weverify.social.model.CollectRequest;
+import com.afp.medialab.weverify.social.model.CollectResponse;
+import com.afp.medialab.weverify.social.model.Status;
 import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -27,16 +32,6 @@ public class CollectService {
     @Autowired
     RequestInterface requestInterface;
 
-
-    private String collectRequestToString(Object collectRequest) {
-        ObjectMapper mapper = new ObjectMapper();
-        try {
-            return mapper.writeValueAsString(collectRequest);
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-        }
-        return "Json parsing Error";
-    }
 
     public CollectRequest stringToCollectRequest(String query) {
         ObjectMapper mapper = new ObjectMapper();

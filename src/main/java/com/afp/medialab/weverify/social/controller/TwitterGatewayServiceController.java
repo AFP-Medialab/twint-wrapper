@@ -1,42 +1,42 @@
 package com.afp.medialab.weverify.social.controller;
 
 import java.io.IOException;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.*;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 
 import javax.validation.Valid;
 
-import com.afp.medialab.weverify.social.model.*;
-import com.afp.medialab.weverify.social.twint.ESOperations;
-import com.afp.medialab.weverify.social.twint.TwintThread;
-import io.netty.util.concurrent.CompleteFuture;
-import com.afp.medialab.weverify.social.dao.entity.Request;
-import com.afp.medialab.weverify.social.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.ObjectError;
-import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.afp.medialab.weverify.social.dao.entity.CollectHistory;
+import com.afp.medialab.weverify.social.dao.entity.Request;
 import com.afp.medialab.weverify.social.dao.service.CollectService;
-import com.afp.medialab.weverify.social.twint.TwintRequestGenerator;
+import com.afp.medialab.weverify.social.model.CollectRequest;
+import com.afp.medialab.weverify.social.model.CollectResponse;
+import com.afp.medialab.weverify.social.model.CollectUpdateRequest;
+import com.afp.medialab.weverify.social.model.HistoryRequest;
+import com.afp.medialab.weverify.social.model.HistoryResponse;
+import com.afp.medialab.weverify.social.model.NotFoundException;
+import com.afp.medialab.weverify.social.model.Status;
+import com.afp.medialab.weverify.social.model.StatusRequest;
+import com.afp.medialab.weverify.social.model.StatusResponse;
 import com.afp.medialab.weverify.social.twint.TwintThreadGroup;
 
 import io.swagger.annotations.Api;
@@ -50,10 +50,6 @@ public class TwitterGatewayServiceController {
 
     @Autowired
     private CollectService collectService;
-
-
-    @Autowired
-    private ESOperations esOperation;
 
     @Autowired
     private TwintThreadGroup ttg;

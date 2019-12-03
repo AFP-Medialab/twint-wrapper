@@ -2,9 +2,16 @@ package com.afp.medialab.weverify.social.dao.entity;
 
 import java.io.Serializable;
 import java.util.Date;
-import java.util.SortedSet;
 
-import javax.persistence.*;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.MapsId;
+import javax.persistence.OneToOne;
+import javax.persistence.Table;
 
 import com.afp.medialab.weverify.social.model.Status;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;

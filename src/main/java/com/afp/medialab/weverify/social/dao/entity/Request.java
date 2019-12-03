@@ -1,17 +1,28 @@
 package com.afp.medialab.weverify.social.dao.entity;
 
-import com.afp.medialab.weverify.social.model.CollectRequest;
-
-import javax.persistence.*;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.Set;
 import java.util.SortedSet;
 
+import javax.persistence.Column;
+import javax.persistence.ElementCollection;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.Table;
+
+import com.afp.medialab.weverify.social.model.CollectRequest;
+
 @Entity(name = "Request")
 @Table(name = "request")
 public class Request implements Serializable {
-    @Id
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 7171258623231757504L;
+
+	@Id
     @GeneratedValue
     private Integer id;
 

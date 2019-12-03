@@ -1,24 +1,25 @@
 package com.afp.medialab.weverify.social.model.twint;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import java.io.IOException;
+import java.util.List;
+
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.core.TreeNode;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 
 public class TwittieDeserializer extends StdDeserializer<TwittieResponse> {
 
-    public TwittieDeserializer() {
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 54707317053927190L;
+
+	public TwittieDeserializer() {
         this(null);
     }
     public TwittieDeserializer(Class<?> vc) {
