@@ -129,15 +129,12 @@ public class TwitterGatewayServiceController {
         if (collectHistory == null) throw new NotFoundException();
 
         CollectRequest collectRequest = new CollectRequest(collectHistory.getRequest());
-        if (collectRequest != null) {
-            if (collectHistory.getStatus() != Status.Done)
-                return new StatusResponse(collectHistory.getSession(), collectHistory.getProcessStart(), collectHistory.getProcessEnd(),
-                        collectHistory.getStatus(), collectRequest, null, null);
-            else
-                return new StatusResponse(collectHistory.getSession(), collectHistory.getProcessStart(), collectHistory.getProcessEnd(),
-                        collectHistory.getStatus(), collectRequest, collectHistory.getCount(), collectHistory.getMessage());
-        }
-        return new StatusResponse(collectHistory.getSession(), null, null, Status.Error, null, null, "No query found, or parsing error");
+        if (collectHistory.getStatus() != Status.Done)
+            return new StatusResponse(collectHistory.getSession(), collectHistory.getProcessStart(), collectHistory.getProcessEnd(),
+                    collectHistory.getStatus(), collectRequest, null, null);
+        else
+            return new StatusResponse(collectHistory.getSession(), collectHistory.getProcessStart(), collectHistory.getProcessEnd(),
+                    collectHistory.getStatus(), collectRequest, collectHistory.getCount(), collectHistory.getMessage());
     }
 
 
@@ -147,9 +144,9 @@ public class TwitterGatewayServiceController {
         Set<Request> users = collectService.requestContainingAllTheUsers(collectRequest.getUserList());
 
         Set<Request> maching_requests = new HashSet<Request>();
-        if (keywords != null){
+        if (keywords != null) {
             maching_requests.addAll(keywords);
-            if(banned_words != null)
+            if (banned_words != null)
                 maching_requests.retainAll(banned_words);
             else
                 maching_requests.retainAll(collectService.requestContainingEmptyBannedWords());
@@ -157,34 +154,31 @@ public class TwitterGatewayServiceController {
                 maching_requests.retainAll(users);
             else
                 maching_requests.retainAll(collectService.requestContainingEmptyUsers());
-        }
-        else{
+        } else {
             maching_requests = users;
         }
         return maching_requests;
     }
 
-    public Set<Request> similarInCache(CollectRequest collectRequest){
+    public Set<Request> similarInCache(CollectRequest collectRequest) {
         Set<Request> keywords = collectService.requestsContainingAllTheKeywords(collectRequest.getKeywordList());
         Set<Request> bannedWords = collectService.requestContainingAllTheBannedWords(collectRequest.getBannedWords());
         Set<Request> users = collectService.requestsContainingOnlySomeOfTheUsers(collectRequest.getUserList());
 
         Set<Request> maching_requests;
-        if (keywords != null){
+        if (keywords != null) {
             maching_requests = new HashSet<Request>(keywords);
-            if(bannedWords != null)
+            if (bannedWords != null)
                 maching_requests.retainAll(bannedWords);
             if (users != null)
                 maching_requests.retainAll(users);
-        }
-        else{
+        } else {
             maching_requests = users;
         }
         return maching_requests;
     }
 
-    public CollectResponse makeRequestFromListAndCompleteTime(CollectRequest collectRequest, Set<Request> requests)
-    {
+    public CollectResponse makeRequestFromListAndCompleteTime(CollectRequest collectRequest, Set<Request> requests) {
         for (Request request : requests) {
             CollectResponse result = makeRequestIfDatesAreLarger(collectRequest, request);
             if (result != null)
@@ -193,8 +187,7 @@ public class TwitterGatewayServiceController {
         return null;
     }
 
-    public CollectResponse makeLargerRequestFromListAndCompleteTime(CollectRequest collectRequest, Set<Request> requests)
-    {
+    public CollectResponse makeLargerRequestFromListAndCompleteTime(CollectRequest collectRequest, Set<Request> requests) {
         for (Request request : requests) {
             CollectResponse result = makeLargerRequestIfDatesAreLarger(collectRequest, request);
             if (result != null)
@@ -486,7 +479,7 @@ public class TwitterGatewayServiceController {
 
         collectHistory.setStatus(Status.Pending);
         Request request = collectHistory.getRequest();
-        if (request == null){
+        if (request == null) {
             collectHistory.setStatus(Status.Error);
             collectHistory.setMessage("Could not find the Request associated");
             collectService.save_collectHistory(collectHistory);
