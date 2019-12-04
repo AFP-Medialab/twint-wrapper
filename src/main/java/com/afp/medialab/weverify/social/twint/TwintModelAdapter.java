@@ -13,6 +13,7 @@ import java.util.TreeMap;
 
 import javax.annotation.PostConstruct;
 
+import org.apache.commons.lang3.StringUtils;
 import org.json.simple.parser.ParseException;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -139,10 +140,11 @@ public class TwintModelAdapter {
 
 		return tokenJSON;
 	}
-
+	
 	public void buildWit(TwintModel tm) throws InterruptedException, ParseException, IOException {
 
 		tweet = tm.getTweet();
+		tweet = StringUtils.normalizeSpace(tweet);
 		Map<String, String> tokensNamed = callTwittie();
 
 		String[] langs = new String[] { "fr", "en" };
@@ -156,13 +158,14 @@ public class TwintModelAdapter {
 		for (String regExp : regExps) {
 			tweet = tweet.replaceAll(regExp, " ");
 		}
-		List<String> words = Arrays.asList(tweet.toLowerCase().split(" "));
+		tweet = StringUtils.normalizeSpace(tweet);
+		List<String> words = Arrays.asList(tweet.toLowerCase().split("\\s+"));
 
 		Map<String, Integer> occurences = new HashMap<>();
 
 		words.stream().forEach((word) -> {
 
-			if (!stopLang.contains(word) && !stopGlob.contains(word))
+			if (!stopLang.contains(word) && !stopGlob.contains(word) && !word.equals(" "))
 				if (occurences.get(word) == null)
 					occurences.put(word, 1);
 				else
