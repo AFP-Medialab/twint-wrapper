@@ -1,6 +1,7 @@
 server:
   servlet:
     context-path: /twint-wrapper
+  port: 8080
 logging:
   level:
     root: INFO

@@ -31,7 +31,7 @@ public class ESConfiguration extends AbstractElasticsearchConfiguration {
 //	@Value("${application.elasticsearch.cluster}")
 //	private String esClusterName;
 
-	@Bean
+	@Bean("ESRestTempate")
 	public RestTemplate getRestTemplate() {
 		return new RestTemplate();
 	}

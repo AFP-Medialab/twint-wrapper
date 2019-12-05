@@ -1,6 +1,7 @@
 package com.afp.medialab.weverify.social.controller;
 
 import java.io.IOException;
+import java.security.Principal;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -15,6 +16,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -58,14 +61,22 @@ public class TwitterGatewayServiceController {
     private String homeMsg;
 
 
+    @PreAuthorize("hasAuthority('user')")
     @RequestMapping(path = "/", method = RequestMethod.GET)
     public @ResponseBody
     String home() {
         return homeMsg;
     }
 
-
+    
+    @PreAuthorize("hasAuthority('user')")
+    @RequestMapping(path = "/me", method = RequestMethod.GET)
+    public ResponseEntity<Principal> get(final Principal principal) {
+    	return ResponseEntity.ok(principal);
+    }
+    
     @ApiOperation(value = "Trigger a Twitter Scraping")
+    @PreAuthorize("hasAuthority('user')")
     @RequestMapping(path = "/collect", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public @ResponseBody
     CollectResponse collect(@RequestBody @Valid CollectRequest collectRequest, BindingResult result) {

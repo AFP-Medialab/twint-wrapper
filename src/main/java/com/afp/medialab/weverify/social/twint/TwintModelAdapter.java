@@ -17,6 +17,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.json.simple.parser.ParseException;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -36,6 +37,7 @@ public class TwintModelAdapter {
 	private static org.slf4j.Logger Logger = LoggerFactory.getLogger(TwintThread.class);
 
 	@Autowired
+	@Qualifier("ESRestTempate")
 	private RestTemplate restTemplate;
 
 	@Value("${application.twittie.url}")
