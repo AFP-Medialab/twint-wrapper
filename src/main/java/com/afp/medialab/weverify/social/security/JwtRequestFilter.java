@@ -7,7 +7,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -27,13 +27,12 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.fusionauth.security.FusionAuthUserDetails;
-import io.fusionauth.security.OpenIDAuthorizationCodeResourceDetails;
 
 @Component
 public class JwtRequestFilter extends OncePerRequestFilter {
 
-	@Autowired
-	private OpenIDAuthorizationCodeResourceDetails openIDResourceDetails;
+	@Value("${fusionAuth.userInfoUri}")
+	private String userInfoUri;
 
 	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
@@ -60,8 +59,8 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 		HttpHeaders headers = new HttpHeaders();
 		headers.set("Authorization", requestTokenHeader);
 		HttpEntity<String> httpEntity = new HttpEntity<>(headers);
-		ResponseEntity<String> response = new RestTemplate().exchange(openIDResourceDetails.getUserInfoUri(),
-				HttpMethod.GET, httpEntity, String.class);
+		ResponseEntity<String> response = new RestTemplate().exchange(this.userInfoUri, HttpMethod.GET, httpEntity,
+				String.class);
 		if (response.getStatusCode() == HttpStatus.OK) {
 			return new ObjectMapper().readTree(response.getBody());
 		}
