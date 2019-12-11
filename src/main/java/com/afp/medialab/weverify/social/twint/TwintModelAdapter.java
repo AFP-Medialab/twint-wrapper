@@ -84,7 +84,7 @@ public class TwintModelAdapter {
         //HTTPConnexion Timeout
         ResponseEntity<String> response = null;
         try {
-           response = restTemplate.postForEntity("http://185.249.140.38/weverify-twitie/process?annotations=:Person,:UserID,:Location,:Organization", tweet, String.class);
+           response = restTemplate.postForEntity("http://185.249.140.38/weverify-twitie/process?annotations=:Person,:UserID,:Location,:Organization", tweet.trim(), String.class);
 
         }
         catch (Exception e){
@@ -102,25 +102,27 @@ public class TwintModelAdapter {
 
         twittieResponse.getPerson().forEach(p -> {
             String per = p.getFeatures().getString();
-            String n_per = per.toLowerCase().replaceAll(" |/.", "_");
-            tweet = tweet.replaceAll(per, n_per);
+            String n_per = per.toLowerCase().replaceAll("\\.", " ").trim().replaceAll(" ", "_");
+            tweet = tweet.trim().replaceAll(per, n_per);
 
             tokenJSON.put(n_per, "Person");
         });
         twittieResponse.getUserID().forEach(p -> {
-            tweet = tweet.replaceAll(p.getFeatures().getString(), p.getFeatures().getString().toLowerCase().replaceAll("@", ""));
+            tweet = tweet.trim().replaceAll(p.getFeatures().getString(), p.getFeatures().getString().toLowerCase().replaceAll("@", ""));
             tokenJSON.put("@" + p.getFeatures().getString().toLowerCase(), "UserID");
         });
         twittieResponse.getLocation().forEach(p -> {
             String per = p.getFeatures().getString();
-            String n_per = per.toLowerCase().replaceAll(" |/.", "_");
-            tweet = tweet.replaceAll(per, n_per);
+            String n_per = per.toLowerCase().replaceAll("\\.", " ").trim();
+            n_per = n_per.replaceAll(" ", "_");
+            tweet = tweet.trim().replaceAll(per, n_per);
             tokenJSON.put(n_per, "Location");
         });
         twittieResponse.getOrganization().forEach(p -> {
             String per = p.getFeatures().getString();
-            String n_per = per.toLowerCase().replaceAll(" |/.", "_");
-            tweet = tweet.replaceAll(per, n_per);
+            String n_per = per.toLowerCase().replaceAll("\\.", " ").trim();
+            n_per = n_per.replaceAll(" ", "_");
+            tweet = tweet.trim().replaceAll(per, n_per);
             tokenJSON.put(n_per, "Organization");
         });
 
@@ -130,6 +132,7 @@ public class TwintModelAdapter {
     public void buildWit(TwintModel tm) throws InterruptedException, ParseException, IOException {
 
         tweet = tm.getTweet();
+
         Map<String, String> tokensNamed = callTwittie();
 
         String[] langs = new String[]{"fr", "en"};
@@ -139,6 +142,7 @@ public class TwintModelAdapter {
 
         stopGlob.addAll(Arrays.asList(tm.getSearch().split(" ")));
         //String tweet = tm.getTweet();
+
 
         for (String regExp : regExps) {
             tweet = tweet.replaceAll(regExp, " ");
@@ -154,6 +158,9 @@ public class TwintModelAdapter {
                         occurences.put(word, 1);
                     else
                         occurences.put(word, occurences.get(word) + 1);
+
+
+
             });
 
             List<TwintModel.WordsInTweet> wit = new ArrayList<>();
@@ -164,6 +171,7 @@ public class TwintModelAdapter {
                 w.setNbOccurences(occ);
                 w.setEntity((tokensNamed != null && tokensNamed.get(word) != null)? tokensNamed.get(word) : null);
 
+                Logger.info(w.getWord() + " : " + w.getNbOccurences());
                 wit.add(w);
             });
 
