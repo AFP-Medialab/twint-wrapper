@@ -23,8 +23,6 @@ application:
     port: ${ES_PORT:9200}
   twittie:
     url: ${TWITTIE_URL:http://185.249.140.38/weverify-twitie/process?annotations=:Person,:UserID,:Location,:Organization}
-    
-
 
 spring:
   jackson:
@@ -38,6 +36,7 @@ spring:
     #driver-class-name: com.mysql.jdbc.Driver
   jpa:
     hibernate.ddl-auto : create-drop
+    hibernate.use-new-id-generator-mappings : false
     generate-ddl: true
     show-sql: false
 
