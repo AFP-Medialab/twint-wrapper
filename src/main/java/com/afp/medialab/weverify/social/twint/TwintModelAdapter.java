@@ -147,8 +147,8 @@ public class TwintModelAdapter {
         for (String regExp : regExps) {
             tweet = tweet.replaceAll(regExp, " ");
         }
-           List<String> words = Arrays.asList(tweet.toLowerCase().split(" "));
-
+           List<String> words = Arrays.asList(tweet.toLowerCase().trim().split(" "));
+            words.remove("&nbsp;");
             Map<String, Integer> occurences = new HashMap<>();
 
             words.stream().forEach((word) -> {
@@ -167,13 +167,14 @@ public class TwintModelAdapter {
 
             occurences.forEach((word, occ) -> {
                 TwintModel.WordsInTweet w = new TwintModel.WordsInTweet();
-                w.setWord(word);
-                w.setNbOccurences(occ);
-                w.setEntity((tokensNamed != null && tokensNamed.get(word) != null)? tokensNamed.get(word) : null);
+                    w.setWord(word);
+                    w.setNbOccurences(occ);
+                    w.setEntity((tokensNamed != null && tokensNamed.get(word) != null) ? tokensNamed.get(word) : null);
 
-                Logger.info(w.getWord() + " : " + w.getNbOccurences());
-                wit.add(w);
+                    Logger.info("\"" + w.getWord() + "\" : " + w.getNbOccurences());
+                    wit.add(w);
             });
+
 
             tm.setTwittieTweet(tweet);
             tm.setWit(wit);
