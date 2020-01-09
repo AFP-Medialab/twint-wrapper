@@ -3,30 +3,28 @@ package com.afp.medialab.weverify.social.twint;
 import com.afp.medialab.weverify.social.model.CollectRequest;
 import com.afp.medialab.weverify.social.model.twint.TwintModel;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.elasticsearch.action.DocWriteResponse;
-import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequest;
+import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
+import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
+import static org.elasticsearch.index.query.QueryBuilders.rangeQuery;
+
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.List;
+
+import javax.annotation.PostConstruct;
+import javax.transaction.Transactional;
+
+import com.afp.medialab.weverify.social.dao.entity.CollectHistory;
+import com.afp.medialab.weverify.social.dao.service.CollectService;
+import com.afp.medialab.weverify.social.model.Status;
+
 import org.elasticsearch.action.bulk.BulkRequest;
-import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.index.IndexRequest;
-import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.update.UpdateRequest;
-import org.elasticsearch.action.update.UpdateResponse;
-import org.elasticsearch.client.Client;
 import org.elasticsearch.common.settings.Settings;
-import org.elasticsearch.common.transport.TransportAddress;
-import org.elasticsearch.common.xcontent.XContentBuilder;
-import org.elasticsearch.common.xcontent.XContentFactory;
 import org.elasticsearch.common.xcontent.XContentType;
-import org.elasticsearch.index.Index;
 import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.search.aggregations.AbstractAggregationBuilder;
-import org.elasticsearch.search.aggregations.AggregationBuilder;
-import org.elasticsearch.search.aggregations.AggregationBuilders;
-import org.elasticsearch.transport.client.PreBuiltTransportClient;
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -73,6 +71,8 @@ public class ESOperations {
 
     private static Logger Logger = LoggerFactory.getLogger(TwintThread.class);
 
+    @Autowired
+    CollectService collectService;
 
     public List<TwintModel> getModels(String essid, String start, String end) throws InterruptedException {
 
@@ -120,9 +120,21 @@ public class ESOperations {
 
     }
 
-    public void indexWordsObj(List<TwintModel> tms) throws IOException {
-        BulkRequest requests = new BulkRequest();
+    @PostConstruct
+    public void upgradeRefreshInterval()
+    {
+        String settingKey = "index.refresh_interval";
+        int settingValue = 30;
+        Settings settings =
+                Settings.builder()
+                        .put(settingKey, settingValue)
+                     //   .put("index.number_of_replicas", 0)
+                        .build();
+        Logger.info("Set settings for elastic");
+    }
 
+    public void indexWordsObj(List<TwintModel> tms, CollectHistory collectHistory) throws IOException {
+        BulkRequest requests = new BulkRequest();
         int i = 0;
         boolean allNull = true;
         for (TwintModel tm : tms) {

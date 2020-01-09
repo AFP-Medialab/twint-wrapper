@@ -8,7 +8,7 @@ import java.util.Arrays;
 public class StatusValidator implements ConstraintValidator<StatusConstrain, String> {
 
     private ArrayList<String> status = new ArrayList<>(
-            Arrays.asList(null, "Pending", "Running", "Error", "Done")
+            Arrays.asList(null, "Pending", "Running", "Error", "CountingWords", "Done")
     );
 
     @Override

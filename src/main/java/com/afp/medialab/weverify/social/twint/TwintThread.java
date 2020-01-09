@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 import com.afp.medialab.weverify.social.model.*;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequest;
@@ -80,7 +81,7 @@ public class TwintThread {
 		Logger.debug("Started Thread n°" + cpt);
 		Integer result = -1;
 		if (request instanceof CollectRequest) {
-			result = callProcessUntilSuccess((CollectRequest) request, session);
+			result = callProcessUntilSuccess((CollectRequest) request,  collectHistory.getSession());
 		}
 		if (request instanceof CollectFollowsRequest)
 			result = callFollowProcessUntilSuccess((CollectFollowsRequest)request, session);
@@ -112,10 +113,13 @@ public class TwintThread {
 			int total_threads = collectHistory.getTotal_threads();
 			if (finished_threads == total_threads) {
 				try {
+					collectHistory.setStatus(Status.CountingWords);
+					//collectService.save_collectHistory(collectHistory);
 					esOperation.indexWordsObj(
 							esOperation.getModels(session,
 									dateFormat.format(((CollectRequest)request).getFrom()),
-									dateFormat.format(((CollectRequest)request).getUntil()))
+									dateFormat.format(((CollectRequest)request).getUntil())),
+							collectHistory
 					);
 				} catch (InterruptedException e) {
 					e.printStackTrace();
@@ -226,13 +230,14 @@ public class TwintThread {
 		return result;
 	}
 
-	private Integer callProcessUntilSuccess(CollectRequest request, String session) throws IOException {
+	private Integer callProcessUntilSuccess(CollectRequest request, String session) {
 		// could add a request subdivision on error
 		Integer nb_tweets = -1;
 		for (int i = 0; i < restart_time && nb_tweets == -1; i++) {
 			Logger.info("Call Process Until success");
 
 			nb_tweets = callTwintProcess(request, session);
+
 			if (nb_tweets == -1) {
 				Logger.info("Error reprocessing ");
 				Date collected_to = esOperation.findWhereIndexingStopped(request, session);

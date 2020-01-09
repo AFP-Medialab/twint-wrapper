@@ -56,7 +56,7 @@ public class ElasticSearchQueryTest {
 				esOperations.getModels(sessid, "2018-10-05","2018-12-13");
 
 		System.out.println(tms.size());
-		esOperations.indexWordsObj(tms);
+		//esOperations.indexWordsObj(tms);
 
 		esOperation.refresh(TwintModel.class);
 

@@ -9,7 +9,7 @@ import java.lang.annotation.*;
 @Target( { ElementType.METHOD, ElementType.FIELD })
 @Retention(RetentionPolicy.RUNTIME)
 public @interface StatusConstrain {
-    String message() default "Invalid status in JSON (\"Pending\", \"Running\", \"Error\", \"Done\"";
+    String message() default "Invalid status in JSON (\"Pending\", \"Running\", \"Error\", \"CountingWords\", \"Done\"";
 
     Class<?>[] groups() default {};
     Class<? extends Payload>[] payload() default {};

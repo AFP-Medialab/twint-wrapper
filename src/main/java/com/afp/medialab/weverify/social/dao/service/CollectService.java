@@ -81,7 +81,11 @@ public class CollectService {
                 collectInterface.updateCollectProcessStart(session, new Date());
             collectInterface.updateCollectStatus(session, newStatus.toString());
             return true;
-        } else if (newStatus == Status.Done && existingStatus == Status.Running) {
+        } else if (newStatus == Status.CountingWords && existingStatus == Status.Running) {
+            collectInterface.updateCollectProcessEnd(session, new Date());
+            collectInterface.updateCollectStatus(session, newStatus.toString());
+            return true;
+        } else if (newStatus == Status.Done && existingStatus == Status.CountingWords) {
             collectInterface.updateCollectProcessEnd(session, new Date());
             collectInterface.updateCollectStatus(session, newStatus.toString());
             return true;
