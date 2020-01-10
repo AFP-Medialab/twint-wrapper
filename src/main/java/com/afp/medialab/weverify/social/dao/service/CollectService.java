@@ -3,17 +3,22 @@ package com.afp.medialab.weverify.social.dao.service;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
-import com.afp.medialab.weverify.social.model.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.afp.medialab.weverify.social.dao.entity.CollectHistory;
+import com.afp.medialab.weverify.social.dao.entity.Request;
 import com.afp.medialab.weverify.social.dao.repository.CollectInterface;
+import com.afp.medialab.weverify.social.dao.repository.RequestInterface;
+import com.afp.medialab.weverify.social.model.CollectRequest;
+import com.afp.medialab.weverify.social.model.CollectResponse;
+import com.afp.medialab.weverify.social.model.Status;
 import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -24,16 +29,9 @@ public class CollectService {
     @Autowired
     CollectInterface collectInterface;
 
+    @Autowired
+    RequestInterface requestInterface;
 
-    private String collectRequestToString(Object collectRequest) {
-        ObjectMapper mapper = new ObjectMapper();
-        try {
-            return mapper.writeValueAsString(collectRequest);
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-        }
-        return "Json parsing Error";
-    }
 
     public CollectRequest stringToCollectRequest(String query) {
         ObjectMapper mapper = new ObjectMapper();
@@ -50,17 +48,17 @@ public class CollectService {
         return null;
     }
 
-
-    public void saveCollectInfo(String session, Object collectRequest, Date processStart, Date processEnd, Status status, String message, Integer count, Integer finished_threads, Integer total_threads, Integer successful_threads) {
-        CollectHistory collectHistory = new CollectHistory(session, collectRequestToString(collectRequest), processStart, processEnd, status, message, count, finished_threads, total_threads, successful_threads);
-        collectInterface.save(collectHistory);
+    public CollectHistory saveCollectInfo(String session, CollectRequest collectRequest, Date processStart, Date processEnd, Status status, String message, Integer count, Integer finished_threads, Integer total_threads, Integer successful_threads) {
+        CollectHistory collectHistory = new CollectHistory(session, new Request(collectRequest), processStart, processEnd, status, message, count, finished_threads, total_threads, successful_threads);
+        return collectInterface.save(collectHistory);
     }
 
-    public CollectResponse alreadyExists(Object collectRequest) {
-        CollectHistory collectHistory = collectInterface.findCollectHistoryByQuery(collectRequestToString(collectRequest));
-        if (collectHistory == null)
-            return null;
-        return new CollectResponse(collectHistory.getSession(), collectHistory.getStatus(), null, collectHistory.getProcessEnd());
+    public CollectResponse alreadyExists(CollectRequest collectRequest) {
+        Request request = null;
+        CollectHistory collectHistory = collectInterface.findCollectHistoryByRequest(request);
+        if (collectHistory != null)
+            return new CollectResponse(collectHistory.getSession(), collectHistory.getStatus(), null, collectHistory.getProcessEnd());
+        return null;
     }
 
     public Boolean updateCollectStatus(String session, Status newStatus) {
@@ -97,9 +95,11 @@ public class CollectService {
         return false;
     }
 
-    public void updateCollectQuery(String session, Object collectRequest) {
-        String query = collectRequestToString(collectRequest);
-        collectInterface.updateCollectQuery(session, query);
+    public void updateCollectQuery(String session, CollectRequest collectRequest) {
+        CollectHistory collectHistory = collectInterface.findCollectHistoryBySession(session);
+        Request request = collectHistory.getRequest();
+        request.update(collectRequest);
+        requestInterface.save(request);
     }
 
     public void updateCollectProcessEnd(String session, Date date) {
@@ -132,7 +132,7 @@ public class CollectService {
         return collectHistoryList;
     }
 
-    public List<CollectHistory> getByStatus(String status, int limit,  boolean desc) {
+    public List<CollectHistory> getByStatus(String status, int limit, boolean desc) {
         List<CollectHistory> collectHistoryList = collectInterface.findCollectHistoryByStatus(status);
         if (desc)
             Collections.reverse(collectHistoryList);
@@ -177,10 +177,6 @@ public class CollectService {
         collectInterface.updateCollectCount(session, count);
     }
 
-    public Set<CollectHistory> findCollectHistoryByQueryContains(String str) {
-        return collectInterface.findCollectHistoryByQueryContains(str);
-    }
-
     public void updateCollectFinishedThreads(String session, Integer finished_threads) {
         collectInterface.updateCollectFinished_threads(session, finished_threads);
     }
@@ -193,5 +189,106 @@ public class CollectService {
         collectInterface.updateCollectSuccessful_threads(session, sucessful_threads);
     }
 
+    /**
+     * @param keywords
+     * @return Set<Request> or null if the given list is empty or null
+     * @function isContainedKeywords : This gives the list of requests that contains the same or less words than given list.
+     */
+    public Set<Request> requestsContainingOnlySomeOfTheKeywords(Set<String> keywords) {
+        Set<Request> matching_keyWords = new HashSet<Request>();
+        if (keywords == null || keywords.size() == 0)
+            return null;
+        for (String keyword : keywords) {
+            List<Request> collected = requestInterface.my_findMatchingRequestByKeyword(keyword, keywords.size());
+            matching_keyWords.addAll(collected);
+        }
+
+        return matching_keyWords.stream().filter(e -> e.getKeywordList().stream().anyMatch(keywords::contains)).collect(Collectors.toSet());
+    }
+
+    /**
+     * @param bannedWords
+     * @return Set<Request> or null if the given list is empty or null
+     * @function isContainedBannedWords : This gives the list of requests that contains the same or less words than given list.
+     */
+    public Set<Request> requestContainingOnlySomeOfTheBannedWords(Set<String> bannedWords) {
+        Set<Request> matching_bannedWords = new HashSet<Request>();
+        if (bannedWords == null || bannedWords.size() == 0)
+            return null;
+        for (String bannedWord : bannedWords) {
+            List<Request> collected = requestInterface.my_findMatchingRequestByBannedWords(bannedWord, bannedWords.size());
+            matching_bannedWords.addAll(collected);
+        }
+        matching_bannedWords = matching_bannedWords.stream().filter(e -> e.getBannedWords().stream().anyMatch(bannedWords::contains)).collect(Collectors.toSet());
+        matching_bannedWords.addAll(requestInterface.findRequestByBannedWordsIsNull());
+        return matching_bannedWords;
+    }
+
+    public Set<Request> requestContainingAllTheUsers(Set<String> users) {
+        Set<Request> matching_users = new HashSet<Request>();
+        if (users == null || users.size() == 0)
+            return null;
+        for (String user : users) {
+            List<Request> collected = requestInterface.my_findMatchingRequestByUsers(user, users.size());
+            matching_users.addAll(collected);
+        }
+        matching_users = matching_users.stream().filter(e -> e.getUserList().containsAll(users) || e.getUserList().size() == 0).collect(Collectors.toSet());
+        matching_users.addAll(requestInterface.findRequestByUserListIsNull());
+        return matching_users;
+    }
+
+    public Set<Request> requestContainingEmptyUsers() {
+        return new HashSet<Request>(requestInterface.findRequestByUserListIsNull());
+    }
+
+    public Set<Request> requestContainingEmptyBannedWords() {
+        return new HashSet<Request>(requestInterface.findRequestByBannedWordsIsNull());
+    }
+
+    public CollectHistory findCollectHistoryByRequest(Request request) {
+        return collectInterface.findCollectHistoryByRequest(request);
+    }
+
+    public void save_collectHistory(CollectHistory collectHistory) {
+        collectInterface.save(collectHistory);
+    }
+
+    public void save_request(Request request) {
+        requestInterface.save(request);
+    }
+
+    public Set<Request> requestsContainingAllTheKeywords(Set<String> keywordList) {
+        Set<Request> matchingRequests = new HashSet<Request>();
+        if (keywordList == null || keywordList.size() == 0)
+            return null;
+        for (String keyword : keywordList) {
+            List<Request> collected = requestInterface.my_findSmallerRequestByKeyword(keyword, keywordList.size());
+            matchingRequests.addAll(collected);
+        }
+        return matchingRequests.stream().filter(e -> e.getKeywordList().containsAll(keywordList)).collect(Collectors.toSet());
+    }
+
+    public Set<Request> requestContainingAllTheBannedWords(Set<String> bannedWords) {
+        Set<Request> matchingRequests = new HashSet<Request>();
+        if (bannedWords == null || bannedWords.size() == 0)
+            return null;
+        for (String keyword : bannedWords) {
+            List<Request> collected = requestInterface.my_findSmallerRequestByBannedWords(keyword, bannedWords.size());
+            matchingRequests.addAll(collected);
+        }
+        return matchingRequests.stream().filter(e -> e.getKeywordList().containsAll(bannedWords)).collect(Collectors.toSet());
+    }
+
+    public Set<Request> requestsContainingOnlySomeOfTheUsers(Set<String> userList) {
+        Set<Request> matching_users = new HashSet<Request>();
+        if (userList == null || userList.size() == 0)
+            return null;
+        for (String user : userList) {
+            List<Request> collected = requestInterface.my_findSmallerRequestByUsers(user);
+            matching_users.addAll(collected);
+        }
+        matching_users = matching_users.stream().filter(e -> e.getBannedWords().stream().anyMatch(userList::contains)).collect(Collectors.toSet());
+        return matching_users;
+    }
 }
 

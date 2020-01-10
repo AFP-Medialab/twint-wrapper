@@ -17,42 +17,23 @@ import javax.transaction.Transactional;
 
 import com.afp.medialab.weverify.social.dao.entity.CollectHistory;
 import com.afp.medialab.weverify.social.dao.service.CollectService;
-import com.afp.medialab.weverify.social.model.Status;
 
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.common.settings.Settings;
+import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
-import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
-import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.SearchQuery;
-import org.springframework.data.elasticsearch.core.query.UpdateQuery;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
-
-import javax.transaction.Transactional;
-import java.io.*;
-import java.net.HttpURLConnection;
-import java.net.InetAddress;
-import java.net.URL;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-
-import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
-import static org.elasticsearch.index.query.QueryBuilders.*;
 
 @Component
 @Transactional
@@ -61,13 +42,13 @@ public class ESOperations {
     @Autowired
     private ElasticsearchOperations esOperation;
 
-
     @Autowired
     private ESConfiguration esConfiguration;
 
     @Autowired
     private TwintModelAdapter twintModelAdapter;
 
+    private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
     private static Logger Logger = LoggerFactory.getLogger(TwintThread.class);
 
@@ -99,8 +80,6 @@ public class ESOperations {
      */
     public Date findWhereIndexingStopped(CollectRequest request, String session) {
 
-
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         String sinceStr = dateFormat.format(request.getFrom());
         String untilStr = dateFormat.format(request.getUntil());
 
@@ -169,7 +148,7 @@ public class ESOperations {
         }
 
         if (!allNull)
-            esConfiguration.elasticsearchClient().bulk(requests);
+            esConfiguration.elasticsearchClient().bulk(requests, RequestOptions.DEFAULT);
 
     }
 

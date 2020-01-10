@@ -1,39 +1,42 @@
 package com.afp.medialab.weverify.social.controller;
 
 import java.io.IOException;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.*;
-import java.util.concurrent.CompletableFuture;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 
 import javax.validation.Valid;
 
-import com.afp.medialab.weverify.social.model.*;
-import com.afp.medialab.weverify.social.twint.ESOperations;
-import com.afp.medialab.weverify.social.twint.TwintThread;
-import io.netty.util.concurrent.CompleteFuture;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.ObjectError;
-import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.afp.medialab.weverify.social.dao.entity.CollectHistory;
+import com.afp.medialab.weverify.social.dao.entity.Request;
 import com.afp.medialab.weverify.social.dao.service.CollectService;
-import com.afp.medialab.weverify.social.twint.TwintRequestGenerator;
+import com.afp.medialab.weverify.social.model.CollectRequest;
+import com.afp.medialab.weverify.social.model.CollectResponse;
+import com.afp.medialab.weverify.social.model.CollectUpdateRequest;
+import com.afp.medialab.weverify.social.model.HistoryRequest;
+import com.afp.medialab.weverify.social.model.HistoryResponse;
+import com.afp.medialab.weverify.social.model.NotFoundException;
+import com.afp.medialab.weverify.social.model.Status;
+import com.afp.medialab.weverify.social.model.StatusRequest;
+import com.afp.medialab.weverify.social.model.StatusResponse;
 import com.afp.medialab.weverify.social.twint.TwintThreadGroup;
 
 import io.swagger.annotations.Api;
@@ -47,10 +50,6 @@ public class TwitterGatewayServiceController {
 
     @Autowired
     private CollectService collectService;
-
-
-    @Autowired
-    private ESOperations esOperation;
 
     @Autowired
     private TwintThreadGroup ttg;
@@ -66,39 +65,14 @@ public class TwitterGatewayServiceController {
     }
 
 
-    @ExceptionHandler(NotFoundException.class)
-    @ResponseStatus(HttpStatus.NOT_FOUND)
-    public String handleResourceNotFoundException() {
-        return "This session could not be found";
-    }
-    @ApiOperation(value = "Trigger a Twitter Scraping follows")
-    @RequestMapping(path = "/collect-follows", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public @ResponseBody
-    CollectResponse collectFollows(@RequestBody CollectFollowsRequest collectRequest, BindingResult result) throws IOException, ExecutionException, InterruptedException {
-
-        String session = UUID.randomUUID().toString();
-        if (result.hasErrors()) {
-            String str = "";
-            for (ObjectError r : result.getAllErrors()) {
-                str += r.getDefaultMessage() + "; ";
-            }
-            return new CollectResponse(session, Status.Error, str, null);
-        }
-
-
-
-        return caching(collectRequest, session);
-       // return caching(collectRequest, session);
-    }
-
-
-
     @ApiOperation(value = "Trigger a Twitter Scraping")
     @RequestMapping(path = "/collect", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public @ResponseBody
-    CollectResponse collect(@RequestBody @Valid CollectRequest collectRequest, BindingResult result) throws IOException, ExecutionException, InterruptedException {
+    CollectResponse collect(@RequestBody @Valid CollectRequest collectRequest, BindingResult result) {
 
-        String session = UUID.randomUUID().toString();
+        if (!collectRequest.isValid())
+            return new CollectResponse(null, Status.Error, "and_list or user_list must be given, from and until are mandatory", null);
+
         Logger.debug(result.getAllErrors().toString());
         if (result.hasErrors()) {
             String str = "";
@@ -106,26 +80,31 @@ public class TwitterGatewayServiceController {
                 str += r.getDefaultMessage() + "; ";
             }
             Logger.info(str);
-            return new CollectResponse(session, Status.Error, str, null);
+            return new CollectResponse(null, Status.Error, str, null);
         }
 
-        Logger.debug("search : " + collectRequest.getSearch());
+        Set<String> and_list = collectRequest.getKeywordList();
+        Set<String> not_ist = collectRequest.getBannedWords();
+        if (and_list != null)
+            Logger.debug("and_list : " + and_list.toString());
+        if (not_ist != null)
+            Logger.debug("not_list : " + not_ist.toString());
         Logger.debug("from : " + collectRequest.getFrom().toString());
         Logger.debug("until : " + collectRequest.getUntil().toString());
         Logger.debug("language : " + collectRequest.getLang());
-        Logger.debug("user : " + collectRequest.getUser_list());
+        Logger.debug("user : " + collectRequest.getUserList());
         Logger.debug("verified : " + collectRequest.isVerified());
         Logger.debug("Retweets : " + collectRequest.getRetweetsHandling());
         Logger.debug("Media : " + collectRequest.getMedia());
 
-        return caching(collectRequest, session);
+        return useCache(collectRequest);
     }
 
 
     @ApiOperation(value = "Trigger a status check")
     @RequestMapping(path = "/status", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public @ResponseBody
-    StatusResponse status(@RequestBody StatusRequest statusRequest){
+    StatusResponse status(@RequestBody StatusRequest statusRequest) {
         Logger.debug("POST status " + statusRequest.getSession());
         return getStatusResponse(statusRequest.getSession());
     }
@@ -134,7 +113,7 @@ public class TwitterGatewayServiceController {
     @ApiOperation(value = "Trigger a status check")
     @RequestMapping(path = "/status/{id}", method = RequestMethod.GET)
     public @ResponseBody
-    StatusResponse status(@PathVariable("id") String id){
+    StatusResponse status(@PathVariable("id") String id) {
         Logger.debug("GET status " + id);
         return getStatusResponse(id);
     }
@@ -142,71 +121,189 @@ public class TwitterGatewayServiceController {
 
     /**
      * @param session we want the status from.
-     * @func Returns the status response of a given session.
      * @return StatusResponse of the session.
+     * @func Returns the status response of a given session.
      */
     private StatusResponse getStatusResponse(String session) {
         CollectHistory collectHistory = collectService.getCollectInfo(session);
         if (collectHistory == null) throw new NotFoundException();
 
-        CollectRequest collectRequest = collectService.stringToCollectRequest(collectHistory.getQuery());
-        if (collectRequest != null) {
-            if (collectHistory.getStatus() != Status.Done)
-                return new StatusResponse(collectHistory.getSession(), collectHistory.getProcessStart(), collectHistory.getProcessEnd(),
-                        collectHistory.getStatus(), collectRequest, null, null);
+        CollectRequest collectRequest = new CollectRequest(collectHistory.getRequest());
+        if (collectHistory.getStatus() != Status.Done)
+            return new StatusResponse(collectHistory.getSession(), collectHistory.getProcessStart(), collectHistory.getProcessEnd(),
+                    collectHistory.getStatus(), collectRequest, null, null);
+        else
+            return new StatusResponse(collectHistory.getSession(), collectHistory.getProcessStart(), collectHistory.getProcessEnd(),
+                    collectHistory.getStatus(), collectRequest, collectHistory.getCount(), collectHistory.getMessage());
+    }
+
+
+    public Set<Request> requestIsInCache(CollectRequest collectRequest) {
+        Set<Request> keywords = collectService.requestsContainingOnlySomeOfTheKeywords(collectRequest.getKeywordList());
+        Set<Request> banned_words = collectService.requestContainingOnlySomeOfTheBannedWords(collectRequest.getBannedWords());
+        Set<Request> users = collectService.requestContainingAllTheUsers(collectRequest.getUserList());
+
+        Set<Request> maching_requests = new HashSet<Request>();
+        if (keywords != null) {
+            maching_requests.addAll(keywords);
+            if (banned_words != null)
+                maching_requests.retainAll(banned_words);
             else
-                return new StatusResponse(collectHistory.getSession(), collectHistory.getProcessStart(), collectHistory.getProcessEnd(),
-                        collectHistory.getStatus(), collectRequest, collectHistory.getCount(), collectHistory.getMessage());
+                maching_requests.retainAll(collectService.requestContainingEmptyBannedWords());
+            if (users != null)
+                maching_requests.retainAll(users);
+            else
+                maching_requests.retainAll(collectService.requestContainingEmptyUsers());
+        } else {
+            maching_requests = users;
         }
-        return new StatusResponse(collectHistory.getSession(), null, null, Status.Error, null, null, "No query found, or parsing error");
+        return maching_requests;
+    }
+
+    public Set<Request> similarInCache(CollectRequest collectRequest) {
+        Set<Request> keywords = collectService.requestsContainingAllTheKeywords(collectRequest.getKeywordList());
+        Set<Request> bannedWords = collectService.requestContainingAllTheBannedWords(collectRequest.getBannedWords());
+        Set<Request> users = collectService.requestsContainingOnlySomeOfTheUsers(collectRequest.getUserList());
+
+        Set<Request> maching_requests;
+        if (keywords != null) {
+            maching_requests = new HashSet<Request>(keywords);
+            if (bannedWords != null)
+                maching_requests.retainAll(bannedWords);
+            if (users != null)
+                maching_requests.retainAll(users);
+        } else {
+            maching_requests = users;
+        }
+        return maching_requests;
+    }
+
+    public CollectResponse makeRequestFromListAndCompleteTime(CollectRequest collectRequest, Set<Request> requests) {
+        for (Request request : requests) {
+            CollectResponse result = makeRequestIfDatesAreLarger(collectRequest, request);
+            if (result != null)
+                return result;
+        }
+        return null;
+    }
+
+    public CollectResponse makeLargerRequestFromListAndCompleteTime(CollectRequest collectRequest, Set<Request> requests) {
+        for (Request request : requests) {
+            CollectResponse result = makeLargerRequestIfDatesAreLarger(collectRequest, request);
+            if (result != null)
+                return result;
+        }
+        return null;
+    }
+
+    private CollectResponse makeLargerRequestIfDatesAreLarger(CollectRequest newCollectRequest, Request oldRequest) {
+        CollectHistory collectHistory = collectService.findCollectHistoryByRequest(oldRequest);
+        collectHistory.setMessage("Completing the research done from " + oldRequest.getSince() + " to " + oldRequest.getUntil());
+
+
+        // The new request covers all the old request and more
+        if (newCollectRequest.getFrom().compareTo(oldRequest.getSince()) < 0
+                && newCollectRequest.getUntil().compareTo(oldRequest.getUntil()) > 0) {
+            // Make a Twint collection from newCollectRequest.getFrom() to newCollectRequest.getUntil()
+            // And from  oldRequest.getUntil() to newCollectRequest.getUntil()
+
+            collectHistory.setStatus(Status.Pending);
+            oldRequest.update(newCollectRequest);
+            collectService.save_request(oldRequest);
+            collectService.save_collectHistory(collectHistory);
+
+            ttg.callTwintMultiThreaded(collectHistory, newCollectRequest);
+            return getCollectResponseFromTwintCall(collectHistory);
+        }
+        // The new request covers all the old request or less
+        else if (newCollectRequest.getFrom().compareTo(oldRequest.getSince()) >= 0
+                && newCollectRequest.getUntil().compareTo(oldRequest.getUntil()) <= 0) {
+            // Research the old request
+            collectHistory.setMessage("Completing the research");
+            collectHistory.setStatus(Status.Pending);
+            newCollectRequest.setFrom(oldRequest.getSince());
+            newCollectRequest.setUntil(oldRequest.getUntil());
+            oldRequest.update(newCollectRequest);
+            collectService.save_request(oldRequest);
+            collectService.save_collectHistory(collectHistory);
+
+            ttg.callTwintMultiThreaded(collectHistory, newCollectRequest);
+            return new CollectResponse(collectHistory);
+        }
+        // The new request covers before and a part of the old request
+        else if (newCollectRequest.getFrom().compareTo(oldRequest.getSince()) < 0
+                && newCollectRequest.getUntil().compareTo(oldRequest.getUntil()) <= 0
+                && newCollectRequest.getUntil().compareTo(oldRequest.getSince()) >= 0) {
+            // make a search from newCollectRequest.getFrom to oldRequest.getUntil()
+            collectHistory.setStatus(Status.Pending);
+            newCollectRequest.setUntil(oldRequest.getUntil());
+            oldRequest.update(newCollectRequest);
+            collectService.save_request(oldRequest);
+            collectService.save_collectHistory(collectHistory);
+
+            ttg.callTwintMultiThreaded(collectHistory, newCollectRequest);
+            return new CollectResponse(collectHistory);
+
+        }
+        // The new request covers after and a part of the old request
+        else if (newCollectRequest.getUntil().compareTo(oldRequest.getUntil()) > 0
+                && newCollectRequest.getFrom().compareTo(oldRequest.getSince()) >= 0
+                && newCollectRequest.getFrom().compareTo(oldRequest.getUntil()) <= 0) {
+            // make a search from oldRequest.getFrom() to newCollectRequest.getUntil()
+
+            collectHistory.setStatus(Status.Pending);
+            newCollectRequest.setFrom(oldRequest.getSince());
+            oldRequest.update(newCollectRequest);
+            collectService.save_request(oldRequest);
+            collectService.save_collectHistory(collectHistory);
+
+            ttg.callTwintMultiThreaded(collectHistory, newCollectRequest);
+            return new CollectResponse(collectHistory);
+        }
+        // else {
+        // The new request covers no days in common with the old one
+        // Undefined case yet so it's ignored for now.
+        // This collect request will have a new session Id even thought it matched the research criteria.
+        // }
+        return null;
     }
 
     /**
-     * @param newCollectRequest collect request asked.
-     * @param session           of the request.
+     * @param collectRequest collect request asked.
      * @return
      * @func Verifies if the request has already been done.
      * If not creates a new session and gives a CollectResponse accordingly.
      */
-    private CollectResponse caching(Object newCollectRequest, String session) throws IOException, ExecutionException, InterruptedException {
-        // Check if this request has already been done
-        CollectResponse alreadyDone = collectService.alreadyExists(newCollectRequest);
+    private CollectResponse useCache(CollectRequest collectRequest) {
+        // Find previous request that are larger than @collectRequest.
+        Set<Request> previousMatch = requestIsInCache(collectRequest);
+        CollectResponse alreadyDone = makeRequestFromListAndCompleteTime(collectRequest, previousMatch);
         if (alreadyDone != null) {
-            Logger.info("This request has already been done sessionId: " + alreadyDone.getSession());
+            Logger.info("This request is contained in an already done request,  sessionId: " + alreadyDone.getSession());
             return alreadyDone;
         }
-
-        if (newCollectRequest instanceof CollectRequest) {
-            //Search for all matching queries regardless of the date
-            Set<CollectHistory> collectHistories = collectService.findCollectHistoryByQueryContains(TwintRequestGenerator.getInstance().generateSearch(((CollectRequest)newCollectRequest).getSearch()));
-
-            for (CollectHistory c : collectHistories) {
-                if (alreadyDone != null)
-                    break;
-                alreadyDone = completingOldRequest(c.getSession(), (CollectRequest)newCollectRequest, collectService.stringToCollectRequest(c.getQuery()));
-            }
-
-            if (alreadyDone != null) {
-                Logger.info("This request has already been done sessionId: " + alreadyDone.getSession());
-                return alreadyDone;
-            }
+        // Find previous request that are smaller than @collectRequest but similar.
+        previousMatch = similarInCache(collectRequest);
+        CollectResponse completing = makeLargerRequestFromListAndCompleteTime(collectRequest, previousMatch);
+        if (completing != null) {
+            Logger.info("This request extends an already done request,  sessionId: " + completing.getSession());
+            return completing;
         }
+
         // Creation of a brand new  CollectHistory
-        collectService.saveCollectInfo(session, newCollectRequest, null, null, Status.Pending, null, null, 0, 0, 0);
+        String session = UUID.randomUUID().toString();
+        Logger.debug(session);
+        Logger.debug(collectRequest.toString());
+        CollectHistory collectHistory = collectService.saveCollectInfo(session, collectRequest, null, null, Status.Pending, null, null, 0, 0, 0);
+        ttg.callTwintMultiThreaded(collectHistory, collectRequest);
+        ;
 
-        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-
-        ttg.callTwintMultiThreaded(newCollectRequest, session);
-
-        CollectHistory collectedInfo = collectService.getCollectInfo(session);
-
-        if (collectedInfo.getStatus() != Status.Done)
-            return new CollectResponse(session, collectedInfo.getStatus(), null, collectedInfo.getProcessEnd());
-        return new CollectResponse(session, collectedInfo.getStatus(), collectedInfo.getMessage(), collectedInfo.getProcessEnd());
+        if (collectHistory.getStatus() != Status.Done)
+            return new CollectResponse(session, collectHistory.getStatus(), null, collectHistory.getProcessEnd());
+        return new CollectResponse(session, collectHistory.getStatus(), collectHistory.getMessage(), collectHistory.getProcessEnd());
     }
 
     /**
-     * @param session
      * @param newCollectRequest
      * @param oldCollectRequest
      * @return corresponding collectResponse if their is a Mach, null otherwise.
@@ -216,93 +313,91 @@ public class TwitterGatewayServiceController {
      * if the 	newCollectRequest does not match,
      * It makes a new CollectHistory
      */
-    private CollectResponse completingOldRequest(String session, CollectRequest newCollectRequest, CollectRequest oldCollectRequest) throws IOException, InterruptedException {
+    private CollectResponse makeRequestIfDatesAreLarger(CollectRequest newCollectRequest, Request oldCollectRequest) {
+        CollectHistory collectHistory = collectService.findCollectHistoryByRequest(oldCollectRequest);
+        collectHistory.setMessage("Completing the research. This research has already been done from " + oldCollectRequest.getSince() + " to " + oldCollectRequest.getUntil());
 
-        CollectRequest resultingCollectRequest = newCollectRequest;
-        String message = "Completing the research. This research has already been done from " + oldCollectRequest.getFrom() + " to " + oldCollectRequest.getUntil();
 
-        if (oldCollectRequest.equals(newCollectRequest)) {
-            // The new request covers all the old request and more
-            if (newCollectRequest.getFrom().compareTo(oldCollectRequest.getFrom()) < 0
-                    && newCollectRequest.getUntil().compareTo(oldCollectRequest.getUntil()) > 0) {
-                // Make a Twint collection from newCollectRequest.getFrom() to oldCollectRequest.getFrom()
-                // And from  oldCollectRequest.getUntil() to newCollectRequest.getUntil()
+        // The new request covers all the old request and more
+        if (newCollectRequest.getFrom().compareTo(oldCollectRequest.getSince()) < 0
+                && newCollectRequest.getUntil().compareTo(oldCollectRequest.getUntil()) > 0) {
+            // Make a Twint collection from newCollectRequest.getFrom() to oldCollectRequest.getFrom()
+            // And from  oldCollectRequest.getUntil() to newCollectRequest.getUntil()
 
-                collectService.updateCollectStatus(session, Status.Pending);
-                collectService.updateCollectQuery(session, resultingCollectRequest);
-                callTwintOnInterval(newCollectRequest, session, newCollectRequest.getFrom(), oldCollectRequest.getFrom());
-                callTwintOnInterval(newCollectRequest, session, oldCollectRequest.getUntil(), newCollectRequest.getUntil());
-                return getCollectResponseFromTwintCall(session, message);
-            }
-            // THe new request all the odl request or less
-            else if (newCollectRequest.getFrom().compareTo(oldCollectRequest.getFrom()) >= 0
-                    && newCollectRequest.getUntil().compareTo(oldCollectRequest.getUntil()) <= 0) {
-                // Return the existing research
-                String messageDone = "This research has already been done.";
-                return new CollectResponse(session, collectService.getCollectInfo(session).getStatus(), messageDone, collectService.getCollectInfo(session).getProcessEnd());
-            }
-            // The new request covers before and a part of the old request
-            else if (newCollectRequest.getFrom().compareTo(oldCollectRequest.getFrom()) < 0
-                    && newCollectRequest.getUntil().compareTo(oldCollectRequest.getUntil()) <= 0
-                    && newCollectRequest.getUntil().compareTo(oldCollectRequest.getFrom()) >= 0) {
-                // make a search from newCollectRequest.getFrom to oldCollectRequest.getFrom()
+            collectHistory.setStatus(Status.Pending);
+            oldCollectRequest.setSince(newCollectRequest.getFrom());
+            oldCollectRequest.setUntil(newCollectRequest.getUntil());
+            collectService.save_request(oldCollectRequest);
+            collectService.save_collectHistory(collectHistory);
 
-                collectService.updateCollectStatus(session, Status.Pending);
-                resultingCollectRequest.setUntil(oldCollectRequest.getUntil());
-                collectService.updateCollectQuery(session, resultingCollectRequest);
-                callTwintOnInterval(newCollectRequest, session, newCollectRequest.getFrom(), oldCollectRequest.getFrom());
-                return getCollectResponseFromTwintCall(session, message);
-
-            }
-            // The new request covers after and a part of the old request
-            else if (newCollectRequest.getUntil().compareTo(oldCollectRequest.getUntil()) > 0
-                    && newCollectRequest.getFrom().compareTo(oldCollectRequest.getFrom()) >= 0
-                    && newCollectRequest.getFrom().compareTo(oldCollectRequest.getUntil()) <= 0) {
-                // make a search from oldCollectRequest.getUntil() to newCollectRequest.getUntil()
-
-                collectService.updateCollectStatus(session, Status.Pending);
-                resultingCollectRequest.setFrom(oldCollectRequest.getFrom());
-                collectService.updateCollectQuery(session, resultingCollectRequest);
-                callTwintOnInterval(newCollectRequest, session, oldCollectRequest.getUntil(), newCollectRequest.getUntil());
-                return getCollectResponseFromTwintCall(session, message);
-            }
-            // else {
-            // The new request covers no days in common with the old one
-            // Undefined case yet so it's ignored for now.
-            // This collect request will have a new session Id even thought it matched the research criteria.
-            // }
-            return null;
+            callTwintOnInterval(collectHistory, oldCollectRequest, newCollectRequest.getFrom(), oldCollectRequest.getSince());
+            callTwintOnInterval(collectHistory, oldCollectRequest, oldCollectRequest.getUntil(), newCollectRequest.getUntil());
+            return getCollectResponseFromTwintCall(collectHistory);
         }
+        // THe new request all the odl request or less
+        else if (newCollectRequest.getFrom().compareTo(oldCollectRequest.getSince()) >= 0
+                && newCollectRequest.getUntil().compareTo(oldCollectRequest.getUntil()) <= 0) {
+            // Return the existing research
+            collectHistory.setMessage("This research has already been done.");
+            return new CollectResponse(collectHistory);
+        }
+        // The new request covers before and a part of the old request
+        else if (newCollectRequest.getFrom().compareTo(oldCollectRequest.getSince()) < 0
+                && newCollectRequest.getUntil().compareTo(oldCollectRequest.getUntil()) <= 0
+                && newCollectRequest.getUntil().compareTo(oldCollectRequest.getSince()) >= 0) {
+            // make a search from newCollectRequest.getFrom to oldCollectRequest.getFrom()
+
+            collectHistory.setStatus(Status.Pending);
+            oldCollectRequest.setUntil(oldCollectRequest.getUntil());
+            collectService.save_request(oldCollectRequest);
+            collectService.save_collectHistory(collectHistory);
+            callTwintOnInterval(collectHistory, oldCollectRequest, newCollectRequest.getFrom(), oldCollectRequest.getSince());
+            return getCollectResponseFromTwintCall(collectHistory);
+
+        }
+        // The new request covers after and a part of the old request
+        else if (newCollectRequest.getUntil().compareTo(oldCollectRequest.getUntil()) > 0
+                && newCollectRequest.getFrom().compareTo(oldCollectRequest.getSince()) >= 0
+                && newCollectRequest.getFrom().compareTo(oldCollectRequest.getUntil()) <= 0) {
+            // make a search from oldCollectRequest.getUntil() to newCollectRequest.getUntil()
+
+            collectHistory.setStatus(Status.Pending);
+            oldCollectRequest.setUntil(oldCollectRequest.getSince());
+            collectService.save_request(oldCollectRequest);
+            collectService.save_collectHistory(collectHistory);
+            callTwintOnInterval(collectHistory, oldCollectRequest, newCollectRequest.getUntil(), newCollectRequest.getUntil());
+            return getCollectResponseFromTwintCall(collectHistory);
+        }
+        // else {
+        // The new request covers no days in common with the old one
+        // Undefined case yet so it's ignored for now.
+        // This collect request will have a new session Id even thought it matched the research criteria.
+        // }
         return null;
     }
 
     /**
-     * @param session    of the collectHistory
-     * @param message
-     * @func getCollectResponseFromTwintCall
      * @return the collect response corresponding to the new call to Twint.
+     * @func getCollectResponseFromTwintCall
      */
-    private CollectResponse getCollectResponseFromTwintCall(String session, String message) {
-        CollectHistory collectedInfo = collectService.getCollectInfo(session);
-        if (collectedInfo.getStatus() != Status.Done)
-            return new CollectResponse(session, collectedInfo.getStatus(), message, collectedInfo.getProcessEnd());
-        return new CollectResponse(session, collectService.getCollectInfo(session).getStatus(), message, collectService.getCollectInfo(session).getProcessEnd());
+    private CollectResponse getCollectResponseFromTwintCall(CollectHistory collectHistory) {
+        if (collectHistory.getStatus() != Status.Done)
+            return new CollectResponse(collectHistory);
+        return new CollectResponse(collectHistory);
     }
 
     /**
-     * @param collectRequest
-     * @param session
      * @param from
      * @param until
      * @return
      * @func callTwintOnInterval overload with only one date interval.
      * call Twint on the interval and append the result to the elastic search session
      */
-    private CompletableFuture<ArrayList<CompletableFuture<Integer>>> callTwintOnInterval(CollectRequest collectRequest, String session, Date from, Date until) throws IOException, InterruptedException {
-        CollectRequest newCollectRequest = new CollectRequest(collectRequest);
+    private void callTwintOnInterval(CollectHistory collectHistory, Request request, Date from, Date until) {
+        CollectRequest newCollectRequest = new CollectRequest(request);
         newCollectRequest.setFrom(from);
         newCollectRequest.setUntil(until);
-        return ttg.callTwintMultiThreaded(newCollectRequest, session);
+        ttg.callTwintMultiThreaded(collectHistory, newCollectRequest);
     }
 
 
@@ -323,10 +418,9 @@ public class TwitterGatewayServiceController {
                 last = collectService.getLasts(limit, !asc);
             else
                 last = collectService.getLasts(limit, desc);
-        }
-        else {
+        } else {
             if (!asc && !desc)
-            last = collectService.getByStatus(status, limit, true);
+                last = collectService.getByStatus(status, limit, true);
             else if (asc)
                 last = collectService.getByStatus(status, limit, !asc);
             else
@@ -365,12 +459,12 @@ public class TwitterGatewayServiceController {
 
     /**
      * @param session
+     * @return Status response or the corresponding session
      * @throws ExecutionException
      * @throws InterruptedException
      * @func Calls Twint on the time interval of a session. The result replaces the old ones un elastic search.
-     * @return Status response or the corresponding session
      */
-   private StatusResponse collectUpdateFunction(String session) throws ExecutionException, InterruptedException, IOException {
+    private StatusResponse collectUpdateFunction(String session) throws ExecutionException, InterruptedException {
         Logger.info("Collect-Update " + session);
 
         CollectHistory collectHistory = collectService.getCollectInfo(session);
@@ -383,12 +477,17 @@ public class TwitterGatewayServiceController {
             return res;
         }
 
-        collectService.updateCollectStatus(session, Status.Pending);
-        CollectRequest oldCollectRequest = collectService.stringToCollectRequest(collectService.getCollectInfo(session).getQuery());
-        if (oldCollectRequest == null) throw new NotFoundException();
-
-        callTwintOnInterval(oldCollectRequest, session, oldCollectRequest.getFrom(), oldCollectRequest.getUntil());
-        collectService.updateCollectProcessStart(session, new Date());
+        collectHistory.setStatus(Status.Pending);
+        Request request = collectHistory.getRequest();
+        if (request == null) {
+            collectHistory.setStatus(Status.Error);
+            collectHistory.setMessage("Could not find the Request associated");
+            collectService.save_collectHistory(collectHistory);
+            throw new NotFoundException();
+        }
+        collectHistory.setProcessStart(new Date());
+        collectService.save_collectHistory(collectHistory);
+        callTwintOnInterval(collectHistory, request, request.getSince(), request.getUntil());
         return getStatusResponse(session);
     }
 }

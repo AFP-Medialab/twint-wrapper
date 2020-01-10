@@ -6,32 +6,38 @@ import com.afp.medialab.weverify.social.model.twint.TwittieDeserializer;
 import com.afp.medialab.weverify.social.model.twint.TwittieResponse;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jdk.internal.loader.Resource;
 import org.apache.commons.lang3.StringUtils;
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+
+import javax.annotation.PostConstruct;
+
 import org.json.simple.parser.ParseException;
-import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.RestTemplate;
 
-import javax.annotation.PostConstruct;
-import java.io.*;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.*;
+import com.afp.medialab.weverify.social.model.twint.TwintModel;
+import com.afp.medialab.weverify.social.model.twint.TwittieResponse;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Configuration
 public class TwintModelAdapter {
-
 
 	private static org.slf4j.Logger Logger = LoggerFactory.getLogger(TwintThread.class);
 
@@ -97,7 +103,6 @@ public class TwintModelAdapter {
 
 		// HTTPConnexion Timeout
 		ResponseEntity<String> response = null;
-		Logger.info("LET'S CALL TWITTIE");
 		try {
 			response = restTemplate.postForEntity(twitieURL, tweet, String.class);
 
@@ -195,7 +200,7 @@ public class TwintModelAdapter {
 		clientHttpRequestFactory.setConnectTimeout(5_000);
 
 		// Read timeout
-		clientHttpRequestFactory.setReadTimeout(5_000);
+		clientHttpRequestFactory.setReadTimeout(10_000);
 		return new RestTemplate(clientHttpRequestFactory);
 	}
 

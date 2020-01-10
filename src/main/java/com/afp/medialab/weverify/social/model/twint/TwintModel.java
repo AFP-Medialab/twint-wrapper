@@ -1,21 +1,12 @@
 package com.afp.medialab.weverify.social.model.twint;
 
-import java.io.*;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.sql.SQLOutput;
-import java.util.*;
+import java.util.Date;
+import java.util.List;
 
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-
-import javax.naming.Name;
 
 @Document(indexName = "twinttweets", type = "_doc")
 public class TwintModel {

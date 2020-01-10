@@ -11,7 +11,7 @@
 	</parent>
 	<groupId>com.afp.medialab.weverify.social</groupId>
 	<artifactId>twint-wrapper</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>1.0.3-SNAPSHOT</version>
 	<name>twint-wrapper</name>
 	<description>Twitter scraper wrapper</description>
 
@@ -57,10 +57,10 @@
 			<artifactId>spring-boot-starter-data-elasticsearch</artifactId>
 		</dependency>
 		<dependency>
-        <groupId>org.springframework.data</groupId>
-        <artifactId>spring-data-elasticsearch</artifactId>
-        <version>3.2.0.RELEASE</version>
-    </dependency>
+			<groupId>org.springframework.data</groupId>
+			<artifactId>spring-data-elasticsearch</artifactId>
+			<version>3.2.0.RELEASE</version>
+		</dependency>
 		<dependency>
 			<groupId> org.elasticsearch.client</groupId>
 			<artifactId>elasticsearch-rest-high-level-client</artifactId>
@@ -78,6 +78,10 @@
 			<groupId>org.hibernate</groupId>
 			<artifactId>hibernate-validator</artifactId>
 			<version>6.0.10.Final</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-lang3</artifactId>
 		</dependency>
 	</dependencies>
 	<profiles>
@@ -109,7 +113,7 @@
 			<properties>
 				<docker.path>src/main/docker/delivery</docker.path>
 				<docker.image.name>twint-wrapper</docker.image.name>
-				<docker.image.tag>1.0.2</docker.image.tag>
+				<docker.image.tag>1.0.3</docker.image.tag>
 			</properties>
 			<build>
 				<plugins>

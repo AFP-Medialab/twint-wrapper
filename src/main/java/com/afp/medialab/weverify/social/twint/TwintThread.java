@@ -1,43 +1,24 @@
 package com.afp.medialab.weverify.social.twint;
 
-import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
-import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
-import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
-import static org.elasticsearch.index.query.QueryBuilders.rangeQuery;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
-import com.afp.medialab.weverify.social.model.*;
-import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequest;
-import org.elasticsearch.action.update.UpdateRequest;
-import org.elasticsearch.common.xcontent.XContentBuilder;
-import org.elasticsearch.common.xcontent.XContentFactory;
-import org.elasticsearch.index.query.QueryBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
-import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
-import org.springframework.data.elasticsearch.core.query.SearchQuery;
-import org.springframework.data.elasticsearch.core.query.UpdateQuery;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import com.afp.medialab.weverify.social.dao.entity.CollectHistory;
 import com.afp.medialab.weverify.social.dao.service.CollectService;
-import com.afp.medialab.weverify.social.model.twint.TwintModel;
+import com.afp.medialab.weverify.social.model.CollectRequest;
+import com.afp.medialab.weverify.social.model.Status;
 
 /**
  * Run twint command in a asynchronous thread
@@ -76,38 +57,30 @@ public class TwintThread {
 	}
 
 	@Async(value = "twintCallTaskExecutor")
-	public CompletableFuture<Integer> callTwint(Object request, String session, Integer cpt) throws IOException {
+	public CompletableFuture<Integer> callTwint(CollectHistory collectHistory, CollectRequest request) {
 
-		Logger.debug("Started Thread n°" + cpt);
-		Integer result = -1;
-		if (request instanceof CollectRequest) {
-			result = callProcessUntilSuccess((CollectRequest) request,  collectHistory.getSession());
-		}
-		if (request instanceof CollectFollowsRequest)
-			result = callFollowProcessUntilSuccess((CollectFollowsRequest)request, session);
+		Integer result = null;
+		result = callProcessUntilSuccess(request, collectHistory.getSession());
 
 		// update db to say this thread is finished
 		synchronized (lock) {
-			CollectHistory collectHistory = collectService.getCollectInfo(session);
-			int finished_thread = collectHistory.getFinished_threads() + 1;
-			collectService.updateCollectFinishedThreads(session, finished_thread);
-
+			collectHistory.setFinished_threads(collectHistory.getFinished_threads() + 1);
 			Integer old_count = collectHistory.getCount();
 			if (old_count == null || old_count == -1)
-				collectService.updateCollectCount(session, result);
+				collectHistory.setCount(result);
 			else
-				collectService.updateCollectCount(session, result + old_count);
+				collectHistory.setCount(result + old_count);
+			collectService.save_collectHistory(collectHistory);
 		}
 
 		if (result != -1) {
 			synchronized (lock) {
-				CollectHistory collectHistory = collectService.getCollectInfo(session);
-				int successful_threads = collectHistory.getSuccessful_threads() + 1;
-				collectService.updateCollectSuccessfulThreads(session, successful_threads);
+				collectHistory.setSuccessful_threads(collectHistory.getSuccessful_threads() + 1);
+				collectService.save_collectHistory(collectHistory);
 			}
 		}
+
 		synchronized (lock) {
-			CollectHistory collectHistory = collectService.getCollectInfo(session);
 			int finished_threads = collectHistory.getFinished_threads();
 			int successful_threads = collectHistory.getSuccessful_threads();
 			int total_threads = collectHistory.getTotal_threads();
@@ -116,36 +89,26 @@ public class TwintThread {
 					collectHistory.setStatus(Status.CountingWords);
 					//collectService.save_collectHistory(collectHistory);
 					esOperation.indexWordsObj(
-							esOperation.getModels(session,
+							esOperation.getModels(collectHistory.getSession(),
 									dateFormat.format(((CollectRequest)request).getFrom()),
 									dateFormat.format(((CollectRequest)request).getUntil())),
 							collectHistory
 					);
-				} catch (InterruptedException e) {
+				} catch (InterruptedException | IOException e) {
 					e.printStackTrace();
 				}
 
-				collectService.updateCollectStatus(session, Status.Done);
+				collectHistory.setStatus(Status.Done);
 				if (successful_threads == finished_threads)
-
-					collectService.updateCollectMessage(session, "Finished successfully");
+					collectHistory.setMessage("Finished successfully");
 				else
-					collectService.updateCollectMessage(session, "Parts of this search could not be found");
+					collectHistory.setMessage("Parts of this search could not be found");
+				collectService.save_collectHistory(collectHistory);
 			}
 		}
 		return CompletableFuture.completedFuture(result);
 	}
 
-	private ProcessBuilder createProcessBuilderFollows(CollectFollowsRequest request, String session, String type){
-		boolean isDocker = isDockerCommand(twintCall);
-		String twintRequest = TwintRequestGenerator.getInstance().generateFollowRequest(request.getUser(), session, type, isDocker, esURL);
-
-		ProcessBuilder processBuilder = new ProcessBuilder("/bin/bash", "-c", twintCall + twintRequest);
-		processBuilder.environment().put("PATH", "/usr/bin:/usr/local/bin:/bin");
-		Logger.info(twintCall + twintRequest);
-		return processBuilder;
-
-	}
 	private ProcessBuilder createProcessBuilder(CollectRequest request, String session) {
 		boolean isDocker = isDockerCommand(twintCall);
 
@@ -191,32 +154,6 @@ public class TwintThread {
 			return -1;
 		return nb_tweets;
 	}
-
-	private Integer callTwintFollowsProcess(CollectFollowsRequest request, String session){
-		Integer result = -1;
-		try {
-			ProcessBuilder processBuilderFollowers = createProcessBuilderFollows(request, session, "followers");
-		//	ProcessBuilder processBuilderFollowing = createProcessBuilderFollows(request, session, "following");
-			result = callProcess(processBuilderFollowers, "users");// + callProcess(processBuilderFollowing);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		return result;
-
-	}
-
-	private Integer callFollowProcessUntilSuccess(CollectFollowsRequest request, String session) {
-		// could add a request subdivision on error
-		Integer nb_tweets = -1;
-		for (int i = 0; i < restart_time && nb_tweets == -1; i++) {
-			nb_tweets = callTwintFollowsProcess(request, session);
-			if (nb_tweets == -1) {
-				Logger.info("Error reprocessing ");
-			}
-		}
-		return nb_tweets;
-	}
-
 
 	private Integer callTwintProcess(CollectRequest request, String session) {
 

@@ -7,7 +7,6 @@ import static org.elasticsearch.index.query.QueryBuilders.rangeQuery;
 import java.io.IOException;
 import java.util.List;
 
-import com.afp.medialab.weverify.social.twint.ESOperations;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -19,11 +18,10 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.SearchQuery;
-import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import com.afp.medialab.weverify.social.model.twint.TwintModel;
-import com.afp.medialab.weverify.social.twint.ESConfiguration;
+import com.afp.medialab.weverify.social.twint.ESOperations;
 
 @SpringBootTest
 @RunWith(SpringRunner.class)
