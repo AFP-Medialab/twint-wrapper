@@ -26,6 +26,7 @@ application:
 
 spring:
   jackson:
+    time-zone: Europe/Paris
     deserialization:
       FAIL_ON_UNKNOWN_PROPERTIES: true
 
@@ -37,6 +38,8 @@ spring:
   jpa:
     hibernate.ddl-auto : create-drop
     hibernate.use-new-id-generator-mappings : false
+    hibernate.naming.physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+    hibernate.naming.implicit-strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl
     generate-ddl: true
     show-sql: false
 
@@ -47,7 +50,7 @@ command:
 spring:
   profiles: dev
   jpa:
-    hibernate.ddl-auto: create-drop
+    hibernate.ddl-auto: none
  
 ---
 spring:

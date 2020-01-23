@@ -1,6 +1,7 @@
 package com.afp.medialab.weverify.social.controller;
 
 import java.io.IOException;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -138,13 +139,13 @@ public class TwitterGatewayServiceController {
     }
 
 
-    public Set<Request> requestIsInCache(CollectRequest collectRequest) {
-        Set<Request> keywords = collectService.requestsContainingOnlySomeOfTheKeywords(collectRequest.getKeywordList());
+    private Set<Request> requestIsInCache(CollectRequest collectRequest) {
+        Set<Request> keywords = collectService.requestsContainingOnlySomeOfTheKeywords(collectRequest.getKeywordList(), collectRequest.getLang());
         Set<Request> banned_words = collectService.requestContainingOnlySomeOfTheBannedWords(collectRequest.getBannedWords());
         Set<Request> users = collectService.requestContainingAllTheUsers(collectRequest.getUserList());
 
         Set<Request> maching_requests = new HashSet<Request>();
-        if (keywords != null) {
+        if (keywords != null && keywords.size() > 0) {
             maching_requests.addAll(keywords);
             if (banned_words != null)
                 maching_requests.retainAll(banned_words);
@@ -160,8 +161,8 @@ public class TwitterGatewayServiceController {
         return maching_requests;
     }
 
-    public Set<Request> similarInCache(CollectRequest collectRequest) {
-        Set<Request> keywords = collectService.requestsContainingAllTheKeywords(collectRequest.getKeywordList());
+    private Set<Request> similarInCache(CollectRequest collectRequest) {
+        Set<Request> keywords = collectService.requestsContainingAllTheKeywords(collectRequest.getKeywordList(), collectRequest.getLang());
         Set<Request> bannedWords = collectService.requestContainingAllTheBannedWords(collectRequest.getBannedWords());
         Set<Request> users = collectService.requestsContainingOnlySomeOfTheUsers(collectRequest.getUserList());
 
@@ -178,7 +179,8 @@ public class TwitterGatewayServiceController {
         return maching_requests;
     }
 
-    public CollectResponse makeRequestFromListAndCompleteTime(CollectRequest collectRequest, Set<Request> requests) {
+    private CollectResponse makeRequestFromListAndCompleteTime(CollectRequest collectRequest, Set<Request> requests) {
+    	if(requests == null) return null; 
         for (Request request : requests) {
             CollectResponse result = makeRequestIfDatesAreLarger(collectRequest, request);
             if (result != null)
@@ -187,7 +189,7 @@ public class TwitterGatewayServiceController {
         return null;
     }
 
-    public CollectResponse makeLargerRequestFromListAndCompleteTime(CollectRequest collectRequest, Set<Request> requests) {
+    private CollectResponse makeLargerRequestFromListAndCompleteTime(CollectRequest collectRequest, Set<Request> requests) {
         for (Request request : requests) {
             CollectResponse result = makeLargerRequestIfDatesAreLarger(collectRequest, request);
             if (result != null)
@@ -294,9 +296,9 @@ public class TwitterGatewayServiceController {
         String session = UUID.randomUUID().toString();
         Logger.debug(session);
         Logger.debug(collectRequest.toString());
-        CollectHistory collectHistory = collectService.saveCollectInfo(session, collectRequest, null, null, Status.Pending, null, null, 0, 0, 0);
+        Date now = Calendar.getInstance().getTime();
+        CollectHistory collectHistory = collectService.saveCollectInfo(session, collectRequest, now , null, Status.Pending, null, null, 0, 0, 0);
         ttg.callTwintMultiThreaded(collectHistory, collectRequest);
-        ;
 
         if (collectHistory.getStatus() != Status.Done)
             return new CollectResponse(session, collectHistory.getStatus(), null, collectHistory.getProcessEnd());
@@ -314,66 +316,46 @@ public class TwitterGatewayServiceController {
      * It makes a new CollectHistory
      */
     private CollectResponse makeRequestIfDatesAreLarger(CollectRequest newCollectRequest, Request oldCollectRequest) {
+    	//TODO custom message when dates are out of range e.g previous 15h->19h  new 20h->21h get the max range => 15h to 21h
         CollectHistory collectHistory = collectService.findCollectHistoryByRequest(oldCollectRequest);
         collectHistory.setMessage("Completing the research. This research has already been done from " + oldCollectRequest.getSince() + " to " + oldCollectRequest.getUntil());
 
-
-        // The new request covers all the old request and more
-        if (newCollectRequest.getFrom().compareTo(oldCollectRequest.getSince()) < 0
-                && newCollectRequest.getUntil().compareTo(oldCollectRequest.getUntil()) > 0) {
+        Date oldFrom = oldCollectRequest.getSince();
+        Date oldUntil = oldCollectRequest.getUntil();
+        Date newFrom = newCollectRequest.getFrom();
+        Date newUntil = newCollectRequest.getUntil();
+        
+        // The new request covers all the old request and more before or after
+        if (newFrom.compareTo(oldFrom) < 0
+                || newUntil.compareTo(oldUntil) > 0) {
             // Make a Twint collection from newCollectRequest.getFrom() to oldCollectRequest.getFrom()
             // And from  oldCollectRequest.getUntil() to newCollectRequest.getUntil()
 
             collectHistory.setStatus(Status.Pending);
-            oldCollectRequest.setSince(newCollectRequest.getFrom());
-            oldCollectRequest.setUntil(newCollectRequest.getUntil());
-            collectService.save_request(oldCollectRequest);
+            collectHistory.setProcessStart(Calendar.getInstance().getTime());
+            collectHistory.setProcessEnd(null);
             collectService.save_collectHistory(collectHistory);
-
-            callTwintOnInterval(collectHistory, oldCollectRequest, newCollectRequest.getFrom(), oldCollectRequest.getSince());
-            callTwintOnInterval(collectHistory, oldCollectRequest, oldCollectRequest.getUntil(), newCollectRequest.getUntil());
+            
+            if(newFrom.compareTo(oldFrom) < 0) {
+            	// Search date is before previous from range
+            	oldCollectRequest.setSince(newCollectRequest.getFrom());
+            	callTwintOnInterval(collectHistory, oldCollectRequest, newFrom, oldFrom);
+            }
+            if(newUntil.compareTo(oldUntil) > 0) {
+            	// Search date is after previous from range
+            	oldCollectRequest.setUntil(newCollectRequest.getUntil());
+            	callTwintOnInterval(collectHistory, oldCollectRequest, oldUntil, newUntil);
+            }
+            collectService.save_request(oldCollectRequest);
             return getCollectResponseFromTwintCall(collectHistory);
         }
-        // THe new request all the odl request or less
-        else if (newCollectRequest.getFrom().compareTo(oldCollectRequest.getSince()) >= 0
-                && newCollectRequest.getUntil().compareTo(oldCollectRequest.getUntil()) <= 0) {
+        // new request all the old request or less
+        else {
             // Return the existing research
             collectHistory.setMessage("This research has already been done.");
             return new CollectResponse(collectHistory);
         }
-        // The new request covers before and a part of the old request
-        else if (newCollectRequest.getFrom().compareTo(oldCollectRequest.getSince()) < 0
-                && newCollectRequest.getUntil().compareTo(oldCollectRequest.getUntil()) <= 0
-                && newCollectRequest.getUntil().compareTo(oldCollectRequest.getSince()) >= 0) {
-            // make a search from newCollectRequest.getFrom to oldCollectRequest.getFrom()
-
-            collectHistory.setStatus(Status.Pending);
-            oldCollectRequest.setUntil(oldCollectRequest.getUntil());
-            collectService.save_request(oldCollectRequest);
-            collectService.save_collectHistory(collectHistory);
-            callTwintOnInterval(collectHistory, oldCollectRequest, newCollectRequest.getFrom(), oldCollectRequest.getSince());
-            return getCollectResponseFromTwintCall(collectHistory);
-
-        }
-        // The new request covers after and a part of the old request
-        else if (newCollectRequest.getUntil().compareTo(oldCollectRequest.getUntil()) > 0
-                && newCollectRequest.getFrom().compareTo(oldCollectRequest.getSince()) >= 0
-                && newCollectRequest.getFrom().compareTo(oldCollectRequest.getUntil()) <= 0) {
-            // make a search from oldCollectRequest.getUntil() to newCollectRequest.getUntil()
-
-            collectHistory.setStatus(Status.Pending);
-            oldCollectRequest.setUntil(oldCollectRequest.getSince());
-            collectService.save_request(oldCollectRequest);
-            collectService.save_collectHistory(collectHistory);
-            callTwintOnInterval(collectHistory, oldCollectRequest, newCollectRequest.getUntil(), newCollectRequest.getUntil());
-            return getCollectResponseFromTwintCall(collectHistory);
-        }
-        // else {
-        // The new request covers no days in common with the old one
-        // Undefined case yet so it's ignored for now.
-        // This collect request will have a new session Id even thought it matched the research criteria.
-        // }
-        return null;
+       
     }
 
     /**

@@ -27,15 +27,6 @@ services:
       - 5601:5601
     networks:
       - esnet
-  nginx:
-    image: nginx
-    container_name: nginx
-    volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf
-    ports:
-      - 83:80
-    networks:
-      - esnet
       
   mysql:
     image: mysql:5.7
@@ -45,6 +36,7 @@ services:
         MYSQL_USER: dev1
         MYSQL_PASSWORD: dev1
         MYSQL_DATABASE: twint-wrapper
+        TZ: Europe/Paris
     container_name: mysql
     volumes:
       - mysqldata1:/usr/share/mysql/data

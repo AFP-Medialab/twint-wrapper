@@ -190,12 +190,12 @@ public class CollectService {
      * @return Set<Request> or null if the given list is empty or null
      * @function isContainedKeywords : This gives the list of requests that contains the same or less words than given list.
      */
-    public Set<Request> requestsContainingOnlySomeOfTheKeywords(Set<String> keywords) {
+    public Set<Request> requestsContainingOnlySomeOfTheKeywords(Set<String> keywords, String language) {
         Set<Request> matching_keyWords = new HashSet<Request>();
         if (keywords == null || keywords.size() == 0)
             return null;
         for (String keyword : keywords) {
-            List<Request> collected = requestInterface.my_findMatchingRequestByKeyword(keyword, keywords.size());
+            List<Request> collected = requestInterface.my_findMatchingRequestByKeyword(keyword, keywords.size(), language);
             matching_keyWords.addAll(collected);
         }
 
@@ -253,12 +253,12 @@ public class CollectService {
         requestInterface.save(request);
     }
 
-    public Set<Request> requestsContainingAllTheKeywords(Set<String> keywordList) {
+    public Set<Request> requestsContainingAllTheKeywords(Set<String> keywordList, String language) {
         Set<Request> matchingRequests = new HashSet<Request>();
         if (keywordList == null || keywordList.size() == 0)
             return null;
         for (String keyword : keywordList) {
-            List<Request> collected = requestInterface.my_findSmallerRequestByKeyword(keyword, keywordList.size());
+            List<Request> collected = requestInterface.my_findSmallerRequestByKeyword(keyword, keywordList.size(), language);
             matchingRequests.addAll(collected);
         }
         return matchingRequests.stream().filter(e -> e.getKeywordList().containsAll(keywordList)).collect(Collectors.toSet());

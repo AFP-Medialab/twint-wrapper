@@ -13,8 +13,8 @@ public interface RequestInterface extends JpaRepository<Request, Integer> {
 
     @Modifying(clearAutomatically = true)
     @Transactional
-    @Query("select r from Request r where :my_keyword member of r.keywordList and size(r.keywordList) <= :my_length")
-    List<Request> my_findMatchingRequestByKeyword(@Param("my_keyword") String my_keyword, @Param("my_length") Integer my_length);
+    @Query("select r from Request r where :my_keyword member of r.keywordList and size(r.keywordList) <= :my_length and r.language = :lang")
+    List<Request> my_findMatchingRequestByKeyword(@Param("my_keyword") String my_keyword, @Param("my_length") Integer my_length, @Param("lang") String lang);
 
     @Modifying(clearAutomatically = true)
     @Transactional
@@ -32,8 +32,8 @@ public interface RequestInterface extends JpaRepository<Request, Integer> {
 
     @Modifying(clearAutomatically = true)
     @Transactional
-    @Query("select r from Request r where :my_keyword member of r.keywordList and size(r.keywordList) >= :my_length")
-    List<Request> my_findSmallerRequestByKeyword(@Param("my_keyword") String my_keyword, @Param("my_length") Integer my_length);
+    @Query("select r from Request r where :my_keyword member of r.keywordList and size(r.keywordList) >= :my_length and r.language = :lang")
+    List<Request> my_findSmallerRequestByKeyword(@Param("my_keyword") String my_keyword, @Param("my_length") Integer my_length, @Param("lang") String lang);
 
     @Modifying(clearAutomatically = true)
     @Transactional

@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.concurrent.CompletableFuture;
 
@@ -99,8 +100,10 @@ public class TwintThread {
 				}
 
 				collectHistory.setStatus(Status.Done);
-				if (successful_threads == finished_threads)
+				collectHistory.setProcessEnd(Calendar.getInstance().getTime());
+				if (successful_threads == finished_threads) {
 					collectHistory.setMessage("Finished successfully");
+				}
 				else
 					collectHistory.setMessage("Parts of this search could not be found");
 				collectService.save_collectHistory(collectHistory);
