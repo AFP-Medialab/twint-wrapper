@@ -6,7 +6,6 @@ import java.util.List;
 import javax.transaction.Transactional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -31,46 +30,46 @@ public interface CollectInterface extends JpaRepository<CollectHistory, Integer>
 
     List<CollectHistory> findAll();
 
-    CollectHistory findCollectHistoryByRequest(Request request);
+    //CollectHistory findCollectHistoryByRequest(Request request);
 
 
 
-    @Modifying(clearAutomatically = true)
+    //@Modifying(clearAutomatically = true)
     @Transactional
     @Query("update CollectHistory collect set collect.status = :status where collect.session = :session")
     void updateCollectStatus(@Param("session") String session, @Param("status") String status);
 
-    @Modifying
+    //@Modifying
     @Transactional
     @Query("update CollectHistory collect set collect.processStart = :processStart where collect.session = :session")
     void updateCollectProcessStart(@Param("session") String session, @Param("processStart") Date processStart);
 
-    @Modifying
+    //@Modifying
     @Transactional
     @Query("update CollectHistory collect set collect.processEnd = :processEnd where collect.session = :session")
     void updateCollectProcessEnd(@Param("session") String session, @Param("processEnd") Date processEnd);
 
-    @Modifying
+    //@Modifying
     @Transactional
     @Query("update CollectHistory collect set collect.message = :message where collect.session = :session")
     void updateCollectMessage(@Param("session") String session, @Param("message") String message);
 
-    @Modifying
+    //@Modifying
     @Transactional
     @Query("update CollectHistory collect set collect.count = :int where collect.session = :session")
     void updateCollectCount(@Param("session") String session, @Param("int") Integer count);
 
-    @Modifying
+    //@Modifying
     @Transactional
     @Query("update CollectHistory collect set collect.finished_threads = :int where collect.session = :session")
     void updateCollectFinished_threads(@Param("session") String session, @Param("int") Integer finished_threads);
 
-    @Modifying
+    //@Modifying
     @Transactional
     @Query("update CollectHistory collect set collect.total_threads = :int where collect.session = :session")
     void updateCollectTotal_threads(@Param("session") String session, @Param("int") Integer total_threads);
 
-    @Modifying
+    //@Modifying
     @Transactional
     @Query("update CollectHistory collect set collect.successful_threads = :int where collect.session = :session")
     void updateCollectSuccessful_threads(@Param("session") String session, @Param("int") Integer successful_threads);

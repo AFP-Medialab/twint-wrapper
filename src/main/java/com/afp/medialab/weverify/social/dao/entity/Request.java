@@ -5,15 +5,16 @@ import java.util.Date;
 import java.util.Set;
 import java.util.SortedSet;
 
-import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.OneToMany;
+import javax.persistence.ManyToOne;
 import javax.persistence.Table;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
 
 import com.afp.medialab.weverify.social.model.CollectRequest;
 
@@ -59,6 +60,9 @@ public class Request implements Serializable {
 	@Column(name = "retweetsHandling")
 	private String retweetsHandling;
 
+	@ManyToOne(fetch = FetchType.LAZY)
+	private CollectHistory collectHistory;
+
 	public Request() {
 	}
 
@@ -91,6 +95,7 @@ public class Request implements Serializable {
 		this.since = collectRequest.getFrom();
 		this.until = collectRequest.getUntil();
 		this.media = collectRequest.getMedia();
+
 	}
 
 	public Integer getId() {
@@ -172,4 +177,13 @@ public class Request implements Serializable {
 	public void setRetweetsHandling(String retweetsHandling) {
 		this.retweetsHandling = retweetsHandling;
 	}
+
+	public CollectHistory getCollectHistory() {
+		return collectHistory;
+	}
+
+	public void setCollectHistory(CollectHistory collectHistory) {
+		this.collectHistory = collectHistory;
+	}
+
 }

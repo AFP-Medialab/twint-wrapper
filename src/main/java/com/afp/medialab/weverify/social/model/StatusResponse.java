@@ -1,82 +1,88 @@
 package com.afp.medialab.weverify.social.model;
 
 import java.util.Date;
+import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class StatusResponse {
 
-    private String session;
-    private Date started, ended;
-    private Status status;
-    private CollectRequest query;
-    private Integer nbTweets;
-    private String message;
+	private String session;
+	private Date started, ended;
+	private Status status;
+	private List<CollectRequest> query;
+	private Integer nbTweets;
+	private String message;
 
-    public StatusResponse(String session, Date started, Date ended, Status status, CollectRequest query, Integer nbTweet, String message) {
-        this.session = session;
-        this.started = started;
-        this.ended = ended;
-        this.status = status;
-        this.query = query;
-        this.message = message;
-        this.nbTweets = nbTweet;
-    }
+	public StatusResponse(String session, Date started, Date ended, Status status, List<CollectRequest> query,
+			Integer nbTweet, String message) {
+		this.session = session;
+		this.started = started;
+		this.ended = ended;
+		this.status = status;
+		this.query = query;
+		this.message = message;
+		this.nbTweets = nbTweet;
+	}
 
-    public String getMessage() {
-        return message;
-    }
+	public String getMessage() {
+		return message;
+	}
 
-    public void setMessage(String message) {
-        this.message = message;
-    }
+	public void setMessage(String message) {
+		this.message = message;
+	}
 
-    public String getSession() {
-        return session;
-    }
+	public String getSession() {
+		return session;
+	}
 
-    public void setSession(String search) {
-        this.session = search;
-    }
+	public void setSession(String search) {
+		this.session = search;
+	}
 
-    public Date getStarted() {
-        return started;
-    }
+	public Date getStarted() {
+		return started;
+	}
 
-    public void setStarted(Date started) {
-        this.started = started;
-    }
+	public void setStarted(Date started) {
+		this.started = started;
+	}
 
-    public Date getEnded() {
-        return ended;
-    }
+	public Date getEnded() {
+		return ended;
+	}
 
-    public void setEnded(Date until) {
-        this.ended = until;
-    }
+	public void setEnded(Date until) {
+		this.ended = until;
+	}
 
-    public CollectRequest getQuery() {
-        return this.query;
-    }
+	public List<CollectRequest> getQuery() {
+		return this.query;
+	}
 
-    public Status getStatus() {
-        return this.status;
-    }
+	public Status getStatus() {
+		return this.status;
+	}
 
-    public void SetStatus(Status status) {
-        this.status = status;
-    }
+	public void SetStatus(Status status) {
+		this.status = status;
+	}
 
-    public void SetQuery(CollectRequest query) {
-        this.query = query;
-    }
+	public void addQuery(CollectRequest collectRequest) {
+		query.add(collectRequest);
+	}
 
-    public Integer getNbTweets() {
-        return nbTweets;
-    }
+	public void SetQuery(List<CollectRequest> query) {
+		this.query = query;
+	}
 
-    public void setNbTweets(Integer nbTweets) {
-        this.nbTweets = nbTweets;
-    }
+	public Integer getNbTweets() {
+		return nbTweets;
+	}
+
+	public void setNbTweets(Integer nbTweets) {
+		this.nbTweets = nbTweets;
+	}
 }

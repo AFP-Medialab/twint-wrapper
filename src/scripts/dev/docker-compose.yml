@@ -28,17 +28,18 @@ services:
         MYSQL_PASSWORD: dev1
         MYSQL_DATABASE: twint-wrapper
         TZ: Europe/Paris
-    container_name: mysql
     volumes:
-      - mysqldata1:/usr/share/mysql/data
+      - mysqldata1:/var/lib/mysql
     ports:
       - 3308:3306
     networks:
       - esnet
       
 volumes:
-  esdata1: {}  
-  mysqldata1: {}
+  mysqldata1:
+  esdata1:
+  
 networks:
   esnet:
+
   
