@@ -2,7 +2,6 @@ package com.afp.medialab.weverify.social.dao.repository;
 
 import java.util.Date;
 import java.util.List;
-import java.util.Optional;
 
 import javax.transaction.Transactional;
 
@@ -11,7 +10,6 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import com.afp.medialab.weverify.social.dao.entity.CollectHistory;
-import com.afp.medialab.weverify.social.dao.entity.Request;
 
 public interface CollectInterface extends JpaRepository<CollectHistory, Integer> {
 
@@ -30,10 +28,7 @@ public interface CollectInterface extends JpaRepository<CollectHistory, Integer>
     List<CollectHistory> findCollectHistoryByProcessEndLessThan(Date processEnd);
 
     List<CollectHistory> findAll();
-    
-    Optional<CollectHistory> findOneCollectionHistoryByRequests(List<Request> requests);
-    
-    List<CollectHistory>  findCollectionHistoryByRequestsIn(List<Request> requests);
+        
     
     //CollectHistory findCollectHistoryByRequest(Request request);
 

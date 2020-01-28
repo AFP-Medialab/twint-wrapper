@@ -6,7 +6,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -58,23 +57,6 @@ public class CollectService {
 	public void removeRequest(Request request) {
 		request.getCollectHistory();
 	}
-
-//	public CollectHistory saveCollectInfo(String session, CollectRequest collectRequest, Date processStart,
-//			Date processEnd, Status status, String message, Integer count, Integer finished_threads,
-//			Integer total_threads, Integer successful_threads) {
-//		CollectHistory collectHistory = new CollectHistory(session, new Request(collectRequest), processStart,
-//				processEnd, status, message, count, finished_threads, total_threads, successful_threads);
-//		return collectInterface.save(collectHistory);
-//	}
-
-//	public CollectResponse alreadyExists(CollectRequest collectRequest) {
-//		Request request = null;
-//		CollectHistory collectHistory = collectInterface.findCollectHistoryByRequest(request);
-//		if (collectHistory != null)
-//			return new CollectResponse(collectHistory.getSession(), collectHistory.getStatus(), null,
-//					collectHistory.getProcessEnd());
-//		return null;
-//	}
 
 	public Boolean updateCollectStatus(String session, Status newStatus) {
 		CollectHistory collectHistory = collectInterface.findCollectHistoryBySession(session);
@@ -264,19 +246,6 @@ public class CollectService {
 
 	public Set<Request> requestContainingEmptyBannedWords() {
 		return new HashSet<Request>(requestInterface.findRequestByBannedWordsIsNull());
-	}
-//
-//	public CollectHistory findCollectHistoryByRequest(Request request) {
-//		return collectInterface.findCollectHistoryByRequest(request);
-//	}
-
-	public CollectHistory findCollectHostoryByRequests(List<Request> requests) {
-		Optional<CollectHistory> opCollectionHistory = collectInterface.findOneCollectionHistoryByRequests(requests);
-		if (opCollectionHistory.isPresent()) {
-			CollectHistory collectHistory = opCollectionHistory.get();
-			return collectHistory;
-		}
-		return null;
 	}
 
 	public void save_collectHistory(CollectHistory collectHistory) {

@@ -3,11 +3,19 @@ package com.afp.medialab.weverify.social.util;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+
+import com.afp.medialab.weverify.social.dao.entity.Request;
+import com.afp.medialab.weverify.social.model.CollectRequest;
 
 @Component
 public class RangeDeltaToProcess {
+
+	private static Logger Logger = LoggerFactory.getLogger(RangeDeltaToProcess.class);
 
 	/**
 	 * Date Range list should be sort in asc; Date Ranges are not overlap;
@@ -88,6 +96,36 @@ public class RangeDeltaToProcess {
 		return dateRangeToProcess;
 	}
 
+	/**
+	 * Clean requests that are not in the request range
+	 * 
+	 * @param requests
+	 * @param collectRequest
+	 */
+	public void requestfromDateRange(Set<Request> requests, CollectRequest collectRequest) {
+		if (requests != null && !requests.isEmpty()) {
+			Date rqStart = collectRequest.getFrom();
+			Date rqEnd = collectRequest.getUntil();
+			for (Request request : requests) {
+				Date start = request.getSince();
+				Date end = request.getUntil();
+				if (isInRange(rqStart, rqEnd, start) || isInRange(rqStart, rqEnd, end)) {
+					Logger.debug("request is in range");
+				} else {
+					requests.remove(request);
+				}
+
+			}
+		}
+	}
+
+	/**
+	 * Compare if date are the same
+	 * 
+	 * @param date
+	 * @param date2
+	 * @return
+	 */
 	private boolean isSameDate(Date date, Date date2) {
 		if (date.compareTo(date2) == 0)
 			return true;
@@ -95,8 +133,16 @@ public class RangeDeltaToProcess {
 			return false;
 	}
 
+	/**
+	 * Test if a date belongs to a range
+	 * 
+	 * @param start
+	 * @param end
+	 * @param testDate
+	 * @return
+	 */
 	private boolean isInRange(Date start, Date end, Date testDate) {
-		if(start.compareTo(testDate) == 0 || end.compareTo(testDate) == 0)
+		if (start.compareTo(testDate) == 0 || end.compareTo(testDate) == 0)
 			return true;
 		return testDate.after(start) && testDate.before(end);
 	}
