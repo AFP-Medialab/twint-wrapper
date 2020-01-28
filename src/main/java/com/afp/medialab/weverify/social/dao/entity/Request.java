@@ -13,8 +13,6 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
 
 import com.afp.medialab.weverify.social.model.CollectRequest;
 
@@ -62,6 +60,9 @@ public class Request implements Serializable {
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	private CollectHistory collectHistory;
+	
+	@Column(name = "merge")
+	private Boolean merge = false;
 
 	public Request() {
 	}
@@ -184,6 +185,14 @@ public class Request implements Serializable {
 
 	public void setCollectHistory(CollectHistory collectHistory) {
 		this.collectHistory = collectHistory;
+	}
+
+	public Boolean getMerge() {
+		return merge;
+	}
+
+	public void setMerge(Boolean merge) {
+		this.merge = merge;
 	}
 
 }

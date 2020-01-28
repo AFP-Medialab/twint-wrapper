@@ -93,8 +93,8 @@ public class TwintRequestGenerator {
 
         if (cr.isVerified())
             call += " --verified";
-        //call += " --essid " + id + " -es " + esURL;
-        call +=" -es " + esURL;
+        call += " --essid " + id + " -es " + esURL;
+        //call +=" -es " + esURL;
         if (isDocker)
             call = " \"" + call + "\"";
         Logger.debug("Twint command: " + call);

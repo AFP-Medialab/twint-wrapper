@@ -104,8 +104,10 @@ public class TwintThread {
 				if (successful_threads == finished_threads) {
 					collectHistory.setMessage("Finished successfully");
 				}
-				else
+				else {
+					collectHistory.setStatus(Status.Error);
 					collectHistory.setMessage("Parts of this search could not be found");
+				}
 				collectService.save_collectHistory(collectHistory);
 			}
 		}

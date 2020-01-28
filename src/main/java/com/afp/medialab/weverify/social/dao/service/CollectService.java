@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -52,6 +53,10 @@ public class CollectService {
 			e.printStackTrace();
 		}
 		return null;
+	}
+
+	public void removeRequest(Request request) {
+		request.getCollectHistory();
 	}
 
 //	public CollectHistory saveCollectInfo(String session, CollectRequest collectRequest, Date processStart,
@@ -265,6 +270,15 @@ public class CollectService {
 //		return collectInterface.findCollectHistoryByRequest(request);
 //	}
 
+	public CollectHistory findCollectHostoryByRequests(List<Request> requests) {
+		Optional<CollectHistory> opCollectionHistory = collectInterface.findOneCollectionHistoryByRequests(requests);
+		if (opCollectionHistory.isPresent()) {
+			CollectHistory collectHistory = opCollectionHistory.get();
+			return collectHistory;
+		}
+		return null;
+	}
+
 	public void save_collectHistory(CollectHistory collectHistory) {
 		collectInterface.save(collectHistory);
 	}
@@ -330,7 +344,7 @@ public class CollectService {
 	public Set<Request> requestContainsKeyWords(Set<String> keywords) {
 		if (keywords == null || keywords.size() == 0)
 			return null;
-		return requestInterface.findByKeywordListIn(keywords);
+		return requestInterface.findByKeywordListInAndMergeIsFalse(keywords);
 	}
 
 	public Set<Request> requestContainsBannedKeyWords(Set<String> bannedWords) {
