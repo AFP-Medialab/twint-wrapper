@@ -87,7 +87,7 @@ public class TwintThread {
 			if (finished_threads == total_threads) {
 				try {
 					collectHistory.setStatus(Status.CountingWords);
-					//collectService.save_collectHistory(collectHistory);
+					collectService.save_collectHistory(collectHistory);
 					esOperation.indexWordsObj(
 							esOperation.getModels(collectHistory.getSession(),
 									dateFormat.format(((CollectRequest)request).getFrom()),

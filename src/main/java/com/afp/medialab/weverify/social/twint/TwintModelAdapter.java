@@ -58,6 +58,8 @@ public class TwintModelAdapter {
 	@Value("classpath:regexp.txt")
 	private Resource regexResource;
 
+	private boolean twittieDown = false;
+
 	@SuppressWarnings("unchecked")
 	@PostConstruct
 	public void stopWordsFile() throws IOException {
@@ -103,11 +105,13 @@ public class TwintModelAdapter {
 
 		// HTTPConnexion Timeout
 		ResponseEntity<String> response = null;
+
 		try {
 			response = restTemplate.postForEntity(twitieURL, tweet, String.class);
 
 		} catch (Exception e) {
 			Logger.error("FAILED CALLING TWITTIE");
+			twittieDown = true;
 			return null;
 		}
 		Logger.info("SUCCESSFULLY CALLED TWITTIE");
@@ -151,7 +155,11 @@ public class TwintModelAdapter {
 
 		tweet = tm.getTweet();
 		tweet = StringUtils.normalizeSpace(tweet);
-		Map<String, String> tokensNamed = callTwittie();
+		Map<String, String> tokensNamed;
+		if (!twittieDown)
+			tokensNamed = callTwittie();
+		else
+			tokensNamed = null;
 
 		String[] langs = new String[] { "fr", "en" };
 
