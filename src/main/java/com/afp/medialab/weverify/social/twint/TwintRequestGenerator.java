@@ -46,12 +46,13 @@ public class TwintRequestGenerator {
 
     public String generateRequest(CollectRequest cr, String id, boolean isDocker, String esURL) {
         SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-
+        boolean hasUser = false;
         String call = "twint -ho --count ";
 
         call += "-s '" + generateSearch(cr) + "'";
 
         if (cr.getUserList() != null && !cr.getUserList().isEmpty()) {
+        	hasUser = true;
             String users = String.join(",", cr.getUserList());
             if (cr.getUserList().size() > 1)
                 call += " --userlist '" + users + "'";
@@ -91,7 +92,7 @@ public class TwintRequestGenerator {
                 call += " --retweets";
         }
 
-        if (cr.isVerified())
+        if (cr.isVerified() && !hasUser)
             call += " --verified";
         call += " --essid " + id + " -es " + esURL;
         //call +=" -es " + esURL;
