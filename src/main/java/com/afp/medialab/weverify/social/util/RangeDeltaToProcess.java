@@ -68,6 +68,8 @@ public class RangeDeltaToProcess {
 						DateRange procdateRange = new DateRange(inter.getStartDate(), startDate);
 						inter.setStartDate(endDate);
 						dateRangeToProcess.add(procdateRange);
+					} else if (isSameDate(inter.getStartDate(), startDate)) {
+						inter.setStartDate(endDate);
 					}
 				} else if (rqStartDate.before(endDate) && dateRangeToProcess.isEmpty() && rqEndDate.after(endDate)) {
 					// Create first range at the beginning

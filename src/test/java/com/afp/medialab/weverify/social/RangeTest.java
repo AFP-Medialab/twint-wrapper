@@ -34,8 +34,12 @@ public class RangeTest {
 	private String date5 = "2020-01-24 10:00:00";
 	private String date6 = "2020-01-24 12:00:00";
 	
+	
+	private String date7 = "2020-01-26 00:00:00";
+	private String date8 = "2020-01-29 00:00:00";
+	private String date9 = "2020-01-30 10:00:00";
 
-	private List<DateRange> rangesMulti, rangesSimple;
+	private List<DateRange> rangesMulti, rangesSimple, rangeContinous;
 
 	@Autowired
 	private RangeDeltaToProcess rangeDeltaToProcess;
@@ -45,24 +49,33 @@ public class RangeTest {
 		rangesMulti = new LinkedList<DateRange>();
 		
 		rangesSimple = new LinkedList<DateRange>();
+		
+		rangeContinous = new LinkedList<DateRange>();
 
 		DateRange range1 = new DateRange(dateFormat.parse(date1), dateFormat.parse(date2));
 		DateRange range2 = new DateRange(dateFormat.parse(date3), dateFormat.parse(date4));
 		DateRange range3 = new DateRange(dateFormat.parse(date5), dateFormat.parse(date6));
 
+		
 		rangesMulti.add(range1);
 		rangesMulti.add(range2);
 		rangesMulti.add(range3);
 
 		rangesSimple.add(range3);
+		
+		DateRange range4 = new DateRange(dateFormat.parse(date7), dateFormat.parse(date8));
+		DateRange range5 = new DateRange(dateFormat.parse(date8), dateFormat.parse(date9));
+		
+		rangeContinous.add(range4);
+		rangeContinous.add(range5);
 	}
 
 	@Test
 	@Order(1)
 	public void testOutOfRange() throws ParseException {
-		System.out.println("test 1");
 		String dateRQ1 = "2020-01-24 00:30:00";
 		String dateRQ2 = "2020-01-24 14:00:00";
+		System.out.println("test 1 : " + dateRQ1 +"-"+ dateRQ2);
 		List<String> ranges = result(rangesMulti, dateRQ1, dateRQ2);
 		assertEquals(ranges.size(), 4);
 		assertEquals(ranges.get(0), "Range 1 : 2020-01-24 00:30:00-2020-01-24 01:00:00");
@@ -75,9 +88,9 @@ public class RangeTest {
 	@Test
 	@Order(2)
 	public void testStartOutOfRange() throws ParseException {
-		System.out.println("test 2");
 		String dateRQ1 = "2020-01-24 04:30:00";
 		String dateRQ2 = "2020-01-24 11:00:00";
+		System.out.println("test 2 : " + dateRQ1 +"-"+ dateRQ2);
 		List<String> ranges = result(rangesMulti, dateRQ1, dateRQ2);
 		assertEquals(ranges.size(), 2);
 		assertEquals(ranges.get(0), "Range 1 : 2020-01-24 04:30:00-2020-01-24 06:00:00");
@@ -88,9 +101,9 @@ public class RangeTest {
 	@Test
 	@Order(3)
 	public void testEndOutOfRange() throws ParseException {
-		System.out.println("test 3");
 		String dateRQ1 = "2020-01-24 06:30:00";
 		String dateRQ2 = "2020-01-24 14:00:00";
+		System.out.println("test 3 : " + dateRQ1 +"-"+ dateRQ2);
 		List<String> ranges = result(rangesMulti, dateRQ1, dateRQ2);
 		assertEquals(ranges.size(), 2);
 		assertEquals(ranges.get(0), "Range 1 : 2020-01-24 08:00:00-2020-01-24 10:00:00");
@@ -101,9 +114,9 @@ public class RangeTest {
 	@Test
 	@Order(4)
 	public void testStartOutOfRange1() throws ParseException {
-		System.out.println("test 4");
 		String dateRQ1 = "2020-01-24 00:30:00";
 		String dateRQ2 = "2020-01-24 02:00:00";
+		System.out.println("test 4 : " + dateRQ1 +"-"+ dateRQ2);
 		List<String> ranges = result(rangesMulti, dateRQ1, dateRQ2);
 		assertEquals(ranges.size(), 1);
 		assertEquals(ranges.get(0), "Range 1 : 2020-01-24 00:30:00-2020-01-24 01:00:00");
@@ -113,9 +126,9 @@ public class RangeTest {
 	@Test
 	@Order(5)
 	public void testEndOutOfRange1() throws ParseException {
-		System.out.println("test 5");
 		String dateRQ1 = "2020-01-24 10:30:00";
 		String dateRQ2 = "2020-01-24 14:00:00";
+		System.out.println("test 5 : " + dateRQ1 +"-"+ dateRQ2);
 		List<String> ranges = result(rangesMulti, dateRQ1, dateRQ2);
 		assertEquals(ranges.size(), 1);
 		assertEquals(ranges.get(0), "Range 1 : 2020-01-24 12:00:00-2020-01-24 14:00:00");
@@ -125,9 +138,9 @@ public class RangeTest {
 	@Test
 	@Order(6)
 	public void testStartEndIn2Ranges() throws ParseException {
-		System.out.println("test 6");
 		String dateRQ1 = "2020-01-24 01:30:00";
 		String dateRQ2 = "2020-01-24 11:00:00";
+		System.out.println("test 6 : " + dateRQ1 +"-"+ dateRQ2);
 		List<String> ranges = result(rangesMulti, dateRQ1, dateRQ2);
 		assertEquals(ranges.size(), 2);
 		assertEquals(ranges.get(0), "Range 1 : 2020-01-24 03:00:00-2020-01-24 06:00:00");
@@ -138,9 +151,9 @@ public class RangeTest {
 	@Test
 	@Order(7)
 	public void testStartEndOutRange1() throws ParseException {
-		System.out.println("test 7");
 		String dateRQ1 = "2020-01-23 01:30:00";
 		String dateRQ2 = "2020-01-24 00:00:00";
+		System.out.println("test 7 : " + dateRQ1 +"-"+ dateRQ2);
 		List<String> ranges = result(rangesMulti, dateRQ1, dateRQ2);
 		assertEquals(ranges.size(), 1);
 		assertEquals(ranges.get(0), "Range 1 : 2020-01-23 01:30:00-2020-01-24 00:00:00");
@@ -150,9 +163,9 @@ public class RangeTest {
 	@Test()
 	@Order(8)
 	public void testStartEndOutRangeN() throws ParseException {
-		System.out.println("test 8");
 		String dateRQ1 = "2020-01-24 17:30:00";
 		String dateRQ2 = "2020-01-25 00:00:00";
+		System.out.println("test 8 : " + dateRQ1 +"-"+ dateRQ2);
 		List<String> ranges = result(rangesMulti, dateRQ1, dateRQ2);
 		assertEquals(ranges.size(), 1);
 		assertEquals(ranges.get(0), "Range 1 : 2020-01-24 17:30:00-2020-01-25 00:00:00");
@@ -162,9 +175,9 @@ public class RangeTest {
 	@Test
 	@Order(9)
 	public void testStartEndInRange() throws ParseException {
-		System.out.println("test 9");
 		String dateRQ1 = "2020-01-24 06:30:00";
 		String dateRQ2 = "2020-01-24 07:30:00";
+		System.out.println("test 9 : " + dateRQ1 +"-"+ dateRQ2);
 		List<String> ranges = result(rangesMulti, dateRQ1, dateRQ2);
 		assertEquals(ranges.size(), 0);
 		System.out.println("#################");
@@ -172,9 +185,9 @@ public class RangeTest {
 	@Test
 	@Order(10)
 	public void testSameRange() throws ParseException {
-		System.out.println("test 10");
 		String dateRQ1 = "2020-01-24 06:00:00";
 		String dateRQ2 = "2020-01-24 08:00:00";
+		System.out.println("test 10 : " + dateRQ1 +"-"+ dateRQ2);
 		List<String> ranges = result(rangesMulti, dateRQ1, dateRQ2);
 		assertEquals(ranges.size(), 0);
 		System.out.println("#################");
@@ -183,12 +196,24 @@ public class RangeTest {
 	@Test
 	@Order(11)
 	public void testSimpleEndOutOfRange() throws ParseException {
-		System.out.println("test 11");
 		String dateRQ1 = "2020-01-24 10:00:00";
 		String dateRQ2 = "2020-01-24 14:00:00";
+		System.out.println("test 11 : " + dateRQ1 +"-"+ dateRQ2);
 		List<String> ranges = result(rangesSimple, dateRQ1, dateRQ2);
 		assertEquals(ranges.size(), 1);
 		assertEquals(ranges.get(0), "Range 1 : 2020-01-24 12:00:00-2020-01-24 14:00:00");
+		System.out.println("#################");
+	}
+	
+	@Test
+	@Order(12)
+	public void testcontinousRange() throws ParseException {
+		String dateRQ1 = "2020-01-28 00:00:00";
+		String dateRQ2 = "2020-01-30 15:10:00";
+		System.out.println("test 12 : " + dateRQ1 +"-"+ dateRQ2);
+		List<String> ranges = result(rangeContinous, dateRQ1, dateRQ2);
+		assertEquals(ranges.size(), 1);
+		assertEquals(ranges.get(0), "Range 1 : 2020-01-30 10:00:00-2020-01-30 15:10:00");
 		System.out.println("#################");
 	}
 	
