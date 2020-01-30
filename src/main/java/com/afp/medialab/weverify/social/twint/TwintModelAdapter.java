@@ -159,7 +159,7 @@ public class TwintModelAdapter {
 		List<String> stopLang = stopwords.get(getTweetLang(langs));
 		List<String> stopGlob = stopwords.get("glob");
 
-		stopGlob.addAll(Arrays.asList(tm.getSearch().split(" ")));
+		stopGlob.addAll(Arrays.asList(tm.getSearch().replaceAll("#", "").split(" ")));
 		// String tweet = tm.getTweet();
 
 		for (String regExp : regExps) {
