@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,22 +51,26 @@ public class RequestCacheManager {
 		// If exist exactly the same request ?
 
 		CollectHistory collectHistory = collectService.createNewCollectHistory();
-		Set<Request> previousMatch = requestIsInCache(collectRequest);
+		Set<Request> similarRequests = similarInCache(collectRequest);
+
+		// Set<Request> previousMatch = requestIsInCache(collectRequest);
+		Set<Request> previousMatch = exactRequests(similarRequests, collectRequest);
 		if (previousMatch != null && !previousMatch.isEmpty()) {
 			// Requests exist in cache
 			// Try to extend
 			completeTimeRanges(collectHistory, collectRequest, previousMatch);
 		} else {
-			Set<Request> similarRequests = similarInCache(collectRequest);
+			// Set<Request> similarRequests = similarInCache(collectRequest);
 
 			runNewTwintRequest(collectHistory, collectRequest);
-			if (similarRequests != null && !similarRequests.isEmpty()) {
-				// Merge old requests
-				for (Request request : similarRequests) {
-					request.setMerge(true);
-					collectService.save_request(request);
-				}
-			}
+			mergeRequest(similarRequests, collectRequest);
+//			if (similarRequests != null && !similarRequests.isEmpty()) {
+//				// Merge old requests
+//				for (Request request : similarRequests) {
+//					request.setMerge(true);
+//					collectService.save_request(request);
+//				}
+//			}
 
 		}
 		CollectResponse collectResponse = new CollectResponse(collectHistory);
@@ -73,6 +78,68 @@ public class RequestCacheManager {
 		return collectResponse;
 	}
 
+	private void mergeRequest(Set<Request> mergeCandidates, CollectRequest collectRequest) {
+		if (mergeCandidates != null && !mergeCandidates.isEmpty()) {
+			Set<Request> filterRequest = new HashSet<Request>();
+			filterRequest.addAll(mergeCandidates);
+			Set<String> keywords = collectRequest.getKeywordList();
+			Set<String> userList = collectRequest.getUserList();
+			Set<String> banneWords = collectRequest.getBannedWords();
+
+			if (mergeCandidates != null && !mergeCandidates.isEmpty()) {
+				if (keywords != null) {
+					filterRequest.addAll(filterRequest.stream().filter(e -> e.getKeywordList().size() < keywords.size())
+							.collect(Collectors.toSet()));
+				}
+				if (userList != null) {
+					filterRequest.addAll(
+							filterRequest.stream().filter(e -> e.getUserList().stream().allMatch(userList::contains))
+									.collect(Collectors.toSet()));
+				}
+				if (banneWords != null) {
+					filterRequest.addAll(filterRequest.stream()
+							.filter(e -> e.getBannedWords().stream().allMatch(banneWords::contains))
+							.collect(Collectors.toSet()));
+				}
+			}
+			for (Request request : filterRequest) {
+				request.setMerge(true);
+				collectService.save_request(request);
+			}
+		}
+
+	}
+
+	private Set<Request> exactRequests(Set<Request> request, CollectRequest collectRequest) {
+		Set<Request> filterRequest = new HashSet<Request>();
+		if (request.isEmpty())
+			return filterRequest;
+
+		final Set<String> keywords;
+		final Set<String> userList;
+		final Set<String> banneWords;
+
+		if (collectRequest.getKeywordList() == null) {
+			keywords = new HashSet<String>();
+		} else {
+			keywords = collectRequest.getKeywordList();
+		}
+		if (collectRequest.getUserList() == null) {
+			userList = new HashSet<String>();
+		} else {
+			userList = collectRequest.getUserList();
+		}
+		if(collectRequest.getBannedWords() == null)
+			banneWords = new HashSet<String>();
+		else
+			banneWords = collectRequest.getBannedWords();
+
+		filterRequest.addAll(request.stream().filter(e -> e.getKeywordList().stream().allMatch(keywords::contains))
+				.filter(e -> e.getUserList().stream().allMatch(userList::contains))
+				.filter(e -> e.getBannedWords().stream().allMatch(banneWords::contains)).collect(Collectors.toSet()));
+
+		return filterRequest;
+	}
 
 	/**
 	 * 
@@ -112,8 +179,12 @@ public class RequestCacheManager {
 			else
 				machingRequests.retainAll(collectService.requestContainingEmptyUsers());
 		} else {
-			machingRequests = users;
+			if (users != null)
+				machingRequests = users;
 		}
+		if (machingRequests != null && !machingRequests.isEmpty())
+			machingRequests = machingRequests.stream()
+					.filter(e -> !e.getCollectHistory().getStatus().equals(Status.Error)).collect(Collectors.toSet());
 		return machingRequests;
 	}
 
@@ -139,20 +210,24 @@ public class RequestCacheManager {
 			existingDateRanges.add(dateRange);
 		}
 		List<DateRange> rangesToProcess = rangeDeltaToProcess.rangeToProcess(existingDateRanges, requestDateRange);
-		List<CollectHistory> newCollects = new LinkedList<CollectHistory>();
+		List<CollectRequest> requestsToPerform = new LinkedList<CollectRequest>();
 		// This is a new reques
 		if (!rangesToProcess.isEmpty()) {
 			// Process twint
 			for (DateRange range : rangesToProcess) {
-				runNewTwintRequest(collectHistory, collectRequest, range);
-				newCollects.add(collectHistory);
+
+				CollectRequest request = runNewTwintRequest(collectHistory, collectRequest, range);
+				requestsToPerform.add(request);
 			}
+			ttg.callTwintMultiThreaded(collectHistory, requestsToPerform);
+			collectService.save_collectHistory(collectHistory);
 		} else {
 			// Request have been done already these elk
 			collectHistory.setStatus(Status.Done);
 			collectHistory.setMessage("Request already processed, no scrapping, see search engine");
 			collectHistory.setProcessEnd(Calendar.getInstance().getTime());
 		}
+
 		return collectHistory;
 	}
 
@@ -162,11 +237,14 @@ public class RequestCacheManager {
 	 * @param collectRequest
 	 * @param dateRange
 	 */
-	private void runNewTwintRequest(CollectHistory collectHistory, CollectRequest collectRequest, DateRange dateRange) {
+	private CollectRequest runNewTwintRequest(CollectHistory collectHistory, CollectRequest collectRequest,
+			DateRange dateRange) {
 
 		collectRequest.setFrom(dateRange.getStartDate());
 		collectRequest.setUntil(dateRange.getEndDate());
-		runNewTwintRequest(collectHistory, collectRequest);
+		Request request = new Request(collectRequest);
+		collectHistory.addRequest(request);
+		return collectRequest;
 	}
 
 	/**

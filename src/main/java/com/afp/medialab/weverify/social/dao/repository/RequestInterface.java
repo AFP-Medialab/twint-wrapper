@@ -13,8 +13,8 @@ public interface RequestInterface extends JpaRepository<Request, Integer> {
 	
 	
 	Set<Request> findByKeywordListInAndMergeIsFalse(Set<String> keywords);
-	Set<Request> findByBannedWordsIn(Set<String> bannedWords);
-	Set<Request> findByUserListIn(Set<String> userList);
+	Set<Request> findByBannedWordsInAndMergeIsFalse(Set<String> bannedWords);
+	Set<Request> findByUserListInAndMergeIsFalse(Set<String> userList);
 	
 	
 	Set<Request> findByKeywordListInAndBannedWordsInAndUserListIn(Set<String> keywords, Set<String> bannedWords, Set<String> userList);

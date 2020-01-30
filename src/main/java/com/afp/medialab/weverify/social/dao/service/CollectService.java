@@ -319,13 +319,13 @@ public class CollectService {
 	public Set<Request> requestContainsBannedKeyWords(Set<String> bannedWords) {
 		if (bannedWords == null || bannedWords.size() == 0)
 			return null;
-		return requestInterface.findByBannedWordsIn(bannedWords);
+		return requestInterface.findByBannedWordsInAndMergeIsFalse(bannedWords);
 	}
 
 	public Set<Request> requestContainsUserList(Set<String> userList) {
 		if (userList == null || userList.size() == 0)
 			return null;
-		return requestInterface.findByUserListIn(userList);
+		return requestInterface.findByUserListInAndMergeIsFalse(userList);
 	}
 
 	/**
