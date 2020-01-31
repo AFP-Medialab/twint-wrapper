@@ -48,7 +48,15 @@ public class ESOperations {
 
     private static Logger Logger = LoggerFactory.getLogger(TwintThread.class);
 
-
+    /**
+     * GEt tweets indexed in elasticsearch
+     * TODO : Add Paging in the request when tweet are up to 10000. 
+     * @param essid
+     * @param start
+     * @param end
+     * @return
+     * @throws InterruptedException
+     */
     public List<TwintModel> getModels(String essid, String start, String end) throws InterruptedException {
 
        // esOperation.refresh(TwintModel.class);

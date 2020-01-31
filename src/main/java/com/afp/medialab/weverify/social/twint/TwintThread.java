@@ -48,7 +48,7 @@ public class TwintThread {
 
 	private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
-	private Object lock = new Object();
+	//private Object lock = new Object();
 
 	private boolean isDockerCommand(String twintCall) {
 		if (twintCall.startsWith("docker"))
@@ -69,52 +69,49 @@ public class TwintThread {
 		}
 
 		// update db to say this thread is finished
-		synchronized (lock) {
-			collectHistory.setFinished_threads(collectHistory.getFinished_threads() + 1);
-			Integer old_count = collectHistory.getCount();
-			if (old_count == null || old_count == -1)
-				collectHistory.setCount(result);
-			else
-				collectHistory.setCount(result + old_count);
-			collectService.save_collectHistory(collectHistory);
-		}
+//		synchronized (lock) {
+		collectHistory.setFinished_threads(collectHistory.getFinished_threads() + 1);
+		Integer old_count = collectHistory.getCount();
+		if (old_count == null || old_count == -1)
+			collectHistory.setCount(result);
+		else
+			collectHistory.setCount(result + old_count);
+		collectService.save_collectHistory(collectHistory);
+//		}
 
 		if (result != -1) {
-			synchronized (lock) {
-				collectHistory.setSuccessful_threads(collectHistory.getSuccessful_threads() + 1);
-				collectService.save_collectHistory(collectHistory);
-			}
+//			synchronized (lock) {
+			collectHistory.setSuccessful_threads(collectHistory.getSuccessful_threads() + 1);
+			collectService.save_collectHistory(collectHistory);
+//			}
 		}
 
-		synchronized (lock) {
-			int finished_threads = collectHistory.getFinished_threads();
-			int successful_threads = collectHistory.getSuccessful_threads();
-			int total_threads = collectHistory.getTotal_threads();
-			if (finished_threads == total_threads) {
-				try {
-					collectHistory.setStatus(Status.CountingWords);
-					collectService.save_collectHistory(collectHistory);
-					esOperation.indexWordsObj(
-							esOperation.getModels(collectHistory.getSession(),
-									dateFormat.format(((CollectRequest)request).getFrom()),
-									dateFormat.format(((CollectRequest)request).getUntil()))
-					);
-				} catch (InterruptedException | IOException e) {
-					e.printStackTrace();
-				}
-
-				collectHistory.setStatus(Status.Done);
-				collectHistory.setProcessEnd(Calendar.getInstance().getTime());
-				if (successful_threads == finished_threads) {
-					collectHistory.setMessage("Finished successfully");
-				}
-				else {
-					collectHistory.setStatus(Status.Error);
-					collectHistory.setMessage("Parts of this search could not be found");
-				}
+//		synchronized (lock) {
+		int finished_threads = collectHistory.getFinished_threads();
+		int successful_threads = collectHistory.getSuccessful_threads();
+		int total_threads = collectHistory.getTotal_threads();
+		if (finished_threads == total_threads) {
+			try {
+				collectHistory.setStatus(Status.CountingWords);
 				collectService.save_collectHistory(collectHistory);
+				esOperation.indexWordsObj(esOperation.getModels(collectHistory.getSession(),
+						dateFormat.format(((CollectRequest) request).getFrom()),
+						dateFormat.format(((CollectRequest) request).getUntil())));
+			} catch (InterruptedException | IOException e) {
+				e.printStackTrace();
 			}
+
+			collectHistory.setStatus(Status.Done);
+			collectHistory.setProcessEnd(Calendar.getInstance().getTime());
+			if (successful_threads == finished_threads) {
+				collectHistory.setMessage("Finished successfully");
+			} else {
+				collectHistory.setStatus(Status.Error);
+				collectHistory.setMessage("Parts of this search could not be found");
+			}
+			collectService.save_collectHistory(collectHistory);
 		}
+//		}
 		return CompletableFuture.completedFuture(result);
 	}
 
@@ -122,7 +119,6 @@ public class TwintThread {
 		boolean isDocker = isDockerCommand(twintCall);
 
 		String twintRequest = TwintRequestGenerator.getInstance().generateRequest(request, session, isDocker, esURL);
-
 
 		ProcessBuilder processBuilder = new ProcessBuilder("/bin/bash", "-c", twintCall + twintRequest);
 		processBuilder.environment().put("PATH", "/usr/bin:/usr/local/bin:/bin");
@@ -141,7 +137,7 @@ public class TwintThread {
 		while ((LoggerString = stdError.readLine()) != null) {
 
 			Logger.error(LoggerString);
-			//error_occurred = true;
+			// error_occurred = true;
 		}
 
 		Integer nb_tweets = -1;
@@ -153,7 +149,6 @@ public class TwintThread {
 					str = LoggerString.split("Successfully collected ")[1].split(" ")[1];
 				nb_tweets = Integer.parseInt(str);
 				Logger.info("Successfully collected: " + nb_tweets + " " + got);
-
 
 			}
 		}
@@ -194,10 +189,7 @@ public class TwintThread {
 
 		Logger.info("Nb tweets: " + nb_tweets);
 
-
 		return nb_tweets;
 	}
-
-
 
 }

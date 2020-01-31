@@ -53,21 +53,16 @@ public class RequestCacheManager {
 		// If exist exactly the same request ?
 
 		CollectHistory collectHistory = collectService.createNewCollectHistory();
-		// candidateRequest(collectRequest);
 		Set<Request> similarRequests = similarInCache(collectRequest);
-//
-		// Set<Request> previousMatch = requestIsInCache(collectRequest);
 		Set<Request> previousMatch = exactRequests(similarRequests, collectRequest);
 		if (previousMatch != null && !previousMatch.isEmpty()) {
 			// Requests exist in cache
 			// Try to extend with new dateRange if so
 			completeTimeRanges(collectHistory, collectRequest, previousMatch);
 		} else {
-			// Set<Request> similarRequests = similarInCache(collectRequest);
 
 			runNewTwintRequest(collectHistory, collectRequest);
 			mergeRequest(similarRequests, collectRequest);
-//
 		}
 		CollectResponse collectResponse = new CollectResponse(collectHistory);
 		// This is a new request
@@ -76,20 +71,6 @@ public class RequestCacheManager {
 
 	private void mergeRequest(Set<Request> mergeCandidates, CollectRequest collectRequest) {
 		if (mergeCandidates != null && !mergeCandidates.isEmpty()) {
-//			Set<Request> filterRequest = new HashSet<Request>();
-//			filterRequest.addAll(mergeCandidates);
-//			Set<String> keywords = collectRequest.getKeywordList();
-//			Set<String> userList = collectRequest.getUserList();
-//			Set<String> banneWords = collectRequest.getBannedWords();
-//
-//			if (mergeCandidates != null && !mergeCandidates.isEmpty()) {
-//				filterRequest.addAll(filterRequest.stream().filter(e -> e.getKeywordList().size() < keywords.size())
-//						.filter(e -> e.getUserList().size() < userList.size())
-//						.filter(e -> e.getBannedWords().size() < banneWords.size())
-//						.filter(e -> e.getVerified() == true && collectRequest.isValid() == false)
-//						.collect(Collectors.toSet()));
-//				filterRequest.removeIf(e -> e.getLanguage() != null && collectRequest.getLang().equals(""));
-//			}
 			for (Request request : mergeCandidates) {
 				String firtLang = request.getLanguage();
 				if ((firtLang != null && !collectRequest.getLang().equals(""))

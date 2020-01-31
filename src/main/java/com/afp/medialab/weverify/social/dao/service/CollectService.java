@@ -249,7 +249,7 @@ public class CollectService {
 	}
 
 	public void save_collectHistory(CollectHistory collectHistory) {
-		collectInterface.save(collectHistory);
+		collectInterface.saveAndFlush(collectHistory);
 	}
 
 	public void save_request(Request request) {
