@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.afp.medialab.weverify.social.dao.entity.CollectHistory;
 import com.afp.medialab.weverify.social.dao.service.CollectService;
@@ -57,6 +58,7 @@ public class TwintThread {
 	}
 
 	@Async(value = "twintCallTaskExecutor")
+	@Transactional
 	public CompletableFuture<Integer> callTwint(CollectHistory collectHistory, CollectRequest request) {
 
 		Integer result = null;
@@ -144,7 +146,7 @@ public class TwintThread {
 
 		Integer nb_tweets = -1;
 		while ((LoggerString = stdInput.readLine()) != null) {
-;
+
 			if (LoggerString.contains("Successfully collected")) {
 				String str = LoggerString.split("Successfully collected ")[1].split(" ")[0];
 				if (str.equals("all"))

@@ -1,6 +1,7 @@
 package com.afp.medialab.weverify.social.util;
 
 import java.util.Date;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -50,9 +51,9 @@ public class RangeDeltaToProcess {
 				if (inter != null) {
 					if (isInRange(startDate, endDate, inter.getStartDate())
 							&& isInRange(startDate, endDate, inter.getEndDate())) {
-						//inter = current dateRange
+						// inter = current dateRange
 						inter = null;
-						sameRange= true;
+						sameRange = true;
 						continue;
 					} else {
 						rgStartDate = inter.getStartDate();
@@ -113,8 +114,11 @@ public class RangeDeltaToProcess {
 	 * @param requests
 	 * @param collectRequest
 	 */
-	public void requestfromDateRange(Set<Request> requests, CollectRequest collectRequest) {
+	public Set<Request> requestfromDateRange(Set<Request> requests, CollectRequest collectRequest) {
+		Set<Request> machingRequests = new HashSet<Request>();
+
 		if (requests != null && !requests.isEmpty()) {
+			machingRequests.addAll(requests);
 			Date rqStart = collectRequest.getFrom();
 			Date rqEnd = collectRequest.getUntil();
 			for (Request request : requests) {
@@ -123,11 +127,12 @@ public class RangeDeltaToProcess {
 				if (isInRange(rqStart, rqEnd, start) || isInRange(rqStart, rqEnd, end)) {
 					Logger.debug("request is in range");
 				} else {
-					requests.remove(request);
+					machingRequests.remove(request);
 				}
 
 			}
 		}
+		return machingRequests;
 	}
 
 	/**

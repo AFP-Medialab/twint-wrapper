@@ -91,8 +91,14 @@ public class RequestCacheManager {
 //				filterRequest.removeIf(e -> e.getLanguage() != null && collectRequest.getLang().equals(""));
 //			}
 			for (Request request : mergeCandidates) {
-				request.setMerge(true);
-				collectService.save_request(request);
+				String firtLang = request.getLanguage();
+				if ((firtLang != null && !collectRequest.getLang().equals(""))
+						&& (firtLang != null && !firtLang.equals(collectRequest.getLang()))) {
+					Logger.info("nothing to merge");
+				}else {
+					request.setMerge(true);
+					collectService.save_request(request);
+				}
 			}
 		}
 
@@ -100,6 +106,7 @@ public class RequestCacheManager {
 
 	private Set<Request> exactRequests(Set<Request> request, CollectRequest collectRequest) {
 		Set<Request> filterRequest = new HashSet<Request>();
+		//Set<Request> filterRequest1 = new HashSet<Request>();
 		if (request.isEmpty())
 			return filterRequest;
 
@@ -131,19 +138,22 @@ public class RequestCacheManager {
 			lang = collectRequest.getLang();
 		}
 
-//		filterRequest.addAll(request.stream().filter(e -> e.getKeywordList().stream().allMatch(keywords::contains))
-//				.filter(e -> e.getUserList().stream().allMatch(userList::contains))
-//				.filter(e -> e.getBannedWords().stream().allMatch(banneWords::contains))
-//				.filter(e -> e.getVerified().equals(collectRequest.isVerified())).collect(Collectors.toSet()));
-	
-		filterRequest.addAll(request.stream().filter(e -> e.getKeywordList().size() <= keywords.size())
-				.filter(e -> e.getUserList().size() <= userList.size())
-				.filter(e -> e.getBannedWords().size() <= banneWords.size())
+		filterRequest.addAll(request.stream().filter(e -> e.getKeywordList().stream().allMatch(keywords::contains))
+				.filter(e -> e.getUserList().stream().allMatch(userList::contains))
+				.filter(e -> e.getBannedWords().stream().allMatch(banneWords::contains))
 				.filter(e -> e.getVerified().equals(collectRequest.isVerified())).collect(Collectors.toSet()));
 
-		for (Request filterReq : filterRequest) {
+//		filterRequest.addAll(request.stream().filter(e -> e.getKeywordList().size() <= keywords.size())
+//				.filter(e -> e.getUserList().size() <= userList.size())
+//				.filter(e -> e.getBannedWords().size() <= banneWords.size())
+//				.filter(e -> e.getVerified().equals(collectRequest.isVerified())).collect(Collectors.toSet()));
+		
+		
+		Set<Request> filterRequest2 = new HashSet<Request>();
+		filterRequest2.addAll(filterRequest);
+		for (Request filterReq : filterRequest2) {
 			String firtLang = filterReq.getLanguage();
-			if ((firtLang != null && !lang.equals("")) && (firtLang != null && firtLang.equals(lang)))
+			if ((firtLang != null && !lang.equals("")) && (firtLang != null && !firtLang.equals(lang)))
 				filterRequest.remove(filterReq);
 		}
 		// if requests is empty search if a largers request exist
@@ -153,27 +163,11 @@ public class RequestCacheManager {
 		return filterRequest;
 	}
 
-	/**
-	 * Get all request with same keywords in the database
-	 * 
-	 * @param collectRequest
-	 * @return
-	 */
-	private void candidateRequest(CollectRequest collectRequest) {
-		Set<Request> requestSameKeyWords = collectService.requestContainsKeyWords(collectRequest.getKeywordList());
-		Set<Request> rqKeyword = collectService
-				.requestsContainingOnlySomeOfTheKeywords(collectRequest.getKeywordList());
-		// filter request list:
-		// Remove all request that have
-
-		System.out.println();
-	}
-
 	private Set<Request> similarInCache(CollectRequest collectRequest) {
 		Set<Request> requestSameKeyWords = collectService.requestContainsKeyWords(collectRequest.getKeywordList());
 		Set<Request> machingRequests = mergeCriteria(requestSameKeyWords);
 
-		rangeDeltaToProcess.requestfromDateRange(machingRequests, collectRequest);
+		machingRequests = rangeDeltaToProcess.requestfromDateRange(machingRequests, collectRequest);
 		return machingRequests;
 	}
 

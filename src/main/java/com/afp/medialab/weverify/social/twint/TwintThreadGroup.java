@@ -123,7 +123,8 @@ public class TwintThreadGroup {
         for (CollectRequest collectRequest : collectRequestList) {
             result.add(tt.callTwint(collectHistory, collectRequest));
         }
-        getOnAllList(result);
+        CompletableFuture.allOf(result.toArray(new CompletableFuture<?>[result.size()])).join();
+        //getOnAllList(result);
     }
     
 
