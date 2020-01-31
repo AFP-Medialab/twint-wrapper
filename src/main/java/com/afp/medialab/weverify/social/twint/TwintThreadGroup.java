@@ -62,26 +62,26 @@ public class TwintThreadGroup {
     }
 
 
-    private ArrayList<CollectRequest> createListOfCollectRequest(CollectRequest request) {
+    private ArrayList<CollectRequest> createListOfCollectRequest(CollectRequest collectRequest) {
 
         ArrayList<CollectRequest> collectRequestList = new ArrayList<>();
 
         Long maximum_duration = days_limit * 86400000;
-        Long request_duration = request.getUntil().getTime() - request.getFrom().getTime();
+        Long request_duration = collectRequest.getUntil().getTime() - collectRequest.getFrom().getTime();
 
         if (request_duration < maximum_duration) {
-            collectRequestList.add(request);
+            collectRequestList.add(collectRequest);
             return collectRequestList;
         }
 
         Duration interval_size = Duration.ofSeconds(request_duration / subdivisions / 1000);
-        Date new_from_date = request.getFrom();
-        Date final_until = request.getUntil();
+        Date new_from_date = collectRequest.getFrom();
+        Date final_until = collectRequest.getUntil();
         Date new_until_date = addDuration(new_from_date, interval_size);
 
         /* while from < until */
         while (new_until_date.compareTo(final_until) < 0) {
-            CollectRequest new_collectRequest = new CollectRequest(request);
+            CollectRequest new_collectRequest = new CollectRequest(collectRequest);
             new_collectRequest.setFrom(new_from_date);
             new_collectRequest.setUntil(new_until_date);
             collectRequestList.add(new_collectRequest);
@@ -106,9 +106,9 @@ public class TwintThreadGroup {
     }
     
     @Async(value ="twintCallGroupTaskExecutor")
-    public void callTwintMultiThreaded(CollectHistory collectHistory, List<CollectRequest> request) {
+    public void callTwintMultiThreaded(CollectHistory collectHistory, List<CollectRequest> collectRequest) {
 
-        ArrayList<CollectRequest> collectRequestList = createListOfCollectRequest(request);
+        ArrayList<CollectRequest> collectRequestList = createListOfCollectRequest(collectRequest);
         callTwintThreads(collectRequestList, collectHistory);
         
     }

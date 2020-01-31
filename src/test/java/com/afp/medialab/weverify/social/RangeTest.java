@@ -36,10 +36,11 @@ public class RangeTest {
 	
 	
 	private String date7 = "2020-01-26 00:00:00";
+	private String date7bis = "2020-01-27 00:00:00";
 	private String date8 = "2020-01-29 00:00:00";
 	private String date9 = "2020-01-30 10:00:00";
 
-	private List<DateRange> rangesMulti, rangesSimple, rangeContinous;
+	private List<DateRange> rangesMulti, rangesSimple, rangeContinous, rangeContinous2;
 
 	@Autowired
 	private RangeDeltaToProcess rangeDeltaToProcess;
@@ -51,6 +52,8 @@ public class RangeTest {
 		rangesSimple = new LinkedList<DateRange>();
 		
 		rangeContinous = new LinkedList<DateRange>();
+		
+		rangeContinous2 = new LinkedList<DateRange>();
 
 		DateRange range1 = new DateRange(dateFormat.parse(date1), dateFormat.parse(date2));
 		DateRange range2 = new DateRange(dateFormat.parse(date3), dateFormat.parse(date4));
@@ -68,6 +71,15 @@ public class RangeTest {
 		
 		rangeContinous.add(range4);
 		rangeContinous.add(range5);
+		
+		DateRange range6 = new DateRange(dateFormat.parse(date7),  dateFormat.parse(date7bis));
+		DateRange range7 = new DateRange(dateFormat.parse(date7bis),  dateFormat.parse(date8));
+		DateRange range8 = new DateRange(dateFormat.parse(date8),  dateFormat.parse(date9));
+		
+		rangeContinous2.add(range6);
+		rangeContinous2.add(range7);
+		rangeContinous2.add(range8);
+		
 	}
 
 	@Test
@@ -214,6 +226,28 @@ public class RangeTest {
 		List<String> ranges = result(rangeContinous, dateRQ1, dateRQ2);
 		assertEquals(ranges.size(), 1);
 		assertEquals(ranges.get(0), "Range 1 : 2020-01-30 10:00:00-2020-01-30 15:10:00");
+		System.out.println("#################");
+	}
+	
+	@Test
+	@Order(13)
+	public void testcontinousSameRange() throws ParseException {
+		String dateRQ1 = "2020-01-26 00:00:00";
+		String dateRQ2 = "2020-01-30 10:00:00";
+		System.out.println("test 12 : " + dateRQ1 +"-"+ dateRQ2);
+		List<String> ranges = result(rangeContinous, dateRQ1, dateRQ2);
+		assertEquals(ranges.size(), 0);
+		System.out.println("#################");
+	}
+	
+	@Test
+	@Order(14)
+	public void testcontinousSameRange2() throws ParseException {
+		String dateRQ1 = "2020-01-26 00:00:00";
+		String dateRQ2 = "2020-01-30 10:00:00";
+		System.out.println("test 13 : " + dateRQ1 +"-"+ dateRQ2);
+		List<String> ranges = result(rangeContinous2, dateRQ1, dateRQ2);
+		assertEquals(ranges.size(), 0);
 		System.out.println("#################");
 	}
 	

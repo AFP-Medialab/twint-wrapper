@@ -196,7 +196,7 @@ public class CollectService {
 		if (keywords == null || keywords.size() == 0)
 			return null;
 		for (String keyword : keywords) {
-			List<Request> collected = requestInterface.my_findMatchingRequestByKeyword(keyword, keywords.size());
+			List<Request> collected = requestInterface.myfindMatchingRequestByKeyword(keyword, keywords.size());
 			matching_keyWords.addAll(collected);
 		}
 

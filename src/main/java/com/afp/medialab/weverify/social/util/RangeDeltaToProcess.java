@@ -30,6 +30,7 @@ public class RangeDeltaToProcess {
 		Date rqStartDate = requestRange.getStartDate();
 		Date rqEndDate = requestRange.getEndDate();
 		DateRange inter = null;
+		boolean sameRange = false;
 
 		for (DateRange dateRange : existingRange) {
 			Date startDate = dateRange.getStartDate();
@@ -47,8 +48,16 @@ public class RangeDeltaToProcess {
 				Date rgEndDate = startDate;
 				Date rgStartDate = null;
 				if (inter != null) {
-					rgStartDate = inter.getStartDate();
-					inter = null;
+					if (isInRange(startDate, endDate, inter.getStartDate())
+							&& isInRange(startDate, endDate, inter.getEndDate())) {
+						//inter = current dateRange
+						inter = null;
+						sameRange= true;
+						continue;
+					} else {
+						rgStartDate = inter.getStartDate();
+						inter = null;
+					}
 				} else {
 					rgStartDate = rqStartDate;
 				}
@@ -92,7 +101,7 @@ public class RangeDeltaToProcess {
 		if (inter != null) {
 			dateRangeToProcess.add(inter);
 		}
-		if (dateRangeToProcess.isEmpty()) {
+		if (dateRangeToProcess.isEmpty() && !sameRange) {
 			dateRangeToProcess.add(requestRange);
 		}
 		return dateRangeToProcess;

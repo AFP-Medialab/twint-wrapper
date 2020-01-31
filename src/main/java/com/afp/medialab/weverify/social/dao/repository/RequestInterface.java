@@ -23,7 +23,7 @@ public interface RequestInterface extends JpaRepository<Request, Integer> {
     //@Transactional
 	
     @Query("select r from Request r where :my_keyword member of r.keywordList and size(r.keywordList) <= :my_length and r.merge = false")
-    List<Request> my_findMatchingRequestByKeyword(@Param("my_keyword") String my_keyword, @Param("my_length") Integer my_length);
+    List<Request> myfindMatchingRequestByKeyword(@Param("my_keyword") String my_keyword, @Param("my_length") Integer my_length);
 
     //@Modifying(clearAutomatically = true)
     //@Transactional
