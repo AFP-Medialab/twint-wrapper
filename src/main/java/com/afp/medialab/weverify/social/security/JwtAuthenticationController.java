@@ -122,6 +122,7 @@ public class JwtAuthenticationController {
 		// Check if user already exists
 		Logger.debug("Looking for user {}", userEmail);
 		ClientResponse<UserResponse, Errors> getUserResponse = getFusionAuthClient().retrieveUserByEmail(userEmail);
+		Logger.debug("GetUser response: {}", formatClientResponse(getUserResponse));
 		if (getUserResponse.wasSuccessful()) {
 			// User already exists, silently returning
 			Logger.info("Duplicate user {} request, silently returning", userEmail);
@@ -146,6 +147,7 @@ public class JwtAuthenticationController {
 		Logger.debug("Creating user {} with data: {}", userEmail, user);
 		ClientResponse<UserResponse, Errors> createUserResponse = getFusionAuthClient().createUser(null,
 				new UserRequest(false, false, user));
+		Logger.debug("CreateUser response: {}", formatClientResponse(createUserResponse));
 
 		if (!createUserResponse.wasSuccessful()) {
 			// Stop and return error message
@@ -166,6 +168,7 @@ public class JwtAuthenticationController {
 		Logger.debug("Adding user {} to created users group with data: {}", userEmail, groupMember);
 		ClientResponse<MemberResponse, Errors> createGroupMembersResponse = getFusionAuthClient()
 				.createGroupMembers(memberRequest);
+		Logger.debug("CreateGroupMember response: {}", formatClientResponse(createGroupMembersResponse));
 
 		if (!createGroupMembersResponse.wasSuccessful()) {
 			Logger.warn("Service error adding user {} to created users group: {}", userEmail,
@@ -175,6 +178,7 @@ public class JwtAuthenticationController {
 		// To enforce security, deactivate user account
 		Logger.debug("Deactivating user {}", userEmail);
 		ClientResponse<Void, Errors> deactivateUserResponse = getFusionAuthClient().deactivateUser(userId);
+		Logger.debug("Deactivating user response: {}", formatClientResponse(deactivateUserResponse));
 
 		if (!deactivateUserResponse.wasSuccessful()) {
 			Logger.warn("Service error deactivating user {}: {}", userEmail,
@@ -203,6 +207,7 @@ public class JwtAuthenticationController {
 		// Check if user exists
 		Logger.debug("Looking for user {}", userEmail);
 		ClientResponse<UserResponse, Errors> getUserResponse = getFusionAuthClient().retrieveUserByEmail(userEmail);
+		Logger.debug("GetUser response: {}", formatClientResponse(getUserResponse));
 		if (!getUserResponse.wasSuccessful()) {
 			if (getUserResponse.status == 404) {
 				// User not found
@@ -242,6 +247,7 @@ public class JwtAuthenticationController {
 
 		ClientResponse<PasswordlessStartResponse, Errors> pwdStartResponse = getFusionAuthClient()
 				.startPasswordlessLogin(pwdStartRequest);
+		Logger.debug("PasswordLessLogin response: {}", formatClientResponse(pwdStartResponse));
 		if (!pwdStartResponse.wasSuccessful()) {
 			Logger.warn("Service error creating authentication access code for user {}: {}", userEmail,
 					formatClientResponse(pwdStartResponse));
@@ -254,6 +260,7 @@ public class JwtAuthenticationController {
 		PasswordlessSendRequest pwdSendRequest = new PasswordlessSendRequest();
 		pwdSendRequest.code = pwdStartResponse.successResponse.code;
 		ClientResponse<Void, Errors> pwdSendResponse = getFusionAuthClient().sendPasswordlessCode(pwdSendRequest);
+		Logger.debug("Send authentication response: {}", formatClientResponse(pwdSendResponse));
 		if (!pwdSendResponse.wasSuccessful()) {
 			Logger.warn("Service error sending authentication access code for user {}: {}", userEmail,
 					formatClientResponse(pwdSendResponse));
@@ -286,7 +293,9 @@ public class JwtAuthenticationController {
 		pwdLessLoginRequest.applicationId = this.twintApplicationId;
 		pwdLessLoginRequest.code = loginRequest.code;
 		pwdLessLoginRequest.ipAddress = HttpRequestUtils.getClientIpAddress();
+		Logger.debug("Found IP adress: {}", pwdLessLoginRequest.ipAddress);
 		Map<String, String> userAgentInfo = HttpRequestUtils.getUserAgentInformation();
+		Logger.debug("Found User Agent info: {}", userAgentInfo);
 		if (!userAgentInfo.isEmpty()) {
 			pwdLessLoginRequest.metaData = new RefreshToken.MetaData();
 			pwdLessLoginRequest.metaData.device = new DeviceInfo();
