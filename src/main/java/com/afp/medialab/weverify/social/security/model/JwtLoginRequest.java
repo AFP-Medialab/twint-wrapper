@@ -9,6 +9,8 @@ import javax.validation.constraints.NotBlank;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
+import io.swagger.annotations.ApiModelProperty;
+
 /**
  * @author <a href="mailto:eric@rickspirit.io">Eric SCHAEFFER</a>
  */
@@ -17,6 +19,8 @@ public class JwtLoginRequest implements Serializable {
 	private static final long serialVersionUID = 7160240555931206871L;
 
 	@NotBlank(message = "Code is required")
+	@ApiModelProperty(value = "User's access code received by email.", required = true,
+			example = "ANv30vmophTjvX3vEI4f2Jn5v41-KMLxO1TU2Z79_5c")
 	public String code;
 
 	/**

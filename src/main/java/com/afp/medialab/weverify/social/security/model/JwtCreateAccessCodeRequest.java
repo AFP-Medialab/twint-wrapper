@@ -10,6 +10,8 @@ import javax.validation.constraints.NotBlank;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
+import io.swagger.annotations.ApiModelProperty;
+
 /**
  * @author <a href="mailto:eric@rickspirit.io">Eric SCHAEFFER</a>
  */
@@ -19,6 +21,8 @@ public class JwtCreateAccessCodeRequest implements Serializable {
 
 	@NotBlank(message = "Email address is required")
 	@Email(message = "Email address must be valid")
+	@ApiModelProperty(value = "User's email addresse and login identifier.", required = true,
+			example = "eric.schaeffer@rickspirit.io")
 	public String email;
 
 	/**

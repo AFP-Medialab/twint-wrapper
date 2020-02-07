@@ -9,6 +9,8 @@ import javax.validation.constraints.NotBlank;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
+import io.swagger.annotations.ApiModelProperty;
+
 /**
  * @author <a href="mailto:eric@rickspirit.io">Eric SCHAEFFER</a>
  */
@@ -17,6 +19,8 @@ public class JwtRefreshTokenRequest implements Serializable {
 	private static final long serialVersionUID = -124946698266454699L;
 
 	@NotBlank(message = "Refresh token is required")
+	@ApiModelProperty(value = "User's JWT refresh token.", required = true,
+			example = "MWHNv6xVLLtDbBIz5l7HtOH7ree3v0DkRTlQOo0V0mAEdY1NtFNwrw")
 	public String refreshToken;
 
 	/**

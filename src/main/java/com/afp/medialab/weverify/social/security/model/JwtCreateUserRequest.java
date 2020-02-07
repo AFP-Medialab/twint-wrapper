@@ -13,6 +13,8 @@ import javax.validation.constraints.NotBlank;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
+import io.swagger.annotations.ApiModelProperty;
+
 /**
  * Register user payload object.
  * 
@@ -24,15 +26,23 @@ public class JwtCreateUserRequest implements Serializable {
 
 	@NotBlank(message = "Email address is required")
 	@Email(message = "Email address must be valid")
+	@ApiModelProperty(value = "User's email addresse and login identifier.", required = true,
+			example = "eric.schaeffer@rickspirit.io")
 	public String email;
+	@ApiModelProperty(value = "User's first name.", required = true, example = "Eric")
 	@NotBlank(message = "Firstname is required")
 	public String firstName;
+	@ApiModelProperty(value = "User's last name.", required = true, example = "SCHAEFFER")
 	@NotBlank(message = "Lastname is required")
 	public String lastName;
+	@ApiModelProperty(value = "User's company name.", required = true, example = "RICK SPIRIT")
 	public String company;
 	@NotBlank(message = "Position is required")
+	@ApiModelProperty(value = "User's position within company.", required = true, example = "FAKE NEWS CHECKER")
 	public String position;
+	@ApiModelProperty(value = "User's preferred languages.", required = false, example = "[ \"fr\", \"en\" ]")
 	public List<Locale> preferredLanguages;
+	@ApiModelProperty(value = "User's timezone ID.", required = false, example = "Europe/Paris")
 	public ZoneId timezone;
 
 	/**
