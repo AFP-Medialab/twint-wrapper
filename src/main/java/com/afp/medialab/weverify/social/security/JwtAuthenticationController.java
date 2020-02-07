@@ -58,6 +58,7 @@ import io.fusionauth.domain.jwt.DeviceInfo;
 import io.fusionauth.domain.jwt.RefreshToken;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 
@@ -98,21 +99,22 @@ public class JwtAuthenticationController {
 	}
 
 	/**
-	 * Register a new user API.
+	 * Register a new user.
 	 * 
 	 * @param createUserRequest
 	 */
 	@RequestMapping(path = "/user", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
-	@ResponseStatus(HttpStatus.OK)
-	@ApiOperation(value = "Create a new user registration request on the system.", nickname = "registerUser",
+	@ResponseStatus(HttpStatus.NO_CONTENT)
+	@ApiOperation(value = "Create a new user registration request on the system.",
 			notes = "Create a user registration request on the system, subject to moderation."
 					+ " Once validated, user will be notified by email and will be able to request an authentication code."
 					+ "\n" + "The operation will not return any error in case of invalid data or request.")
 	@ApiResponses(
-			value = { @ApiResponse(code = 200, message = "User registration request has been received correctly."),
+			value = { @ApiResponse(code = 204, message = "User registration request has been received correctly."),
 					@ApiResponse(code = 400, message = "Request is incomplete or malformed."),
 					@ApiResponse(code = 500, message = "An internal error occured during request processing.") })
-	public void createUser(@Valid @RequestBody JwtCreateUserRequest createUserRequest) {
+	public void createUser(@Valid @RequestBody @ApiParam(value = "User registration information.",
+			required = true) JwtCreateUserRequest createUserRequest) {
 		Logger.debug("Create User with request {}", createUserRequest);
 
 		String userEmail = createUserRequest.email;
@@ -188,9 +190,9 @@ public class JwtAuthenticationController {
 	 * @param createAccessCodeRequest
 	 */
 	@RequestMapping(path = "/accesscode", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
-	@ResponseStatus(HttpStatus.OK)
-	@ApiOperation(value = "Request an access code for user authentication (sent by email).")
-	@ApiResponses(value = { @ApiResponse(code = 200, message = "Access code request has been received correctly."),
+	@ResponseStatus(HttpStatus.NO_CONTENT)
+	@ApiOperation(value = "Request an access code for user authentication, sent by email.")
+	@ApiResponses(value = { @ApiResponse(code = 204, message = "Access code request has been received correctly."),
 			@ApiResponse(code = 400, message = "Request is incomplete or malformed."),
 			@ApiResponse(code = 500, message = "An internal error occured during request processing.") })
 	public void createAccessCode(@Valid @RequestBody JwtCreateAccessCodeRequest createAccessCodeRequest) {
@@ -339,31 +341,31 @@ public class JwtAuthenticationController {
 		Logger.debug("Login user with information: {}", pwdLessLoginRequest);
 		ClientResponse<LoginResponse, Errors> pwdLessLoginResponse = getFusionAuthClient()
 				.passwordlessLogin(pwdLessLoginRequest);
+		Logger.debug("Login response: {}", formatClientResponse(pwdLessLoginResponse));
 
 		if (!pwdLessLoginResponse.wasSuccessful()) {
 			if (pwdLessLoginResponse.status >= 500) {
 				Logger.warn("FusionAuth error: {}", formatClientResponse(pwdLessLoginResponse));
 				throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
 						"Service was unable to process your request");
-				// throw new ServiceInternalException("Service was unable to process your
-				// request", pwdLessLoginResponse);
 			}
 			if (pwdLessLoginResponse.status == 400) {
 				Logger.warn("Error while calling FusionAuth service: {}", formatClientResponse(pwdLessLoginResponse));
 				throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
 						"Service was unable to process your request");
-				// throw new ServiceInternalException("Service was unable to process your
-				// request", pwdLessLoginResponse);
 			}
 			if (pwdLessLoginResponse.status == 409) {
 				// User blocked
+				Logger.debug("Login user is blocked: {}", formatClientResponse(pwdLessLoginResponse));
 				throw new ResponseStatusException(HttpStatus.CONFLICT, "User account is blocked");
 			}
 			if (pwdLessLoginResponse.status == 410) {
 				// User expired
+				Logger.debug("Login user is expired: {}", formatClientResponse(pwdLessLoginResponse));
 				throw new ResponseStatusException(HttpStatus.GONE, "User account is expired");
 			}
 			// Return 403
+			Logger.debug("Login user is refused: {}", formatClientResponse(pwdLessLoginResponse));
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Invalid credentials");
 		}
 
@@ -371,24 +373,29 @@ public class JwtAuthenticationController {
 		LoginResponse respContent = pwdLessLoginResponse.successResponse;
 		if ((respContent.token == null) || (respContent.user == null)) {
 			// User state prevent login
+			Logger.debug("Login response without token or user: {}", formatClientResponse(pwdLessLoginResponse));
 			throw new ResponseStatusException(HttpStatus.CONFLICT, "User account is blocked");
 		}
 		if (!respContent.user.active) {
 			// User inactive
+			Logger.debug("Login user is inactive: {}", formatClientResponse(pwdLessLoginResponse));
 			throw new ResponseStatusException(HttpStatus.CONFLICT, "User account is blocked");
 		}
 		if (respContent.user.getRegistrationForApplication(this.twintApplicationId) == null) {
 			// User not registered for application
+			Logger.debug("Login user has no registration for application {}: {}", this.twintApplicationId,
+					formatClientResponse(pwdLessLoginResponse));
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Invalid credentials");
 		}
 
 		// Convert response data
-		JwtLoginResponse response = new JwtLoginResponse();
-		response.token = respContent.token;
-		response.refreshToken = respContent.refreshToken;
-		response.user = FusionAuthDataConverter.toJwtUser(respContent.user, this.twintApplicationId);
+		JwtLoginResponse loginResponse = new JwtLoginResponse();
+		loginResponse.token = respContent.token;
+		loginResponse.refreshToken = respContent.refreshToken;
+		loginResponse.user = FusionAuthDataConverter.toJwtUser(respContent.user, this.twintApplicationId);
 
-		return response;
+		Logger.debug("Returning response: {}", loginResponse);
+		return loginResponse;
 	}
 
 	/**
@@ -399,7 +406,7 @@ public class JwtAuthenticationController {
 			produces = MediaType.APPLICATION_JSON_VALUE)
 	@ResponseStatus(HttpStatus.OK)
 	@ApiOperation(value = "Refresh a user access token.")
-	@ApiResponses(value = { @ApiResponse(code = 200, message = "Refresh has been successful."),
+	@ApiResponses(value = { @ApiResponse(code = 200, message = "Token has been successfuly refreshed."),
 			@ApiResponse(code = 400, message = "Request is incomplete or malformed."),
 			@ApiResponse(code = 401,
 					message = "Invalid or expired refresh token, refresh has been refused, user is logged out."),
@@ -410,20 +417,25 @@ public class JwtAuthenticationController {
 		RefreshRequest refreshRequest = new RefreshRequest();
 		refreshRequest.refreshToken = refreshTokenRequest.refreshToken;
 
+		Logger.debug("Refreshing token with request: {}", refreshRequest);
 		ClientResponse<RefreshResponse, Errors> refreshClientResponse = getFusionAuthClient()
 				.exchangeRefreshTokenForJWT(refreshRequest);
+		Logger.debug("Refresh response: {}", formatClientResponse(refreshClientResponse));
 
 		if (!refreshClientResponse.wasSuccessful()) {
 			if (refreshClientResponse.status >= 500) {
+				Logger.warn("FusionAuth call error: {}", formatClientResponse(refreshClientResponse));
 				throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
 						"Service was unable to process your request");
 			}
+			Logger.debug("Refresh refused: {}", formatClientResponse(refreshClientResponse));
 			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid refresh token");
 		}
 
 		JwtRefreshTokenResponse refreshTokenResponse = new JwtRefreshTokenResponse();
 		refreshTokenResponse.token = refreshClientResponse.successResponse.token;
 
+		Logger.debug("Returning response: {}", refreshTokenResponse);
 		return refreshTokenResponse;
 	}
 
