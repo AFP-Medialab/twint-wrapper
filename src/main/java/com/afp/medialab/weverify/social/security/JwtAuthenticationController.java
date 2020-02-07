@@ -34,6 +34,8 @@ import com.afp.medialab.weverify.social.security.model.JwtCreateAccessCodeReques
 import com.afp.medialab.weverify.social.security.model.JwtCreateUserRequest;
 import com.afp.medialab.weverify.social.security.model.JwtLoginRequest;
 import com.afp.medialab.weverify.social.security.model.JwtLoginResponse;
+import com.afp.medialab.weverify.social.security.model.JwtRefreshTokenRequest;
+import com.afp.medialab.weverify.social.security.model.JwtRefreshTokenResponse;
 import com.inversoft.error.Errors;
 import com.inversoft.rest.ClientResponse;
 
@@ -46,6 +48,8 @@ import io.fusionauth.domain.api.MemberRequest;
 import io.fusionauth.domain.api.MemberResponse;
 import io.fusionauth.domain.api.UserRequest;
 import io.fusionauth.domain.api.UserResponse;
+import io.fusionauth.domain.api.jwt.RefreshRequest;
+import io.fusionauth.domain.api.jwt.RefreshResponse;
 import io.fusionauth.domain.api.passwordless.PasswordlessLoginRequest;
 import io.fusionauth.domain.api.passwordless.PasswordlessSendRequest;
 import io.fusionauth.domain.api.passwordless.PasswordlessStartRequest;
@@ -387,13 +391,40 @@ public class JwtAuthenticationController {
 		return response;
 	}
 
-	// Login ?
-
+	/**
+	 * @param refreshTokenRequest
+	 * @return
+	 */
 	@RequestMapping(path = "/refreshtoken", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE,
 			produces = MediaType.APPLICATION_JSON_VALUE)
-	public Object refreshToken(Object refreshTokenRequest) throws Exception {
-		// TODO
-		return null;
+	@ResponseStatus(HttpStatus.OK)
+	@ApiOperation(value = "Refresh a user access token.")
+	@ApiResponses(value = { @ApiResponse(code = 200, message = "Refresh has been successful."),
+			@ApiResponse(code = 400, message = "Request is incomplete or malformed."),
+			@ApiResponse(code = 401,
+					message = "Invalid or expired refresh token, refresh has been refused, user is logged out."),
+			@ApiResponse(code = 500, message = "An internal error occured during request processing.") })
+	public JwtRefreshTokenResponse refreshToken(@Valid @RequestBody JwtRefreshTokenRequest refreshTokenRequest) {
+		Logger.debug("Refresh token with request {}", refreshTokenRequest);
+
+		RefreshRequest refreshRequest = new RefreshRequest();
+		refreshRequest.refreshToken = refreshTokenRequest.refreshToken;
+
+		ClientResponse<RefreshResponse, Errors> refreshClientResponse = getFusionAuthClient()
+				.exchangeRefreshTokenForJWT(refreshRequest);
+
+		if (!refreshClientResponse.wasSuccessful()) {
+			if (refreshClientResponse.status >= 500) {
+				throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+						"Service was unable to process your request");
+			}
+			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid refresh token");
+		}
+
+		JwtRefreshTokenResponse refreshTokenResponse = new JwtRefreshTokenResponse();
+		refreshTokenResponse.token = refreshClientResponse.successResponse.token;
+
+		return refreshTokenResponse;
 	}
 
 	@RequestMapping(path = "/logout", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
