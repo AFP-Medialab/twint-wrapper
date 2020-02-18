@@ -9,7 +9,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 
 import org.slf4j.Logger;
@@ -20,6 +22,7 @@ import org.springframework.http.MediaType;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -34,7 +37,6 @@ import com.afp.medialab.weverify.social.security.model.JwtCreateAccessCodeReques
 import com.afp.medialab.weverify.social.security.model.JwtCreateUserRequest;
 import com.afp.medialab.weverify.social.security.model.JwtLoginRequest;
 import com.afp.medialab.weverify.social.security.model.JwtLoginResponse;
-import com.afp.medialab.weverify.social.security.model.JwtRefreshTokenRequest;
 import com.afp.medialab.weverify.social.security.model.JwtRefreshTokenResponse;
 import com.inversoft.error.Errors;
 import com.inversoft.rest.ClientResponse;
@@ -274,6 +276,7 @@ public class JwtAuthenticationController {
 	/**
 	 * @param loginRequest
 	 * @param httpRequest
+	 * @param httpResponse
 	 * @return
 	 */
 	@RequestMapping(path = "/login", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE,
@@ -286,7 +289,8 @@ public class JwtAuthenticationController {
 			@ApiResponse(code = 409, message = "User account state is preventing login."),
 			@ApiResponse(code = 410, message = "User account is expired."),
 			@ApiResponse(code = 500, message = "An internal error occured during request processing.") })
-	public JwtLoginResponse login(@Valid @RequestBody JwtLoginRequest loginRequest, HttpServletRequest httpRequest) {
+	public JwtLoginResponse login(@Valid @RequestBody JwtLoginRequest loginRequest, HttpServletRequest httpRequest,
+			HttpServletResponse httpResponse) {
 		Logger.debug("Login with request {}", loginRequest);
 
 		PasswordlessLoginRequest pwdLessLoginRequest = new PasswordlessLoginRequest();
@@ -378,6 +382,8 @@ public class JwtAuthenticationController {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Invalid credentials");
 		}
 
+		// TODO: check user email address??
+
 		// TODO: logout user before returning?
 		LoginResponse respContent = pwdLessLoginResponse.successResponse;
 		if ((respContent.token == null) || (respContent.user == null)) {
@@ -400,19 +406,22 @@ public class JwtAuthenticationController {
 		// Convert response data
 		JwtLoginResponse loginResponse = new JwtLoginResponse();
 		loginResponse.token = respContent.token;
-		loginResponse.refreshToken = respContent.refreshToken;
 		loginResponse.user = FusionAuthDataConverter.toJwtUser(respContent.user, this.twintApplicationId);
+
+		// Add refresh token as a secure http only cookie
+		httpResponse.addCookie(createRefreshTokenCookie(respContent.refreshToken));
 
 		Logger.debug("Returning response: {}", loginResponse);
 		return loginResponse;
 	}
 
 	/**
-	 * @param refreshTokenRequest
+	 * Refresh a JWT access token.
+	 * 
+	 * @param refreshToken
 	 * @return
 	 */
-	@RequestMapping(path = "/refreshtoken", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE,
-			produces = MediaType.APPLICATION_JSON_VALUE)
+	@RequestMapping(path = "/refreshtoken", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
 	@ResponseStatus(HttpStatus.OK)
 	@ApiOperation(value = "Refresh a user access token.")
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "Token has been successfuly refreshed."),
@@ -420,11 +429,11 @@ public class JwtAuthenticationController {
 			@ApiResponse(code = 401,
 					message = "Invalid or expired refresh token, refresh has been refused, user is logged out."),
 			@ApiResponse(code = 500, message = "An internal error occured during request processing.") })
-	public JwtRefreshTokenResponse refreshToken(@Valid @RequestBody JwtRefreshTokenRequest refreshTokenRequest) {
-		Logger.debug("Refresh token with request {}", refreshTokenRequest);
+	public JwtRefreshTokenResponse refreshToken(@CookieValue(name = "refresh_token") String refreshToken) {
+		Logger.debug("Refresh token for {}", refreshToken);
 
 		RefreshRequest refreshRequest = new RefreshRequest();
-		refreshRequest.refreshToken = refreshTokenRequest.refreshToken;
+		refreshRequest.refreshToken = refreshToken;
 
 		Logger.debug("Refreshing token with request: {}", refreshRequest);
 		ClientResponse<RefreshResponse, Errors> refreshClientResponse = getFusionAuthClient()
@@ -521,6 +530,23 @@ public class JwtAuthenticationController {
 		if (this.fusionAuthClient == null) {
 			this.fusionAuthClient = new FusionAuthClient(this.fusionAuthApiKey, this.fusionAuthUrl);
 		}
+	}
+
+	/**
+	 * Create a secure http only cookie for the JWT refresh token.
+	 * 
+	 * @param refreshToken
+	 * @return
+	 */
+	private Cookie createRefreshTokenCookie(String refreshToken) {
+		Cookie cookie = new Cookie("refresh_token", refreshToken);
+		cookie.setHttpOnly(true);
+		// cookie.setSecure(true);
+		// Only to refresh token endpoint
+		cookie.setPath("/api/v1/auth/refreshtoken");
+		// Max age of 2 months
+		cookie.setMaxAge(60 * 24 * 60 * 60);
+		return cookie;
 	}
 
 	/**
