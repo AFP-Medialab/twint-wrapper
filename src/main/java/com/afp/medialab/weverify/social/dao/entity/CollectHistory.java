@@ -2,19 +2,18 @@ package com.afp.medialab.weverify.social.dao.entity;
 
 import java.io.Serializable;
 import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.MapsId;
-import javax.persistence.OneToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
 import com.afp.medialab.weverify.social.model.Status;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @Entity
 @Table(name = "collectHistory")
@@ -25,16 +24,14 @@ public class CollectHistory implements Serializable {
      */
     private static final long serialVersionUID = 1L;
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id", nullable = false, updatable = false)
+    @GeneratedValue
+    @Column(name = "id", nullable = false)
     private Integer id;
     @Column(name = "session")
     private String session;
 
-    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
-    @OneToOne(fetch = FetchType.LAZY)
-    @MapsId
-    private Request request;
+    @OneToMany(mappedBy = "collectHistory", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Request> requests = new LinkedList<Request>();
 
     @Column(name = "processStart", nullable = true)
     private Date processStart;
@@ -45,21 +42,21 @@ public class CollectHistory implements Serializable {
     @Column(name = "message")
     private String message;
     @Column(name = "count")
-    private Integer count;
+    private Integer count = 0;
     @Column(name = "finished_threads")
-    private Integer finished_threads;
+    private Integer finished_threads = 0;
     @Column(name = "total_threads")
-    private Integer total_threads;
+    private Integer total_threads = 0;
     @Column(name = "successful_threads")
-    private Integer successful_threads;
+    private Integer successful_threads = 0;
 
 
     public CollectHistory() {
     }
 
-    public CollectHistory(String session, Request request, Date processStart, Date processEnd, Status status, String message, Integer count, Integer finished_threads, Integer total_threads, Integer successful_threads) {
+    public CollectHistory(String session, List<Request> requests, Date processStart, Date processEnd, Status status, String message, Integer count, Integer finished_threads, Integer total_threads, Integer successful_threads) {
         this.session = session;
-        this.request = request;
+        this.requests = requests;
         this.processStart = processStart;
         this.processEnd = processEnd;
         this.status = status.toString();
@@ -90,15 +87,21 @@ public class CollectHistory implements Serializable {
         this.session = session;
     }
 
-    public Request getRequest() {
-        return request;
+    public void addRequest(Request request) {
+    	requests.add(request);
+    	request.setCollectHistory(this);
     }
-
-    public void setRequest(Request request) {
-        this.request = request;
+    
+    public void removeRequest(Request request) {
+    	requests.remove(request);
+    	request.setCollectHistory(null);
     }
+    
+    public List<Request> getRequests() {
+		return requests;
+	}
 
-    public Date getProcessStart() {
+	public Date getProcessStart() {
         return processStart;
     }
 

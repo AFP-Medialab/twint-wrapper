@@ -1,4 +1,4 @@
-FROM twint:2.1.2 as base
+FROM twint:2.1.12 as base
 
 # install openjre:8
 RUN set -eux; \

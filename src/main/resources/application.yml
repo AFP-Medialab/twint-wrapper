@@ -27,6 +27,7 @@ application:
 
 spring:
   jackson:
+    time-zone: Europe/Paris
     deserialization:
       FAIL_ON_UNKNOWN_PROPERTIES: true
   security:
@@ -42,25 +43,27 @@ spring:
     password: ${MYSQL_PASSWD:dev1}
     #driver-class-name: com.mysql.jdbc.Driver
   jpa:
-    hibernate.ddl-auto : create-drop
+    hibernate.ddl-auto : none
     hibernate.use-new-id-generator-mappings : false
+    hibernate.naming.physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+    hibernate.naming.implicit-strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl
     generate-ddl: true
-    show-sql: false
+    show-sql: true
 
 command:
-  twint: docker run --rm --network dev_esnet -i medialab.registry.afp.com/twint:2.1.2
+  twint: docker run --rm --network dev_esnet -i medialab.registry.afp.com/twint:2.1.12
  
 ---
 spring:
   profiles: dev
   jpa:
-    hibernate.ddl-auto: create-drop
- 
+    hibernate.ddl-auto: update
+
 ---
 spring:
   profiles: prod 
   jpa:
-    hibernate.ddl-auto: update
+    hibernate.ddl-auto: none
     generate-ddl: false
     show-sql: false
       
