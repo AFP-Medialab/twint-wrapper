@@ -48,7 +48,7 @@ public class TwintThread {
 
 	private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
-	//private Object lock = new Object();
+	// private Object lock = new Object();
 
 	private boolean isDockerCommand(String twintCall) {
 		if (twintCall.startsWith("docker"))
@@ -91,14 +91,17 @@ public class TwintThread {
 		int successful_threads = collectHistory.getSuccessful_threads();
 		int total_threads = collectHistory.getTotal_threads();
 		if (finished_threads == total_threads) {
-			try {
-				collectHistory.setStatus(Status.CountingWords);
-				collectService.save_collectHistory(collectHistory);
-				esOperation.indexWordsObj(esOperation.getModels(collectHistory.getSession(),
-						dateFormat.format(((CollectRequest) request).getFrom()),
-						dateFormat.format(((CollectRequest) request).getUntil())));
-			} catch (InterruptedException | IOException e) {
-				e.printStackTrace();
+			if (collectHistory.getCount() > 0) {
+				try {
+
+					collectHistory.setStatus(Status.CountingWords);
+					collectService.save_collectHistory(collectHistory);
+					esOperation.enrichWithTweetie(collectHistory.getSession(),
+							dateFormat.format(((CollectRequest) request).getFrom()),
+							dateFormat.format(((CollectRequest) request).getUntil()));
+				} catch (IOException e) {
+					Logger.error("error with tweeetie", e);
+				}
 			}
 
 			collectHistory.setStatus(Status.Done);

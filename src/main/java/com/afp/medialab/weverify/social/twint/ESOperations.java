@@ -6,6 +6,7 @@ import static org.elasticsearch.index.query.QueryBuilders.rangeQuery;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -23,6 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.ScrolledPage;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.SearchQuery;
 import org.springframework.stereotype.Component;
@@ -35,111 +37,100 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @Transactional
 public class ESOperations {
 
-    @Autowired
-    private ElasticsearchOperations esOperation;
+	@Autowired
+	private ElasticsearchOperations esOperation;
 
-    @Autowired
-    private ESConfiguration esConfiguration;
+	@Autowired
+	private ESConfiguration esConfiguration;
 
-    @Autowired
-    private TwintModelAdapter twintModelAdapter;
+	@Autowired
+	private TwintModelAdapter twintModelAdapter;
 
-    private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+	private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
-    private static Logger Logger = LoggerFactory.getLogger(TwintThread.class);
+	private static Logger Logger = LoggerFactory.getLogger(TwintThread.class);
 
-    /**
-     * GEt tweets indexed in elasticsearch
-     * TODO : Add Paging in the request when tweet are up to 10000. 
-     * @param essid
-     * @param start
-     * @param end
-     * @return
-     * @throws InterruptedException
-     */
-    public List<TwintModel> getModels(String essid, String start, String end) throws InterruptedException {
+	public void enrichWithTweetie(String essid, String start, String end) throws IOException {
+		QueryBuilder builder = boolQuery().must(matchQuery("essid", essid));
+		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(builder).withPageable(PageRequest.of(0, 10))
+				.build();
+		ScrolledPage<TwintModel> scroll = esOperation.startScroll(1000, searchQuery, TwintModel.class);
+		String scrollId = scroll.getScrollId();
+		List<TwintModel> model = new ArrayList<TwintModel>();
+		while (scroll.hasContent()) {
+			model.addAll(scroll.getContent());
+			scrollId = scroll.getScrollId();
+			scroll = esOperation.continueScroll(scrollId, 1000, TwintModel.class);
+		}
+		indexWordsObj(model);
+	}
 
-       // esOperation.refresh(TwintModel.class);
-        QueryBuilder builder = boolQuery().must(matchQuery("essid", essid));
-             //   .filter(rangeQuery("date").format("yyyy-MM-dd HH:mm:ss||yyyy-MM-dd||epoch_millis")
-               //         .gte(start).lte(end));
+	/**
+	 * Get the latest tweet extracted for this session. (Oldest tweet is always
+	 * searched)
+	 *
+	 * @param request
+	 * @param session
+	 * @return
+	 */
+	public Date findWhereIndexingStopped(CollectRequest request, String session) {
 
-        SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(builder).build().setPageable(PageRequest.of(0, 10000));;
-              //  .addSort(Sort.by("date").ascending());
+		String sinceStr = dateFormat.format(request.getFrom());
+		String untilStr = dateFormat.format(request.getUntil());
 
-        final List<TwintModel> model = esOperation.queryForList(searchQuery, TwintModel.class);
-        System.out.println(model.size());
-        return model;
-    }
+		QueryBuilder builder = boolQuery().must(matchQuery("essid", session)).filter(
+				rangeQuery("date").format("yyyy-MM-dd HH:mm:ss||yyyy-MM-dd||epoch_millis").gte(sinceStr).lte(untilStr));
+		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(builder).build()
+				.addSort(Sort.by("date").ascending()).setPageable(PageRequest.of(0, 1));
+		final List<TwintModel> hits = esOperation.queryForList(searchQuery, TwintModel.class);
 
-    /**
-     * Get the latest tweet extracted for this session. (Oldest tweet is always
-     * searched)
-     *
-     * @param request
-     * @param session
-     * @return
-     */
-    public Date findWhereIndexingStopped(CollectRequest request, String session) {
+		if (hits.size() < 1) {
+			Logger.error("No tweets found");
+			return null;
+		}
+		TwintModel twintModel = hits.get(0);
+		return twintModel.getDate();
 
-        String sinceStr = dateFormat.format(request.getFrom());
-        String untilStr = dateFormat.format(request.getUntil());
+	}
 
-        QueryBuilder builder = boolQuery().must(matchQuery("essid", session)).filter(
-                rangeQuery("date").format("yyyy-MM-dd HH:mm:ss||yyyy-MM-dd||epoch_millis").gte(sinceStr).lte(untilStr));
-        SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(builder).build()
-                .addSort(Sort.by("date").ascending()).setPageable(PageRequest.of(0, 1));
-        final List<TwintModel> hits = esOperation.queryForList(searchQuery, TwintModel.class);
+	public void indexWordsObj(List<TwintModel> tms) throws IOException {
+		BulkRequest requests = new BulkRequest();
 
+		int i = 0;
+		boolean allNull = true;
+		for (TwintModel tm : tms) {
 
-        if (hits.size() < 1) {
-            Logger.error("No tweets found");
-            return null;
-        }
-        TwintModel twintModel = hits.get(0);
-        return twintModel.getDate();
+			if (tm.getWit() == null) {
+				try {
+					allNull = false;
+					Logger.info("Builtin wit : " + i++ + "/" + tms.size());
+					twintModelAdapter.buildWit(tm);
 
-    }
+					ObjectMapper mapper = new ObjectMapper();
+					String b = "{\"wit\": " + mapper.writeValueAsString(tm.getWit()) + "}";
 
-    public void indexWordsObj(List<TwintModel> tms) throws IOException {
-        BulkRequest requests = new BulkRequest();
+					IndexRequest indexRequest = new IndexRequest("twinttweets");
+					indexRequest.id(tm.getId());
+					indexRequest.type("_doc");
 
-        int i = 0;
-        boolean allNull = true;
-        for (TwintModel tm : tms) {
+					UpdateRequest updateRequest = new UpdateRequest();
+					updateRequest.index("twinttweets");
+					updateRequest.type("_doc");
+					updateRequest.id(tm.getId());
 
-            if (tm.getWit() == null) {
-                try {
-                    allNull = false;
-                    Logger.info("Builtin wit : " + i++ + "/" + tms.size());
-                    twintModelAdapter.buildWit(tm);
+					updateRequest.doc(b, XContentType.JSON);
 
+					requests.add(updateRequest);
 
-                    ObjectMapper mapper = new ObjectMapper();
-                    String b = "{\"wit\": " + mapper.writeValueAsString(tm.getWit()) + "}";
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		}
 
-                    IndexRequest indexRequest = new IndexRequest("twinttweets");
-                    indexRequest.id(tm.getId());
-                    indexRequest.type("_doc");
+		if (!allNull)
+			esConfiguration.elasticsearchClient().bulk(requests, RequestOptions.DEFAULT);
 
-                    UpdateRequest updateRequest = new UpdateRequest();
-                    updateRequest.index("twinttweets");
-                    updateRequest.type("_doc");
-                    updateRequest.id(tm.getId());
-
-                    updateRequest.doc(b, XContentType.JSON);
-
-                    requests.add(updateRequest);
-
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-
-        if (!allNull)
-            esConfiguration.elasticsearchClient().bulk(requests, RequestOptions.DEFAULT);
-
-    }
+	}
 
 }

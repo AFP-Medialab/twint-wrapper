@@ -76,7 +76,7 @@ public class RequestCacheManager {
 				if ((firtLang != null && !collectRequest.getLang().equals(""))
 						&& (firtLang != null && !firtLang.equals(collectRequest.getLang()))) {
 					Logger.info("nothing to merge");
-				}else {
+				} else {
 					request.setMerge(true);
 					collectService.save_request(request);
 				}
@@ -87,7 +87,7 @@ public class RequestCacheManager {
 
 	private Set<Request> exactRequests(Set<Request> request, CollectRequest collectRequest) {
 		Set<Request> filterRequest = new HashSet<Request>();
-		//Set<Request> filterRequest1 = new HashSet<Request>();
+		// Set<Request> filterRequest1 = new HashSet<Request>();
 		if (request.isEmpty())
 			return filterRequest;
 
@@ -124,12 +124,6 @@ public class RequestCacheManager {
 				.filter(e -> e.getBannedWords().stream().allMatch(banneWords::contains))
 				.filter(e -> e.getVerified().equals(collectRequest.isVerified())).collect(Collectors.toSet()));
 
-//		filterRequest.addAll(request.stream().filter(e -> e.getKeywordList().size() <= keywords.size())
-//				.filter(e -> e.getUserList().size() <= userList.size())
-//				.filter(e -> e.getBannedWords().size() <= banneWords.size())
-//				.filter(e -> e.getVerified().equals(collectRequest.isVerified())).collect(Collectors.toSet()));
-		
-		
 		Set<Request> filterRequest2 = new HashSet<Request>();
 		filterRequest2.addAll(filterRequest);
 		for (Request filterReq : filterRequest2) {
