@@ -61,7 +61,8 @@ public class TwitterGatewayServiceController {
     private String homeMsg;
 
 
-    @PreAuthorize("hasAuthority('user')")
+//    @PreAuthorize("hasAuthority('user')")
+    @PreAuthorize("isAuthenticated()")
     @RequestMapping(path = "/", method = RequestMethod.GET)
     public @ResponseBody
     String home() {
@@ -69,14 +70,17 @@ public class TwitterGatewayServiceController {
     }
 
     
-    @PreAuthorize("hasAuthority('user')")
+//    @PreAuthorize("hasAuthority('user')")
+    @PreAuthorize("isAuthenticated()")
     @RequestMapping(path = "/me", method = RequestMethod.GET)
     public ResponseEntity<Principal> get(final Principal principal) {
     	return ResponseEntity.ok(principal);
     }
     
     @ApiOperation(value = "Trigger a Twitter Scraping")
-    @PreAuthorize("hasAuthority('user')")
+//    @PreAuthorize("hasAuthority('user')")
+//    @PreAuthorize("hasRole('user')")
+    @PreAuthorize("isAuthenticated()")
     @RequestMapping(path = "/collect", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public @ResponseBody
     CollectResponse collect(@RequestBody @Valid CollectRequest collectRequest, BindingResult result) {
@@ -113,6 +117,7 @@ public class TwitterGatewayServiceController {
 
 
     @ApiOperation(value = "Trigger a status check")
+    @PreAuthorize("isAuthenticated()")
     @RequestMapping(path = "/status", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public @ResponseBody
     StatusResponse status(@RequestBody StatusRequest statusRequest) {
@@ -122,6 +127,7 @@ public class TwitterGatewayServiceController {
 
 
     @ApiOperation(value = "Trigger a status check")
+    @PreAuthorize("isAuthenticated()")
     @RequestMapping(path = "/status/{id}", method = RequestMethod.GET)
     public @ResponseBody
     StatusResponse status(@PathVariable("id") String id) {
@@ -412,6 +418,7 @@ public class TwitterGatewayServiceController {
     }
 
 
+    @PreAuthorize("isAuthenticated()")
     @RequestMapping(value = "/collect-history", method = RequestMethod.GET)
     public @ResponseBody
     HistoryResponse collectHistory(@RequestParam(value = "limit", required = false, defaultValue = "5") int limit,
@@ -443,6 +450,7 @@ public class TwitterGatewayServiceController {
     }
 
     @ApiOperation(value = "Get the requests history")
+    @PreAuthorize("isAuthenticated()")
     @RequestMapping(path = "/collect-history", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public @ResponseBody
     HistoryResponse status(@RequestBody @Valid HistoryRequest historyRequest) {
@@ -454,6 +462,7 @@ public class TwitterGatewayServiceController {
     }
 
     @ApiOperation(value = "Update an old request")
+    @PreAuthorize("isAuthenticated()")
     @RequestMapping(path = "/collect-update/{id}", method = RequestMethod.GET)
     public @ResponseBody
     StatusResponse collectUpdate(@PathVariable("id") String id) throws ExecutionException, InterruptedException, IOException {
@@ -461,6 +470,7 @@ public class TwitterGatewayServiceController {
     }
 
     @ApiOperation(value = "Update an old request")
+    @PreAuthorize("isAuthenticated()")
     @RequestMapping(path = "/collect-update", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public @ResponseBody
     StatusResponse collectUpdate(@RequestBody @Valid CollectUpdateRequest collectUpdateRequest) throws ExecutionException, InterruptedException, IOException {
