@@ -30,6 +30,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.afp.medialab.weverify.social.security.model.FusionAuthDataConverter;
@@ -196,6 +198,7 @@ public class JwtAuthenticationController {
 	 * @param createAccessCodeRequest
 	 */
 	@RequestMapping(path = "/accesscode", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
+	// @RequestMapping(path = "/accesscode", method = RequestMethod.POST)
 	@ResponseStatus(HttpStatus.NO_CONTENT)
 	@ApiOperation(value = "Request an access code for user authentication, sent by email.")
 	@ApiResponses(value = { @ApiResponse(code = 204, message = "Access code request has been received correctly."),
@@ -543,7 +546,9 @@ public class JwtAuthenticationController {
 		cookie.setHttpOnly(true);
 		// cookie.setSecure(true);
 		// Only to refresh token endpoint
-		cookie.setPath("/api/v1/auth/refreshtoken");
+		String baseAppPath = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest()
+				.getServletContext().getContextPath();
+		cookie.setPath(baseAppPath + "/api/v1/auth/refreshtoken");
 		// Max age of 2 months
 		cookie.setMaxAge(60 * 24 * 60 * 60);
 		return cookie;

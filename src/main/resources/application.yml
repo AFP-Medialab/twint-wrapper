@@ -29,6 +29,12 @@ spring:
   jackson:
     deserialization:
       FAIL_ON_UNKNOWN_PROPERTIES: true
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: medialab.afp.com
+          jwk-set-uri: ${FUSIONAUTH_URL:http://localhost:9011}/.well-known/jwks.json
 
   datasource:
     url: ${MYSQL_URL:jdbc:mysql://localhost:3308/twint-wrapper?serverTimeZone=CET&useSSL=false}

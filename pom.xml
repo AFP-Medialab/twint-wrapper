@@ -88,11 +88,11 @@
 			<artifactId>spring-boot-configuration-processor</artifactId>
 			<optional>true</optional>
 		</dependency>
-		<dependency>
-			<groupId>io.fusionauth</groupId>
-			<artifactId>fusionauth-spring-security</artifactId>
-			<version>1.0.4</version>
-		</dependency>
+<!-- 		<dependency> -->
+<!-- 			<groupId>io.fusionauth</groupId> -->
+<!-- 			<artifactId>fusionauth-spring-security</artifactId> -->
+<!-- 			<version>1.0.4</version> -->
+<!-- 		</dependency> -->
 		<dependency>
 			<groupId>io.fusionauth</groupId>
 			<artifactId>fusionauth-java-client</artifactId>
@@ -102,6 +102,24 @@
 			<groupId>nl.basjes.parse.useragent</groupId>
 			<artifactId>yauaa</artifactId>
 			<version>5.14.1</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-security</artifactId>
+		</dependency>
+<!-- 		<dependency> -->
+<!-- 			<groupId>org.springframework.security</groupId> -->
+<!-- 			<artifactId>spring-security-config</artifactId> -->
+<!-- 		</dependency> -->
+		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>
+				spring-security-oauth2-resource-server
+			</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-oauth2-jose</artifactId>
 		</dependency>
 	</dependencies>
 	<profiles>
