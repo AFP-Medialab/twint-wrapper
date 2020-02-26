@@ -16,14 +16,18 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
+
 public class CollectRequest {
 
 	@NotNull(message = "keywords are mandatory")
+	@JsonDeserialize(using = SetStringNormalizerDeserializer.class)
 	private Set<String> keywordList;
+	@JsonDeserialize(using = SetStringNormalizerDeserializer.class)
 	private Set<String> bannedWords;
 
 	@LangConstrain
 	private String lang;
+	@JsonDeserialize(using = SetStringNormalizerDeserializer.class)
 	private Set<String> userList;
 	@JsonProperty("from")
 	@JsonDeserialize(using = MultiDateDeserializer.class)

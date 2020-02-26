@@ -231,12 +231,6 @@ public class TwitterGatewayServiceController {
         collectHistory.setStatus(Status.Pending);
 		// Request request = collectHistory.getRequest();
 		Request request = new Request();
-        if (request == null) {
-            collectHistory.setStatus(Status.Error);
-            collectHistory.setMessage("Could not find the Request associated");
-            collectService.save_collectHistory(collectHistory);
-            throw new NotFoundException();
-        }
         collectHistory.setProcessStart(new Date());
         collectService.save_collectHistory(collectHistory);
 		collectService.callTwintOnInterval(collectHistory, request, request.getSince(), request.getUntil());
