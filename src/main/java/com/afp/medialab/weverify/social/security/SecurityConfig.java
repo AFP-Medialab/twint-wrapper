@@ -22,7 +22,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 			// -- Swagger ui
 			"/swagger-resources/**", "/swagger-ui.html", "/v2/api-docs", "/webjars/**"
 			// -- Authentication services
-			, "/api/v1/auth/user", "/api/v1/auth/accesscode", "/api/v1/auth/login", "/api/v1/auth/refreshtoken",
+			, "/api/v1/auth/registration", "/api/v1/auth/accesscode", "/api/v1/auth/login", "/api/v1/auth/refreshtoken",
 			"/api/v1/auth/logout" };
 
 	// @Override

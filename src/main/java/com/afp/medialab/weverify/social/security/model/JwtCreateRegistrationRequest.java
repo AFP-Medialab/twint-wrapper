@@ -21,18 +21,18 @@ import io.swagger.annotations.ApiModelProperty;
  * @author <a href="mailto:eric@rickspirit.io">Eric SCHAEFFER</a>
  */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-public class JwtCreateUserRequest implements Serializable {
+public class JwtCreateRegistrationRequest implements Serializable {
 	private static final long serialVersionUID = -2952101473443468656L;
 
 	@NotBlank(message = "Email address is required")
 	@Email(message = "Email address must be valid")
 	@ApiModelProperty(value = "User's email addresse and login identifier.", required = true,
-			example = "eric.schaeffer@rickspirit.io")
+			example = "email@address.com")
 	public String email;
-	@ApiModelProperty(value = "User's first name.", required = true, example = "Eric")
+	@ApiModelProperty(value = "User's first name.", required = true, example = "John")
 	@NotBlank(message = "Firstname is required")
 	public String firstName;
-	@ApiModelProperty(value = "User's last name.", required = true, example = "SCHAEFFER")
+	@ApiModelProperty(value = "User's last name.", required = true, example = "SMITH")
 	@NotBlank(message = "Lastname is required")
 	public String lastName;
 	@ApiModelProperty(value = "User's company name.", required = true, example = "RICK SPIRIT")
@@ -48,7 +48,7 @@ public class JwtCreateUserRequest implements Serializable {
 	/**
 	 * Constructor.
 	 */
-	public JwtCreateUserRequest() {
+	public JwtCreateRegistrationRequest() {
 		super();
 	}
 
@@ -74,7 +74,7 @@ public class JwtCreateUserRequest implements Serializable {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		JwtCreateUserRequest other = (JwtCreateUserRequest) obj;
+		JwtCreateRegistrationRequest other = (JwtCreateRegistrationRequest) obj;
 		if (company == null) {
 			if (other.company != null)
 				return false;

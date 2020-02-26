@@ -22,7 +22,7 @@ public class JwtCreateAccessCodeRequest implements Serializable {
 	@NotBlank(message = "Email address is required")
 	@Email(message = "Email address must be valid")
 	@ApiModelProperty(value = "User's email addresse and login identifier.", required = true,
-			example = "eric.schaeffer@rickspirit.io")
+			example = "email@address.com")
 	public String email;
 
 	/**

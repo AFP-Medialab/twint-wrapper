@@ -12,6 +12,8 @@ import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
+import io.swagger.annotations.ApiModelProperty;
+
 /**
  * @author <a href="mailto:eric@rickspirit.io">Eric SCHAEFFER</a>
  */
@@ -19,15 +21,26 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 public class JwtUser implements Serializable {
 	private static final long serialVersionUID = -8694660337222202689L;
 
+	@ApiModelProperty(value = "User's identifier.", required = true, example = "1b941adc-8e55-4f40-801d-614fd8a6318d")
 	public UUID id;
+	@ApiModelProperty(value = "User's email addresse and login identifier.", required = true,
+			example = "email@address.com")
 	public String email;
+	@ApiModelProperty(value = "True if user account is activated.", example = "true")
 	public boolean active;
+	@ApiModelProperty(value = "User account expiration date.", example = "true")
 	public ZonedDateTime expiry;
+	@ApiModelProperty(value = "User's first name.", example = "John")
 	public String firstName;
+	@ApiModelProperty(value = "User's last name.", example = "SMITH")
 	public String lastName;
+	@ApiModelProperty(value = "User's company name.", example = "RICK SPIRIT")
 	public String company;
+	@ApiModelProperty(value = "User's position within company.", example = "FAKE NEWS CHECKER")
 	public String position;
+	@ApiModelProperty(value = "User's preferred languages.", example = "[ \"fr\", \"en\" ]")
 	public List<Locale> preferredLanguages;
+	@ApiModelProperty(value = "User's timezone ID.", example = "Europe/Paris")
 	public ZoneId timezone;
 	// public List<AuthUserRegistration> registrations;
 	// public String securityRole;

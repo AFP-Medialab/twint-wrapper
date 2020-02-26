@@ -36,7 +36,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import com.afp.medialab.weverify.social.security.model.FusionAuthDataConverter;
 import com.afp.medialab.weverify.social.security.model.JwtCreateAccessCodeRequest;
-import com.afp.medialab.weverify.social.security.model.JwtCreateUserRequest;
+import com.afp.medialab.weverify.social.security.model.JwtCreateRegistrationRequest;
 import com.afp.medialab.weverify.social.security.model.JwtLoginRequest;
 import com.afp.medialab.weverify.social.security.model.JwtLoginResponse;
 import com.afp.medialab.weverify.social.security.model.JwtRefreshTokenResponse;
@@ -87,8 +87,8 @@ public class JwtAuthenticationController {
 	@Value("${security.fusionAuth.apiKey}")
 	private String fusionAuthApiKey;
 
-	@Value("${security.auth.create-user.groupId}")
-	private UUID createUserGroupId;
+	@Value("${security.auth.register-user.groupId}")
+	private UUID registerUserGroupId;
 
 	@Value("${security.auth.twint.applicationId}")
 	private UUID twintApplicationId;
@@ -105,23 +105,23 @@ public class JwtAuthenticationController {
 	/**
 	 * Register a new user.
 	 * 
-	 * @param createUserRequest
+	 * @param createRegistrationRequest
 	 */
-	@RequestMapping(path = "/user", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
+	@RequestMapping(path = "/registration", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
 	@ResponseStatus(HttpStatus.NO_CONTENT)
 	@ApiOperation(value = "Create a new user registration request on the system.",
 			notes = "Create a user registration request on the system, subject to moderation."
 					+ " Once validated, user will be notified by email and will be able to request an authentication code."
-					+ "\n" + "The operation will not return any error in case of invalid data or request.")
+					+ "\n" + "The operation will not return any error in case of invalid or duplicated demand.")
 	@ApiResponses(
 			value = { @ApiResponse(code = 204, message = "User registration request has been received correctly."),
 					@ApiResponse(code = 400, message = "Request is incomplete or malformed."),
 					@ApiResponse(code = 500, message = "An internal error occured during request processing.") })
-	public void createUser(@Valid @RequestBody @ApiParam(value = "User registration information.",
-			required = true) JwtCreateUserRequest createUserRequest) {
-		Logger.debug("Create User with request {}", createUserRequest);
+	public void createRegistration(@Valid @RequestBody @ApiParam(value = "User registration information.",
+			required = true) JwtCreateRegistrationRequest createRegistrationRequest) {
+		Logger.debug("Create User with request {}", createRegistrationRequest);
 
-		String userEmail = createUserRequest.email;
+		String userEmail = createRegistrationRequest.email;
 
 		// Check if user already exists
 		Logger.debug("Looking for user {}", userEmail);
@@ -138,14 +138,14 @@ public class JwtAuthenticationController {
 		user.email = userEmail;
 		// TODO: generate random strong password
 		user.password = "PASSWORD";
-		user.firstName = createUserRequest.firstName;
-		user.lastName = createUserRequest.lastName;
+		user.firstName = createRegistrationRequest.firstName;
+		user.lastName = createRegistrationRequest.lastName;
 		Map<String, Object> userData = new HashMap<String, Object>();
-		Optional.ofNullable(createUserRequest.company).ifPresent(s -> userData.put("company", s));
-		Optional.ofNullable(createUserRequest.position).ifPresent(s -> userData.put("position", s));
+		Optional.ofNullable(createRegistrationRequest.company).ifPresent(s -> userData.put("company", s));
+		Optional.ofNullable(createRegistrationRequest.position).ifPresent(s -> userData.put("position", s));
 		user.data = userData;
-		Optional.ofNullable(createUserRequest.preferredLanguages).map(l -> user.preferredLanguages.addAll(l));
-		user.timezone = createUserRequest.timezone;
+		Optional.ofNullable(createRegistrationRequest.preferredLanguages).map(l -> user.preferredLanguages.addAll(l));
+		user.timezone = createRegistrationRequest.timezone;
 
 		// Create user
 		Logger.debug("Creating user {} with data: {}", userEmail, user);
@@ -164,7 +164,7 @@ public class JwtAuthenticationController {
 		UUID userId = userResponse.user.id;
 
 		// Add user to created users group
-		UUID userGroupUUID = this.createUserGroupId;
+		UUID userGroupUUID = this.registerUserGroupId;
 		GroupMember groupMember = new GroupMember();
 		groupMember.groupId = userGroupUUID;
 		groupMember.userId = userId;
