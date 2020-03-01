@@ -137,12 +137,15 @@ public class JwtAuthenticationController {
 		User user = new User();
 		user.email = userEmail;
 		// TODO: generate random strong password
-		user.password = "PASSWORD";
+		user.password = UUID.randomUUID().toString();
 		user.firstName = createRegistrationRequest.firstName;
 		user.lastName = createRegistrationRequest.lastName;
 		Map<String, Object> userData = new HashMap<String, Object>();
-		Optional.ofNullable(createRegistrationRequest.company).ifPresent(s -> userData.put("company", s));
-		Optional.ofNullable(createRegistrationRequest.position).ifPresent(s -> userData.put("position", s));
+		Optional.ofNullable(createRegistrationRequest.organization).ifPresent(s -> userData.put("organization", s));
+		Optional.ofNullable(createRegistrationRequest.organizationRole)
+				.ifPresent(s -> userData.put("organizationRole", s.name()));
+		Optional.ofNullable(createRegistrationRequest.organizationRoleOther)
+				.ifPresent(s -> userData.put("organizationRoleOther", s));
 		user.data = userData;
 		Optional.ofNullable(createRegistrationRequest.preferredLanguages).map(l -> user.preferredLanguages.addAll(l));
 		user.timezone = createRegistrationRequest.timezone;
@@ -162,6 +165,8 @@ public class JwtAuthenticationController {
 
 		UserResponse userResponse = createUserResponse.successResponse;
 		UUID userId = userResponse.user.id;
+
+		// TODO: Add user registration on application
 
 		// Add user to created users group
 		UUID userGroupUUID = this.registerUserGroupId;

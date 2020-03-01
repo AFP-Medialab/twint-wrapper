@@ -34,10 +34,12 @@ public class JwtUser implements Serializable {
 	public String firstName;
 	@ApiModelProperty(value = "User's last name.", example = "SMITH")
 	public String lastName;
-	@ApiModelProperty(value = "User's company name.", example = "RICK SPIRIT")
-	public String company;
-	@ApiModelProperty(value = "User's position within company.", example = "FAKE NEWS CHECKER")
-	public String position;
+	@ApiModelProperty(value = "User's organization name.", example = "RICK SPIRIT")
+	public String organization;
+	@ApiModelProperty(value = "User's role within organization.", example = "FAKE_NEWS_CHECKER")
+	public JwtUserOrganizationRole organizationRole;
+	@ApiModelProperty(value = "User's role within organization (if OTHER).", example = "Tester")
+	public String organizationRoleOther;
 	@ApiModelProperty(value = "User's preferred languages.", example = "[ \"fr\", \"en\" ]")
 	public List<Locale> preferredLanguages;
 	@ApiModelProperty(value = "User's timezone ID.", example = "Europe/Paris")
@@ -57,14 +59,15 @@ public class JwtUser implements Serializable {
 		final int prime = 31;
 		int result = 1;
 		result = prime * result + (active ? 1231 : 1237);
-		result = prime * result + ((company == null) ? 0 : company.hashCode());
 		result = prime * result + ((email == null) ? 0 : email.hashCode());
 		result = prime * result + ((expiry == null) ? 0 : expiry.hashCode());
 		result = prime * result + ((firstName == null) ? 0 : firstName.hashCode());
 		result = prime * result + ((id == null) ? 0 : id.hashCode());
 		result = prime * result + ((lastName == null) ? 0 : lastName.hashCode());
+		result = prime * result + ((organization == null) ? 0 : organization.hashCode());
+		result = prime * result + ((organizationRole == null) ? 0 : organizationRole.hashCode());
+		result = prime * result + ((organizationRoleOther == null) ? 0 : organizationRoleOther.hashCode());
 		result = prime * result + ((preferredLanguages == null) ? 0 : preferredLanguages.hashCode());
-		result = prime * result + ((position == null) ? 0 : position.hashCode());
 		result = prime * result + ((timezone == null) ? 0 : timezone.hashCode());
 		return result;
 	}
@@ -79,11 +82,6 @@ public class JwtUser implements Serializable {
 			return false;
 		JwtUser other = (JwtUser) obj;
 		if (active != other.active)
-			return false;
-		if (company == null) {
-			if (other.company != null)
-				return false;
-		} else if (!company.equals(other.company))
 			return false;
 		if (email == null) {
 			if (other.email != null)
@@ -110,15 +108,22 @@ public class JwtUser implements Serializable {
 				return false;
 		} else if (!lastName.equals(other.lastName))
 			return false;
+		if (organization == null) {
+			if (other.organization != null)
+				return false;
+		} else if (!organization.equals(other.organization))
+			return false;
+		if (organizationRole != other.organizationRole)
+			return false;
+		if (organizationRoleOther == null) {
+			if (other.organizationRoleOther != null)
+				return false;
+		} else if (!organizationRoleOther.equals(other.organizationRoleOther))
+			return false;
 		if (preferredLanguages == null) {
 			if (other.preferredLanguages != null)
 				return false;
 		} else if (!preferredLanguages.equals(other.preferredLanguages))
-			return false;
-		if (position == null) {
-			if (other.position != null)
-				return false;
-		} else if (!position.equals(other.position))
 			return false;
 		if (timezone == null) {
 			if (other.timezone != null)
@@ -131,7 +136,8 @@ public class JwtUser implements Serializable {
 	@Override
 	public String toString() {
 		return "JwtUser [id=" + id + ", email=" + email + ", active=" + active + ", expiry=" + expiry + ", firstName="
-				+ firstName + ", lastName=" + lastName + ", company=" + company + ", position=" + position
-				+ ", preferredLanguages=" + preferredLanguages + ", timezone=" + timezone + "]";
+				+ firstName + ", lastName=" + lastName + ", organization=" + organization + ", organizationRole="
+				+ organizationRole + ", organizationRoleOther=" + organizationRoleOther + ", preferredLanguages="
+				+ preferredLanguages + ", timezone=" + timezone + "]";
 	}
 }

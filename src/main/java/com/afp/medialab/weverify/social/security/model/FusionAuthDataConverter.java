@@ -27,8 +27,17 @@ public class FusionAuthDataConverter {
 		jwtUser.firstName = user.firstName;
 		jwtUser.lastName = user.lastName;
 		if (!user.data.isEmpty()) {
-			jwtUser.company = (String) user.data.get("company");
-			jwtUser.position = (String) user.data.get("position");
+			jwtUser.organization = (String) user.data.get("organization");
+			if (user.data.get("organizationRole") != null) {
+				try {
+					jwtUser.organizationRole = JwtUserOrganizationRole
+							.valueOf((String) user.data.get("organizationRole"));
+				} catch (IllegalArgumentException e) {
+					// TODO: raise exception to better identify data errors?
+					jwtUser.organizationRole = JwtUserOrganizationRole.OTHER;
+				}
+			}
+			jwtUser.organizationRoleOther = (String) user.data.get("organisationRoleOther");
 		}
 		UserRegistration userRegistration = (applicationId != null ? user.getRegistrationForApplication(applicationId)
 				: null);
