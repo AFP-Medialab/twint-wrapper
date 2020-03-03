@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
+import javax.annotation.PostConstruct;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -94,6 +95,11 @@ public class JwtAuthenticationController {
 	private UUID twintApplicationId;
 
 	private FusionAuthClient fusionAuthClient;
+
+	@Value("${spring.profiles.active:}")
+	private String activeProfiles;
+
+	private boolean devProfile = false;
 
 	/**
 	 * Constructor.
@@ -549,7 +555,9 @@ public class JwtAuthenticationController {
 	private Cookie createRefreshTokenCookie(String refreshToken) {
 		Cookie cookie = new Cookie("refresh_token", refreshToken);
 		cookie.setHttpOnly(true);
-		// cookie.setSecure(true);
+		if (!this.devProfile) {
+			cookie.setSecure(true);
+		}
 		// Only to refresh token endpoint
 		String baseAppPath = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest()
 				.getServletContext().getContextPath();
@@ -579,5 +587,24 @@ public class JwtAuthenticationController {
 			strBuffer.append(", ").append(String.valueOf(response.exception));
 		}
 		return strBuffer.toString();
+	}
+
+	@PostConstruct
+	public void init() {
+		Logger.debug("Active Spring Profiles: {}", this.activeProfiles);
+		this.devProfile = isDevProfile(this.activeProfiles);
+		Logger.debug("Dev mode: {}", this.devProfile);
+	}
+
+	private static boolean isDevProfile(String profiles) {
+		if (profiles == null || "".equals(profiles.trim())) {
+			return true;
+		}
+		for (String p : profiles.split(",")) {
+			if ("dev".equalsIgnoreCase(p.trim())) {
+				return true;
+			}
+		}
+		return false;
 	}
 }
