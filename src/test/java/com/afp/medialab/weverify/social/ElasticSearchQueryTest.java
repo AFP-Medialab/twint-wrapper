@@ -37,8 +37,8 @@ public class ElasticSearchQueryTest {
 	@Test
 	public void lastInsert() {
 		QueryBuilder builder = boolQuery().must(matchQuery("essid", "e759073c-dd59-4b6e-be67-4419b2ead383"))
-				.filter(rangeQuery("date").format("yyyy-MM-dd HH:mm:ss||yyyy-MM-dd||epoch_millis")
-						.gte("2018-10-05").lte("2018-12-13"));
+				.filter(rangeQuery("date").format("yyyy-MM-dd HH:mm:ss||yyyy-MM-dd||epoch_millis").gte("2018-10-05")
+						.lte("2018-12-13"));
 
 		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(builder).build()
 				.addSort(Sort.by("date").ascending()).setPageable(PageRequest.of(0, 10000));
@@ -50,14 +50,10 @@ public class ElasticSearchQueryTest {
 	@Test
 	public void addWit() throws IOException, InterruptedException {
 		String sessid = "e759073c-dd59-4b6e-be67-4419b2ead383";
-		List<TwintModel> tms =
-				esOperations.getModels(sessid, "2018-10-05","2018-12-13");
-
-		System.out.println(tms.size());
-		esOperations.indexWordsObj(tms);
-
+		esOperations.enrichWithTweetie(sessid, "2018-10-05", "2018-12-13");
 		esOperation.refresh(TwintModel.class);
 
-		//esOperations.getModels(sessid, "2018-10-05","2018-12-13").forEach(model -> System.out.println(model.getWit()));
+		// esOperations.getModels(sessid, "2018-10-05","2018-12-13").forEach(model ->
+		// System.out.println(model.getWit()));
 	}
 }

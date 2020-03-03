@@ -60,6 +60,9 @@ spring:
     hibernate.ddl-auto: update
 
 ---
+server:
+  servlet:
+    context-path: /
 spring:
   profiles: prod 
   jpa:
