@@ -9,7 +9,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
-import javax.annotation.PostConstruct;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -98,6 +97,7 @@ public class JwtAuthenticationController {
 
 	@Value("${spring.profiles.active:}")
 	private String activeProfiles;
+	private boolean initialized = false;
 
 	private boolean devProfile = false;
 
@@ -555,8 +555,9 @@ public class JwtAuthenticationController {
 	private Cookie createRefreshTokenCookie(String refreshToken) {
 		Cookie cookie = new Cookie("refresh_token", refreshToken);
 		cookie.setHttpOnly(true);
-		if (!this.devProfile) {
-			cookie.setSecure(true);
+		cookie.setSecure(true);
+		if (this.isDevProfile()) {
+			cookie.setSecure(false);
 		}
 		// Only to refresh token endpoint
 		String baseAppPath = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest()
@@ -589,14 +590,26 @@ public class JwtAuthenticationController {
 		return strBuffer.toString();
 	}
 
-	@PostConstruct
-	public void init() {
-		Logger.debug("Active Spring Profiles: {}", this.activeProfiles);
-		this.devProfile = isDevProfile(this.activeProfiles);
-		Logger.debug("Dev mode: {}", this.devProfile);
+	/**
+	 * @return the devProfile
+	 */
+	private boolean isDevProfile() {
+		init();
+		return devProfile;
 	}
 
-	private static boolean isDevProfile(String profiles) {
+	// @PostConstruct
+	public void init() {
+		if (this.initialized) {
+			return;
+		}
+		Logger.debug("Active Spring Profiles: {}", this.activeProfiles);
+		this.devProfile = checkDevProfile(this.activeProfiles);
+		Logger.debug("Dev mode: {}", this.devProfile);
+		this.initialized = true;
+	}
+
+	private static boolean checkDevProfile(String profiles) {
 		if (profiles == null || "".equals(profiles.trim())) {
 			return true;
 		}
