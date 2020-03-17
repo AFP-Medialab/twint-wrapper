@@ -48,7 +48,7 @@ public class ESOperations {
 
 	private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
-	private static Logger Logger = LoggerFactory.getLogger(TwintThread.class);
+	private static Logger Logger = LoggerFactory.getLogger(ESOperations.class);
 
 	public void enrichWithTweetie(String essid, String start, String end) throws IOException {
 		QueryBuilder builder = boolQuery().must(matchQuery("essid", essid));

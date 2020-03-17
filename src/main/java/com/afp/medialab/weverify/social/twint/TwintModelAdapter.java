@@ -34,7 +34,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @Configuration
 public class TwintModelAdapter {
 
-	private static org.slf4j.Logger Logger = LoggerFactory.getLogger(TwintThread.class);
+	private static org.slf4j.Logger Logger = LoggerFactory.getLogger(TwintModelAdapter.class);
 
 	@Autowired
 	@Qualifier("ESRestTempate")
