@@ -15,6 +15,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
 import com.afp.medialab.weverify.social.model.CollectRequest;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 
 @Entity(name = "Request")
 @Table(name = "request")
@@ -59,6 +60,7 @@ public class Request implements Serializable {
 	private String retweetsHandling;
 
 	@ManyToOne(fetch = FetchType.LAZY)
+	@JsonBackReference
 	private CollectHistory collectHistory;
 	
 	@Column(name = "merge")

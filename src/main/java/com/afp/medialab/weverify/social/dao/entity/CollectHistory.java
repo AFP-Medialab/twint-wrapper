@@ -14,6 +14,7 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
 import com.afp.medialab.weverify.social.model.Status;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 @Entity
 @Table(name = "collectHistory")
@@ -31,6 +32,7 @@ public class CollectHistory implements Serializable {
     private String session;
 
     @OneToMany(mappedBy = "collectHistory", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
     private List<Request> requests = new LinkedList<Request>();
 
     @Column(name = "processStart", nullable = true)
