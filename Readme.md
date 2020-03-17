@@ -25,13 +25,16 @@ Full application is run using a docker-compose script
 * MySQL to manage scraping sessions
 * Docker
 * Twint
-* [FusionAuth] (https://fusionauth.io/) to protect operations to authorized users
+* [FusionAuth](https://fusionauth.io/) to protect operations to authorized users
  
+### How to develop
 
- src/scripts/dev folder gives docker-compose file to start MySQL, ElasticSearch and FusionAuth
+ src/scripts/dev folder gives docker-compose file to start MySQL, ElasticSearch and FusionAuth.
  
 	$cd src/scripts/dev
 	$docker-compose up -d
+ By default, the application will connect to the different containers 
+ 
  
  An other script add Kibana to monitor ElasticSearch Index.
 
