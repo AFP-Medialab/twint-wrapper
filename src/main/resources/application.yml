@@ -34,7 +34,7 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: medialab.afp.com
+          issuer-uri: ${FUSIONAUTH_ISSUER:weverify.eu}
           jwk-set-uri: ${FUSIONAUTH_URL:http://localhost:9011}/.well-known/jwks.json
 
   datasource:

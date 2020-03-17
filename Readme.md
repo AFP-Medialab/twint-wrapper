@@ -25,21 +25,23 @@ Full application is run using a docker-compose script
 * MySQL to manage scraping sessions
 * Docker
 * Twint
+* [FusionAuth] (https://fusionauth.io/) to protect operations to authorized users
+ 
 
- src/scripts/dev folder gives docker-compose file to start MySQL and ElasticSearch
+ src/scripts/dev folder gives docker-compose file to start MySQL, ElasticSearch and FusionAuth
  
 	$cd src/scripts/dev
 	$docker-compose up -d
  
- An other script starts MySQL, ElasticSearch and Kibana
+ An other script add Kibana to monitor ElasticSearch Index.
 
 	$ cd src/scripts/dev
-	$ docker-compose -f docker-compose.yml up -d
+	$ docker-compose -f docker-compose-kibana.yml up -d
 
 
-### Twint Docker build
+## Twint Docker build
 
-Twint is the only scraper that is supported so far.
+Twint is the only scraper that is supported.
 Project pom.xml defined the build of twint bases on a forked of the twint project.
 Dockerfile that build twint image is located src/main/docker/twint
 
@@ -54,11 +56,11 @@ Test twint image:
 ## Builds
 Default build build Spring-Boot application as jar file. Default profile is dev
 
-	mvn package
+	mvn clean package
 	
 Build docker image with Spring-Boot application and twint application
 
-	mvn package -P prod
+	mvn clean package -P prod
 	
 ## Run service
 Twitter-gateway can be run with different profiles (Default, dev & prod).
@@ -76,7 +78,49 @@ prod
 	java -Dspring.profiles.active=prod -jar twint-wrapper.jar
 
  
+## FusionAuth configuration
 
+FusionAuth executed with docker-compose use a setup sql script that embedded minimum configuration to add authorized users.
+This inialisation will be set at first docker-compose startup.
+
+Setup to grant users are:
+
+* Register user 
+* Approved user through fusionAuth UI
+* User ask a register code with his email address
+* User ask a token with his received register code to use scraping operations. 
+
+
+FusionAuth is accessible locally:
+* [http://localhost:9011](http://localhost:9011)
+* login: weverify@weverify.eu
+* password: Weverify$
+
+#### Email configuration with google account
+FusionAuth send registration code by email.
+To enable this feature, a SMTP server need to be setup in fusionAuth. You can use your Google Account to setup it up:
+
+ Tenants > Weverify (Edit) > Email (SMTP settings)
+
+* Host: smtp.gmail.com
+* Port: 587
+* Username: <your google email address>
+* Change password: <your google application generated password>  (password is stored encrypted locally)
+* Security: TLS
+
+To use your google account as a SMTP Gateway, you must enable 2 factors authentication in your account
+* Account
+* Security
+* Activate 2 factor Authentication
+
+Create an application password:
+* Account
+* Security
+* Application password
+* Other -> Give a Name -> Generated
+* Copy paste the generated password to FusionAuth Email configuration
+
+ 
 
 
 
