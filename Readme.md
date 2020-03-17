@@ -96,12 +96,14 @@ Setup to grant users are:
 
 FusionAuth is accessible locally:
 * [http://localhost:9011](http://localhost:9011)
-* login: weverify@weverify.eu
-* password: Weverify$
+* login: *weverify@weverify.eu*
+* password: *Weverify$*
 
 #### Email configuration with google account
 FusionAuth send registration code by email.
-To enable this feature, a SMTP server need to be setup in fusionAuth. You can use your Google Account to setup it up:
+To enable this feature, a SMTP server need to be setup in fusionAuth. 
+
+Example with a Gmail Account:
 
  Tenants > Weverify (Edit) > Email (SMTP settings)
 
@@ -111,18 +113,18 @@ To enable this feature, a SMTP server need to be setup in fusionAuth. You can us
 * Change password: <your google application generated password>  (password is stored encrypted locally)
 * Security: TLS
 
-To use your google account as a SMTP Gateway, you must enable 2 factors authentication in your account
+To use your google account as a SMTP Gateway, you must [turn on 2-step Verification](https://support.google.com/accounts/answer/185839) in your account
 * Account
 * Security
-* Activate 2 factor Authentication
+* Turn on 2-step verification
 
-Create an application password:
+Add an access to your local FusionAuth by creating [an application password](https://support.google.com/accounts/answer/185833?hl=en)
+
 * Account
 * Security
 * Application password
 * Other -> Give a Name -> Generated
-* Copy paste the generated password to FusionAuth Email configuration
-
+* Copy paste the generated password to FusionAuth Email configuration. 
  
 
 
