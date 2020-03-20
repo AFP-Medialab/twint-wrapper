@@ -26,6 +26,8 @@ Full application is run using a docker-compose script
 * Docker
 * Twint
 * [FusionAuth](https://fusionauth.io/) to protect operations to authorized users
+
+![architecture](doc/twint-wrapper-components.png)
  
 ### How to develop
 
