@@ -30,7 +30,7 @@ services:
         MYSQL_DATABASE: twint-wrapper
     container_name: mysql
     volumes:
-      - mysqldata1:/usr/share/mysql/data
+      - mysqldata1:/var/lib/mysql
       - ./fusionauth-2020-weverify.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
       - 3308:3306
@@ -38,7 +38,7 @@ services:
       - esnet
       
   twint-wrapper:
-    image: twint-wrapper:1.0.8.1
+    image: twint-wrapper:1.0.8.2
     container_name: twint-wrapper
     restart: on-failure
     depends_on:
@@ -54,6 +54,7 @@ services:
       FUSIONAUTH_URL: http://fusionauth:9011
       FUSIONAUTH_ISSUER: weverify.eu
       TWITTIE_URL: "http://twitie:8081/gate/process?annotations=:Person,:UserID,:Location,:Organization"
+      PROFILE: demo,default
     logging:
       driver: "json-file"
       options:

@@ -103,6 +103,8 @@ FROM base
 
 COPY twint-wrapper.jar twint-wrapper.jar 
 
-ENTRYPOINT [ "/bin/bash", "-c", "java  -Djava.security.egd=file:/dev/./urandom -jar -Dspring.profiles.active=prod twint-wrapper.jar"]
+ENV PROFILE=prod
+
+ENTRYPOINT [ "/bin/bash", "-c", "java  -Djava.security.egd=file:/dev/./urandom -jar -Dspring.profiles.active=$PROFILE twint-wrapper.jar"]
 
 CMD ["/bin/bash"]

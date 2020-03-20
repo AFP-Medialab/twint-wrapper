@@ -10,7 +10,8 @@ WORKDIR /install
 RUN apt-get update && apt-get install -y --no-install-recommends \
 	git && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 	
-RUN git clone https://github.com/AFP-Medialab/twint.git twint
+RUN git clone https://github.com/twintproject/twint.git twint && cd twint && \
+	git reset --hard 81f6c2c516a231136fbd821bd6a53d7959965fee && cd ..
 #RUN cd twint && python setup.py install && cd .. && rm -rf /twint
 RUN mkdir -p build/lib/python3.6/site-packages
 ENV PYTHONPATH=/install/build/lib/python3.6/site-packages/

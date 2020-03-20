@@ -12,13 +12,9 @@ This tool supported following operations:
 
 All operations are defined through swagger page **/twint-wrapper/swagger-ui.html**
 
-Target build is a Docker image that combine Twint image and the java Spring-Boot application.
+Target build is a Docker image that combine Twint docker image and the java Spring-Boot application.
 
-Full application is run using a docker-compose script
 
-	$src/main/script/prod
-	$docker-compose up -d
-	
 
 ## Requirements
 * ElasticSearch to index twitter scraping results
@@ -28,8 +24,22 @@ Full application is run using a docker-compose script
 * [FusionAuth](https://fusionauth.io/) to protect operations to authorized users
 
 ![architecture](doc/twint-wrapper-components.png)
+
+### Twint Docker build
+
+Twint is the only scraper that is supported. It must be build as a docker image as a prerequisite to any new development.
+Project pom.xml defined the build of twint bases on a commit 81f6c2c516a231136fbd821bd6a53d7959965fee of twint project.
+Dockerfile that build twint image is located src/main/docker/twint
+
+To build twint image with maven run:
+
+	mvn docker:build -P twint-docker
+
+Test twint image:
+
+	docker run --rm -it twint:2.1.4 "twint -s '#pactemondialsurlesmigrations' --since '2018-12-01 00:00:00' --until '2018-12-15 00:00:00' -l fr --count"
  
-### How to develop
+## How to develop
 
  src/scripts/dev folder gives docker-compose file to start MySQL, ElasticSearch and FusionAuth.
  
@@ -44,19 +54,6 @@ Full application is run using a docker-compose script
 	$ docker-compose -f docker-compose-kibana.yml up -d
 
 
-## Twint Docker build
-
-Twint is the only scraper that is supported.
-Project pom.xml defined the build of twint bases on a forked of the twint project.
-Dockerfile that build twint image is located src/main/docker/twint
-
-To build twint image with maven run:
-
-	mvn docker:build -P twint-docker
-
-Test twint image:
-
-	docker run --rm -it twint:2.1.2 "twint -s '#pactemondialsurlesmigrations' --since '2018-12-01 00:00:00' --until '2018-12-15 00:00:00' -l fr --count"
 
 ## Builds
 Default build build Spring-Boot application as jar file. Default profile is dev
@@ -81,6 +78,12 @@ dev:
 prod
 
 	java -Dspring.profiles.active=prod -jar twint-wrapper.jar
+
+Full application with all components run with docker-compose
+
+	$src/main/script/prod
+	$docker-compose up -d
+	
 
  
 ## FusionAuth configuration

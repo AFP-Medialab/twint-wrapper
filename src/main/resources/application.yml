@@ -51,14 +51,18 @@ spring:
     show-sql: true
 
 command:
-  twint: docker run --rm --network dev_esnet -i medialab.registry.afp.com/twint:2.1.12
+  twint: docker run --rm --network dev_esnet -i twint:2.1.12
  
 ---
 spring:
   profiles: dev
   jpa:
     hibernate.ddl-auto: update
-
+---
+spring:
+  profiles: demo
+command:
+   twint:
 ---
 server:
   servlet:
