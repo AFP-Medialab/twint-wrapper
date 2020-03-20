@@ -2,17 +2,11 @@ version: '3.7'
 
 services:
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:7.3.1
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.6.0
     container_name: elasticsearch
-    restart: on-failure
     environment:
-      - node.name=elasticsearch
-      - discovery.seed_hosts=elasticsearch2
-      - cluster.initial_master_nodes=elasticsearch,elasticsearch2
-      - cluster.name=docker-cluster
+      - discovery.type=single-node
       - bootstrap.memory_lock=true
-      - http.cors.enabled=true
-      - http.cors.allow-origin=*
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
     ulimits:
       memlock:
@@ -24,38 +18,6 @@ services:
       - 9200:9200
     networks:
       - esnet
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "200k"
-        max-size: "200k"
-        labels: "elk1"
-  elasticsearch2:
-    image: docker.elastic.co/elasticsearch/elasticsearch:7.3.1
-    container_name: elasticsearch2
-    environment:
-      - node.name=elasticsearch2
-      - discovery.seed_hosts=elasticsearch
-      - cluster.initial_master_nodes=elasticsearch,elasticsearch2
-      - cluster.name=docker-cluster
-      - bootstrap.memory_lock=true
-      - http.cors.enabled=true
-      - http.cors.allow-origin=*
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-    ulimits:
-      memlock:
-        soft: -1
-        hard: -1
-    volumes:
-      - esdata2:/usr/share/elasticsearch/data
-    networks:
-      - esnet
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "200k"
-        max-size: "200k"
-        labels: "elk2"
   
   mysql:
     image: mysql:5.7
@@ -69,13 +31,14 @@ services:
     container_name: mysql
     volumes:
       - mysqldata1:/usr/share/mysql/data
+      - ./fusionauth-2020-weverify.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
       - 3308:3306
     networks:
       - esnet
       
   twint-wrapper:
-    image: medialab.registry.afp.com/twint-wrapper:1.0.3
+    image: twint-wrapper:1.0.8.1
     container_name: twint-wrapper
     restart: on-failure
     depends_on:
@@ -83,23 +46,84 @@ services:
     networks:
       - esnet
     ports:
-      - 8080:8080
-    expose:
-      - 8080
+      - 8282:8080
     environment:
       MYSQL_URL: "jdbc:mysql://mysql:3306/twint-wrapper?serverTimeZone=CET&useSSL=false"
       ES_URL: elasticsearch:9200
       ES_HOST: elasticsearch
+      FUSIONAUTH_URL: http://fusionauth:9011
+      FUSIONAUTH_ISSUER: weverify.eu
+      TWITTIE_URL: "http://twitie:8081/gate/process?annotations=:Person,:UserID,:Location,:Organization"
     logging:
       driver: "json-file"
       options:
         max-size: "200k"
         max-size: "200k"
         labels: "twint-wrapper"
+  
+  weverify-twitie:
+    container_name: twitie
+    image: registry.gitlab.com/european-language-grid/usfd/gate-ie-tools/twitie-snapshot:latest
+    restart: always
+    networks:
+      - esnet
+    ports:
+      - 8081:8080
+    environment:
+      ELG_CONCURRENCY: 4
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1m"
+        max-file: "3"
+        labels: "twitie-log"
+
+
+  search:
+    image: docker.elastic.co/elasticsearch/elasticsearch:6.3.1
+    environment:
+      - cluster.name=fusionauth
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms256m -Xmx256m"
+    networks:
+      - esnet
+    restart: unless-stopped
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - es_fusion_data:/usr/share/elasticsearch/data
+     
+  fusionauth:
+    image: fusionauth/fusionauth-app:latest
+    depends_on:
+      - mysql
+      - search
+    environment:
+      DATABASE_URL: jdbc:mysql://mysql:3306/fusionauth
+      DATABASE_ROOT_USER: root
+      DATABASE_ROOT_PASSWORD: devpass123
+      DATABASE_USER: dev1
+      DATABASE_PASSWORD: dev1
+      FUSIONAUTH_MEMORY: 256M
+      FUSIONAUTH_SEARCH_SERVERS: http://search:9200
+      FUSIONAUTH_URL: http://fusionauth:9011
+    networks:
+     - esnet
+    restart: unless-stopped
+    ports:
+      - 9011:9011
+    volumes:
+      - fa_config:/usr/local/fusionauth/config 
+      
+      
 volumes:
   esdata1: {}
-  esdata2: {}  
   mysqldata1: {}
+  fa_config: {}
+  es_fusion_data: {}
+  
 networks:
   esnet:
   
