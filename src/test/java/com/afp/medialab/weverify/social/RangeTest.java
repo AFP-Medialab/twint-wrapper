@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -39,8 +40,15 @@ public class RangeTest {
 	private String date7bis = "2020-01-27 00:00:00";
 	private String date8 = "2020-01-29 00:00:00";
 	private String date9 = "2020-01-30 10:00:00";
+	
+	
+	private String date10 = "2020-03-01 00:00:00";
+	private String date11 = "2020-03-03 00:00:00";
+	
+	private String date12 = "2020-03-05 00:00:00";
+	private String date13 = "2020-03-06 00:00:00";
 
-	private List<DateRange> rangesMulti, rangesSimple, rangeContinous, rangeContinous2;
+	private List<DateRange> rangesMulti, rangesSimple, rangeContinous, rangeContinous2, rangesMulti2;
 
 	@Autowired
 	private RangeDeltaToProcess rangeDeltaToProcess;
@@ -54,6 +62,9 @@ public class RangeTest {
 		rangeContinous = new LinkedList<DateRange>();
 		
 		rangeContinous2 = new LinkedList<DateRange>();
+		
+		rangesMulti2 = new LinkedList<DateRange>();
+		
 
 		DateRange range1 = new DateRange(dateFormat.parse(date1), dateFormat.parse(date2));
 		DateRange range2 = new DateRange(dateFormat.parse(date3), dateFormat.parse(date4));
@@ -79,6 +90,19 @@ public class RangeTest {
 		rangeContinous2.add(range6);
 		rangeContinous2.add(range7);
 		rangeContinous2.add(range8);
+		
+		DateRange range9 = new DateRange(dateFormat.parse(date10),  dateFormat.parse(date11));
+		DateRange range10 = new DateRange(dateFormat.parse(date12),  dateFormat.parse(date13));
+		
+		rangesMulti2.add(range9);
+		rangesMulti2.add(range10);
+		
+		
+		rangesMulti.sort(Comparator.comparing(DateRange::getStartDate).thenComparing(DateRange::getEndDate));
+		rangesSimple.sort(Comparator.comparing(DateRange::getStartDate).thenComparing(DateRange::getEndDate));
+		rangeContinous.sort(Comparator.comparing(DateRange::getStartDate).thenComparing(DateRange::getEndDate));
+		rangeContinous2.sort(Comparator.comparing(DateRange::getStartDate).thenComparing(DateRange::getEndDate));
+		rangesMulti2.sort(Comparator.comparing(DateRange::getStartDate).thenComparing(DateRange::getEndDate));
 		
 	}
 
@@ -248,6 +272,19 @@ public class RangeTest {
 		System.out.println("test 13 : " + dateRQ1 +"-"+ dateRQ2);
 		List<String> ranges = result(rangeContinous2, dateRQ1, dateRQ2);
 		assertEquals(ranges.size(), 0);
+		System.out.println("#################");
+	}
+	
+	@Test
+	@Order(15)
+	public void testEndOutOfRange2() throws ParseException {
+		String dateRQ1 = "2020-03-01 00:00:00";
+		String dateRQ2 = "2020-03-09 00:00:00";
+		System.out.println("test 3 : " + dateRQ1 +"-"+ dateRQ2);
+		List<String> ranges = result(rangesMulti2, dateRQ1, dateRQ2);
+		assertEquals(ranges.size(), 2);
+		assertEquals(ranges.get(0), "Range 1 : 2020-03-03 00:00:00-2020-03-05 00:00:00");
+		assertEquals(ranges.get(1), "Range 2 : 2020-03-06 00:00:00-2020-03-09 00:00:00");
 		System.out.println("#################");
 	}
 	

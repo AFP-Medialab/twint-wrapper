@@ -1,5 +1,6 @@
 package com.afp.medialab.weverify.social.util;
 
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -32,7 +33,7 @@ public class RangeDeltaToProcess {
 		Date rqEndDate = requestRange.getEndDate();
 		DateRange inter = null;
 		boolean sameRange = false;
-
+		existingRange.sort(Comparator.comparing(DateRange::getStartDate).thenComparing(DateRange::getEndDate));
 		for (DateRange dateRange : existingRange) {
 			Date startDate = dateRange.getStartDate();
 			Date endDate = dateRange.getEndDate();

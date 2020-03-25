@@ -26,10 +26,11 @@ import com.afp.medialab.weverify.social.model.Status;
  *
  * @author Medialab
  */
-@Service
+@Service("twintThread")
 public class TwintThread {
 
-	private static Logger Logger = LoggerFactory.getLogger(TwintThread.class);
+	
+	private static final Logger Logger = LoggerFactory.getLogger(TwintThread.class);
 
 	@Value("${command.twint}")
 	private String twintCall;

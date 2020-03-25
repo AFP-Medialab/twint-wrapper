@@ -343,4 +343,18 @@ public class CollectService {
 		return collectHistory;
 
 	}
+	/**
+	 * Create a new collecthistory
+	 * 
+	 * @return
+	 */
+	public CollectHistory createNewCollectHistory(String sessid) {
+		CollectHistory collectHistory = new CollectHistory();
+		
+		collectHistory.setSession(sessid);
+		collectHistory.setProcessStart(Calendar.getInstance().getTime());
+		collectHistory.setStatus(Status.Pending);
+		return collectHistory;
+
+	}
 }

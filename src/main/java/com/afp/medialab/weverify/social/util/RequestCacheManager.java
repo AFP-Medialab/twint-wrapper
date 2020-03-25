@@ -1,12 +1,17 @@
 package com.afp.medialab.weverify.social.util;
 
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -58,9 +63,8 @@ public class RequestCacheManager {
 		if (previousMatch != null && !previousMatch.isEmpty()) {
 			// Requests exist in cache
 			// Try to extend with new dateRange if so
-			completeTimeRanges(collectHistory, collectRequest, previousMatch);
+			collectHistory = completeTimeRanges(collectHistory, collectRequest, previousMatch);
 		} else {
-
 			runNewTwintRequest(collectHistory, collectRequest);
 			mergeRequest(similarRequests, collectRequest);
 		}
@@ -69,6 +73,41 @@ public class RequestCacheManager {
 		return collectResponse;
 	}
 
+	private CollectHistory reusePreviousSessionId(Set<Request> previousMatch) {
+
+		if (previousMatch.isEmpty())
+			return null;
+		List<Request> requests = previousMatch.stream().filter(distinctByKeys(Request::getCollectHistory))
+				.collect(Collectors.toList());
+
+		if (requests.size() > 1)
+			Logger.warn("Similar Request have several collect Id");
+
+		CollectHistory collectHistoryReuse = requests.get(0).getCollectHistory();
+		CollectHistory collectHistory = collectService.createNewCollectHistory(collectHistoryReuse.getSession());
+
+		return collectHistory;
+	}
+
+	@SafeVarargs
+	private static <T> Predicate<T> distinctByKeys(Function<? super T, ?>... keyExtractors) {
+		final Map<List<?>, Boolean> seen = new ConcurrentHashMap<>();
+
+		return t -> {
+			final List<?> keys = Arrays.stream(keyExtractors).map(ke -> ke.apply(t)).collect(Collectors.toList());
+
+			return seen.putIfAbsent(keys, Boolean.TRUE) == null;
+		};
+	}
+
+	/**
+	 * Merge previous request to the new request. Example prev-request = 'Fake' &
+	 * 'News' => new-request= 'Fake' prev-request is merge to new-request because
+	 * new-request is larger.
+	 * 
+	 * @param mergeCandidates
+	 * @param collectRequest
+	 */
 	private void mergeRequest(Set<Request> mergeCandidates, CollectRequest collectRequest) {
 		if (mergeCandidates != null && !mergeCandidates.isEmpty()) {
 			for (Request request : mergeCandidates) {
@@ -85,6 +124,13 @@ public class RequestCacheManager {
 
 	}
 
+	/**
+	 * Extract exact match previous requests
+	 * 
+	 * @param request
+	 * @param collectRequest
+	 * @return
+	 */
 	private Set<Request> exactRequests(Set<Request> request, CollectRequest collectRequest) {
 		Set<Request> filterRequest = new HashSet<Request>();
 		// Set<Request> filterRequest1 = new HashSet<Request>();
@@ -138,14 +184,26 @@ public class RequestCacheManager {
 		return filterRequest;
 	}
 
+	/**
+	 * Get requests match same keywords Example: new-request = 'Fake' => similiar:
+	 * prev-request: 'Fake' & 'News'
+	 * 
+	 * @param collectRequest
+	 * @return
+	 */
 	private Set<Request> similarInCache(CollectRequest collectRequest) {
 		Set<Request> requestSameKeyWords = collectService.requestContainsKeyWords(collectRequest.getKeywordList());
 		Set<Request> machingRequests = mergeCriteria(requestSameKeyWords);
-
 		machingRequests = rangeDeltaToProcess.requestfromDateRange(machingRequests, collectRequest);
 		return machingRequests;
 	}
 
+	/**
+	 * Add similar request as merge candidate if status is not in error
+	 * 
+	 * @param requestSameKeyWords
+	 * @return
+	 */
 	private Set<Request> mergeCriteria(Set<Request> requestSameKeyWords) {
 		Set<Request> machingRequests = new HashSet<Request>();
 		if (requestSameKeyWords != null && requestSameKeyWords.size() > 0) {
@@ -189,6 +247,7 @@ public class RequestCacheManager {
 			ttg.callTwintMultiThreaded(collectHistory, requestsToPerform);
 
 		} else {
+			collectHistory = reusePreviousSessionId(requests);
 			// Request have been done already these elk
 			collectHistory.setStatus(Status.Done);
 			collectHistory.setMessage("Request already processed, no scrapping, see search engine");
@@ -206,12 +265,12 @@ public class RequestCacheManager {
 	 */
 	private CollectRequest runNewTwintRequest(CollectHistory collectHistory, CollectRequest collectRequest,
 			DateRange dateRange) {
-
-		collectRequest.setFrom(dateRange.getStartDate());
-		collectRequest.setUntil(dateRange.getEndDate());
-		Request request = new Request(collectRequest);
+		CollectRequest newCollect = new CollectRequest(collectRequest);
+		newCollect.setFrom(dateRange.getStartDate());
+		newCollect.setUntil(dateRange.getEndDate());
+		Request request = new Request(newCollect);
 		collectHistory.addRequest(request);
-		return collectRequest;
+		return newCollect;
 	}
 
 	/**

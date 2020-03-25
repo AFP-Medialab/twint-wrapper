@@ -1,10 +1,13 @@
 package com.afp.medialab.weverify.social.model;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonParser;
@@ -15,40 +18,48 @@ import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.fasterxml.jackson.databind.node.TextNode;
 
 public class SetStringNormalizerDeserializer extends StdDeserializer<Set<String>> {
-	
+
 	public SetStringNormalizerDeserializer() {
 		this(null);
 	}
-	
+
 	public SetStringNormalizerDeserializer(Class<?> vc) {
 		super(vc);
-		// TODO Auto-generated constructor stub
 	}
 
-	
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 7616490862955541690L;
 
+	private String regex = "[,]";
+	private List<String> stopWords = Arrays.asList("and", "or", "not");
+
 	@Override
 	public Set<String> deserialize(JsonParser p, DeserializationContext ctxt)
 			throws IOException, JsonProcessingException {
 		JsonNode node = p.getCodec().readTree(p);
-		
-		if(!node.isArray()) {
-			 throw new JsonParseException(p, "Unsupported formats");
+
+		if (!node.isArray()) {
+			throw new JsonParseException(p, "Unsupported formats");
 		}
 		SortedSet<String> elements = new TreeSet<String>();
 		Iterator<JsonNode> iter = node.elements();
-		while(iter.hasNext()) {
+		while (iter.hasNext()) {
 			JsonNode nod = iter.next();
-			if(nod instanceof TextNode) {
-				String text = ((TextNode)nod).asText();
-				elements.add(text.toLowerCase());
+			if (nod instanceof TextNode) {
+				String text = ((TextNode) nod).asText();
+				text = text.replaceAll(regex, " ");
+				text = text.toLowerCase().trim();
+				String[] token = text.split("\\s+");
+				List<String> tokens = Arrays.asList(token);
+
+				elements.addAll(tokens.stream().filter(tk -> stopWords.stream().noneMatch(tk::equals))
+						.collect(Collectors.toList()));
+
 			}
 		}
-		
+
 		return elements;
 	}
 

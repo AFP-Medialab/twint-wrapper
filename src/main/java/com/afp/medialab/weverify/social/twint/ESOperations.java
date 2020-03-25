@@ -98,12 +98,13 @@ public class ESOperations {
 
 		int i = 0;
 		boolean allNull = true;
+		Logger.info("call Twittie WS for {} extracted tweets", tms.size());
 		for (TwintModel tm : tms) {
 
 			if (tm.getWit() == null) {
 				try {
 					allNull = false;
-					Logger.info("Builtin wit : " + i++ + "/" + tms.size());
+					Logger.debug("Builtin wit : " + i++ + "/" + tms.size());
 					twintModelAdapter.buildWit(tm);
 
 					ObjectMapper mapper = new ObjectMapper();

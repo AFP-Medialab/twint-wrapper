@@ -97,6 +97,11 @@ public class TwintModelAdapter {
 
 	}
 
+	/**
+	 * Call Twittie Gate webservice
+	 * @return
+	 * @throws IOException
+	 */
 	private Map<String, String> callTwittie() throws IOException {
 
 		// HTTPConnexion Timeout
@@ -109,7 +114,7 @@ public class TwintModelAdapter {
 			twittieDown = true;
 			return null;
 		}
-		Logger.info("SUCCESSFULLY CALLED TWITTIE");
+		Logger.debug("SUCCESSFULLY CALLED TWITTIE");
 		ObjectMapper mapper = new ObjectMapper();
 
 		JsonNode root = mapper.readTree(response.getBody());
