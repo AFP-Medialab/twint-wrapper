@@ -7,6 +7,7 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -32,9 +33,15 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Configuration
-public class TwintModelAdapter {
+/**
+ * Call Tweetie service
+ * Count number of word occurences with entity type if detecte by tweetie
+ * @author Bertrand Goupil
+ *
+ */
+public class TweetsPostProcess {
 
-	private static org.slf4j.Logger Logger = LoggerFactory.getLogger(TwintModelAdapter.class);
+	private static org.slf4j.Logger Logger = LoggerFactory.getLogger(TweetsPostProcess.class);
 
 	@Autowired
 	@Qualifier("ESRestTempate")
@@ -46,14 +53,12 @@ public class TwintModelAdapter {
 	private Map<String, List<String>> stopwords;
 	private List<String> regExps;
 
-	private String tweet;
-
 	@Value("classpath:stopwords.json")
 	private Resource stopWordsResource;
 
 	@Value("classpath:regexp.txt")
 	private Resource regexResource;
-	
+
 	private boolean twittieDown = false;
 
 	@SuppressWarnings("unchecked")
@@ -79,7 +84,7 @@ public class TwintModelAdapter {
 		reader.close();
 	}
 
-	private String getTweetLang(String[] langs) {
+	private String getTweetLang(String tweet, String[] langs) {
 		Map<String, Float> percents = new TreeMap<>();
 
 		Arrays.stream(langs).forEach(lang -> {
@@ -99,10 +104,11 @@ public class TwintModelAdapter {
 
 	/**
 	 * Call Twittie Gate webservice
+	 * 
 	 * @return
 	 * @throws IOException
 	 */
-	private Map<String, String> callTwittie() throws IOException {
+	private List<Tweetie> callTwittie(String tweet) throws IOException {
 
 		// HTTPConnexion Timeout
 		ResponseEntity<String> response = null;
@@ -114,59 +120,74 @@ public class TwintModelAdapter {
 			twittieDown = true;
 			return null;
 		}
-		Logger.debug("SUCCESSFULLY CALLED TWITTIE");
+		// Logger.debug("SUCCESSFULLY CALLED TWITTIE");
 		ObjectMapper mapper = new ObjectMapper();
 
 		JsonNode root = mapper.readTree(response.getBody());
 		JsonNode annotations = root.get("response").get("annotations");
 
 		TwittieResponse twittieResponse = mapper.treeToValue(annotations, TwittieResponse.class);
-		Map<String, String> tokenJSON = new HashMap<>();
+		List<Tweetie> tweeties = new LinkedList<Tweetie>();
 
 		twittieResponse.getPerson().forEach(p -> {
 			String per = p.getFeatures().getString();
 			String n_per = per.toLowerCase().replaceAll(" |/.", "_");
-			tweet = tweet.replaceAll(per, n_per);
+			Tweetie tweetie = new Tweetie(per, n_per, "Person");
+			tweeties.add(tweetie);
+			// tweetTweetie = tweet.replaceAll(per, n_per);
 
-			tokenJSON.put(n_per, "Person");
+			// tokenJSON.put(n_per, "Person");
 		});
 		twittieResponse.getUserID().forEach(p -> {
-			tweet = tweet.replaceAll(p.getFeatures().getString(),
-					p.getFeatures().getString().toLowerCase().replaceAll("@", ""));
-			tokenJSON.put("@" + p.getFeatures().getString().toLowerCase(), "UserID");
+			String feat = "@" + p.getFeatures().getString();
+			// String norm = p.getFeatures().getString().toLowerCase().replaceAll("@", "");
+			String norm = "@" + p.getFeatures().getString().toLowerCase();
+			// tweet = tweet.replaceAll(p.getFeatures().getString(),
+			// p.getFeatures().getString().toLowerCase().replaceAll("@", ""));
+			Tweetie tweetie = new Tweetie(feat, norm, "UserID");
+			tweeties.add(tweetie);
+			// tokenJSON.put("@" + p.getFeatures().getString().toLowerCase(), "UserID");
 		});
 		twittieResponse.getLocation().forEach(p -> {
 			String per = p.getFeatures().getString();
 			String n_per = per.toLowerCase().replaceAll(" |/.", "_");
-			tweet = tweet.replaceAll(per, n_per);
-			tokenJSON.put(n_per, "Location");
+			Tweetie tweetie = new Tweetie(per, n_per, "Location");
+			tweeties.add(tweetie);
+			// tweet = tweet.replaceAll(per, n_per);
+			// tokenJSON.put(n_per, "Location");
 		});
 		twittieResponse.getOrganization().forEach(p -> {
 			String per = p.getFeatures().getString();
 			String n_per = per.toLowerCase().replaceAll(" |/.", "_");
-			tweet = tweet.replaceAll(per, n_per);
-			tokenJSON.put(n_per, "Organization");
+			Tweetie tweetie = new Tweetie(per, n_per, "Organization");
+			tweeties.add(tweetie);
+			// tweet = tweet.replaceAll(per, n_per);
+			// tokenJSON.put(n_per, "Organization");
 		});
 
-		return tokenJSON;
+		return tweeties;
 	}
-	
-	public void buildWit(TwintModel tm) throws InterruptedException, ParseException, IOException {
 
-		tweet = tm.getTweet();
+	public List<TwintModel.WordsInTweet> buildWit(String tweet, String search)
+			throws InterruptedException, ParseException, IOException {
+
 		tweet = StringUtils.normalizeSpace(tweet);
-		Map<String, String> tokensNamed;
-		if (!twittieDown)
-			tokensNamed = callTwittie();
-		else
-			tokensNamed = null;
+		List<Tweetie> tweeties;
+		Map<String, String> tokenJSON = new HashMap<>();
+		if (!twittieDown) {
+			tweeties = callTwittie(tweet);
+			for (Tweetie tweetie : tweeties) {
+				tweet = tweet.replaceAll(tweetie.getFeature(), tweetie.getNormalized());
+				tokenJSON.put(tweetie.getNormalized(), tweetie.getEntity());
+			}
+		}
 
 		String[] langs = new String[] { "fr", "en" };
 
-		List<String> stopLang = stopwords.get(getTweetLang(langs));
+		List<String> stopLang = stopwords.get(getTweetLang(tweet, langs));
 		List<String> stopGlob = stopwords.get("glob");
 
-		stopGlob.addAll(Arrays.asList(tm.getSearch().replaceAll("#", "").split(" ")));
+		stopGlob.addAll(Arrays.asList(search.replaceAll("#", "").split(" ")));
 		// String tweet = tm.getTweet();
 
 		for (String regExp : regExps) {
@@ -192,13 +213,12 @@ public class TwintModelAdapter {
 			TwintModel.WordsInTweet w = new TwintModel.WordsInTweet();
 			w.setWord(word);
 			w.setNbOccurences(occ);
-			w.setEntity((tokensNamed != null && tokensNamed.get(word) != null) ? tokensNamed.get(word) : null);
+			w.setEntity((tokenJSON.get(word) != null) ? tokenJSON.get(word) : null);
 
 			wit.add(w);
 		});
 
-		tm.setTwittieTweet(tweet);
-		tm.setWit(wit);
+		return wit;
 	}
 
 	@Bean
@@ -211,8 +231,28 @@ public class TwintModelAdapter {
 		clientHttpRequestFactory.setReadTimeout(10_000);
 		return new RestTemplate(clientHttpRequestFactory);
 	}
+}
 
-	public String getTweet() {
-		return tweet;
+class Tweetie {
+	private String feature;
+	private String normalized;
+	private String entity;
+
+	public Tweetie(String feature, String normalized, String entity) {
+		this.feature = feature;
+		this.normalized = normalized;
+		this.entity = entity;
+	}
+
+	public String getFeature() {
+		return feature;
+	}
+
+	public String getNormalized() {
+		return normalized;
+	}
+
+	public String getEntity() {
+		return entity;
 	}
 }

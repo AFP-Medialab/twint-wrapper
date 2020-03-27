@@ -3,9 +3,9 @@ package com.afp.medialab.weverify.social.twint;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 import org.slf4j.Logger;
@@ -20,6 +20,7 @@ import com.afp.medialab.weverify.social.dao.entity.CollectHistory;
 import com.afp.medialab.weverify.social.dao.service.CollectService;
 import com.afp.medialab.weverify.social.model.CollectRequest;
 import com.afp.medialab.weverify.social.model.Status;
+import com.afp.medialab.weverify.social.model.twint.TwintModel;
 
 /**
  * Run twint command in a asynchronous thread
@@ -29,7 +30,6 @@ import com.afp.medialab.weverify.social.model.Status;
 @Service("twintThread")
 public class TwintThread {
 
-	
 	private static final Logger Logger = LoggerFactory.getLogger(TwintThread.class);
 
 	@Value("${command.twint}")
@@ -47,7 +47,8 @@ public class TwintThread {
 	@Autowired
 	CollectService collectService;
 
-	private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+	// private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd
+	// HH:mm:ss");
 
 	// private Object lock = new Object();
 
@@ -68,9 +69,15 @@ public class TwintThread {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		try {
+			Thread.sleep(2000);
+			List<TwintModel> tms = esOperation.enrichWithTweetie(request);
+			esOperation.indexWordsObj(tms);
+		} catch (IOException | InterruptedException e) {
+			Logger.error("error with tweeetie", e);
+		}
 
 		// update db to say this thread is finished
-//		synchronized (lock) {
 		collectHistory.setFinished_threads(collectHistory.getFinished_threads() + 1);
 		Integer old_count = collectHistory.getCount();
 		if (old_count == null || old_count == -1)
@@ -78,32 +85,18 @@ public class TwintThread {
 		else
 			collectHistory.setCount(result + old_count);
 		collectService.save_collectHistory(collectHistory);
-//		}
 
 		if (result != -1) {
-//			synchronized (lock) {
 			collectHistory.setSuccessful_threads(collectHistory.getSuccessful_threads() + 1);
 			collectService.save_collectHistory(collectHistory);
-//			}
 		}
 
-//		synchronized (lock) {
 		int finished_threads = collectHistory.getFinished_threads();
 		int successful_threads = collectHistory.getSuccessful_threads();
 		int total_threads = collectHistory.getTotal_threads();
+		Logger.debug("FINISH THREAD {}, SUCCCESS {}, TOTAL THREAD {}", finished_threads, successful_threads,
+				total_threads);
 		if (finished_threads == total_threads) {
-			if (collectHistory.getCount() > 0) {
-				try {
-
-					collectHistory.setStatus(Status.CountingWords);
-					collectService.save_collectHistory(collectHistory);
-					esOperation.enrichWithTweetie(collectHistory.getSession(),
-							dateFormat.format(((CollectRequest) request).getFrom()),
-							dateFormat.format(((CollectRequest) request).getUntil()));
-				} catch (IOException e) {
-					Logger.error("error with tweeetie", e);
-				}
-			}
 
 			collectHistory.setStatus(Status.Done);
 			collectHistory.setProcessEnd(Calendar.getInstance().getTime());

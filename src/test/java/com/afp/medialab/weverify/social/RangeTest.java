@@ -47,8 +47,14 @@ public class RangeTest {
 	
 	private String date12 = "2020-03-05 00:00:00";
 	private String date13 = "2020-03-06 00:00:00";
+	
+	private String date14 = "2020-03-07 00:00:00";
+	private String date15 = "2020-03-08 00:00:00";
+	
+	private String date16  = "2020-03-10 00:00:00";
+	private String date17  = "2020-03-12 00:00:00";
 
-	private List<DateRange> rangesMulti, rangesSimple, rangeContinous, rangeContinous2, rangesMulti2;
+	private List<DateRange> rangesMulti, rangesSimple, rangeContinous, rangeContinous2, rangesMulti2, rangeContinous3;
 
 	@Autowired
 	private RangeDeltaToProcess rangeDeltaToProcess;
@@ -65,6 +71,7 @@ public class RangeTest {
 		
 		rangesMulti2 = new LinkedList<DateRange>();
 		
+		rangeContinous3 = new LinkedList<DateRange>();
 
 		DateRange range1 = new DateRange(dateFormat.parse(date1), dateFormat.parse(date2));
 		DateRange range2 = new DateRange(dateFormat.parse(date3), dateFormat.parse(date4));
@@ -103,6 +110,16 @@ public class RangeTest {
 		rangeContinous.sort(Comparator.comparing(DateRange::getStartDate).thenComparing(DateRange::getEndDate));
 		rangeContinous2.sort(Comparator.comparing(DateRange::getStartDate).thenComparing(DateRange::getEndDate));
 		rangesMulti2.sort(Comparator.comparing(DateRange::getStartDate).thenComparing(DateRange::getEndDate));
+		
+		DateRange range11 = new DateRange(dateFormat.parse(date13),  dateFormat.parse(date14));
+		DateRange range12 = new DateRange(dateFormat.parse(date14),  dateFormat.parse(date15));
+		DateRange range13 = new DateRange(dateFormat.parse(date16),  dateFormat.parse(date17));
+		
+		rangeContinous3.add(range9);
+		rangeContinous3.add(range10);
+		rangeContinous3.add(range11);
+		rangeContinous3.add(range12);
+		rangeContinous3.add(range13);
 		
 	}
 
@@ -287,6 +304,37 @@ public class RangeTest {
 		assertEquals(ranges.get(1), "Range 2 : 2020-03-06 00:00:00-2020-03-09 00:00:00");
 		System.out.println("#################");
 	}
+	
+	@Test
+	@Order(16)
+	public void testContinious() throws ParseException {
+		String dateRQ1 = "2020-03-04 00:00:00";
+		String dateRQ2 = "2020-03-06 00:00:00";
+		System.out.println("test 16 : " + dateRQ1 +"-"+ dateRQ2);
+		List<String> ranges = result(rangeContinous3, dateRQ1, dateRQ2);
+		assertEquals(ranges.size(), 1);
+		assertEquals(ranges.get(0), "Range 1 : 2020-03-04 00:00:00-2020-03-05 00:00:00");
+		
+		System.out.println("#################");
+	}
+	
+	@Test
+	@Order(17)
+	public void testMergeRange(){
+		List<DateRange> merge1 = rangeDeltaToProcess.mergeExistingDateRange(rangesMulti);
+		assertEquals(merge1.size(), 3);
+		List<DateRange> merge2 = rangeDeltaToProcess.mergeExistingDateRange(rangesSimple);
+		assertEquals(merge2.size(), 1);
+		List<DateRange> merge3 = rangeDeltaToProcess.mergeExistingDateRange(rangeContinous);
+		assertEquals(merge3.size(), 1);
+		List<DateRange> merge4 = rangeDeltaToProcess.mergeExistingDateRange(rangeContinous2);
+		assertEquals(merge4.size(), 1);
+		List<DateRange> merge5 = rangeDeltaToProcess.mergeExistingDateRange(rangesMulti2);
+		assertEquals(merge5.size(), 2);
+		List<DateRange> merge6 = rangeDeltaToProcess.mergeExistingDateRange(rangeContinous3);
+		assertEquals(merge6.size(), 3);
+	}
+	
 	
 	private List<String> result(List<DateRange> range, String dateRQ1, String dateRQ2) throws ParseException {
 		DateRange rqDateRange = new DateRange(dateFormat.parse(dateRQ1), dateFormat.parse(dateRQ2));

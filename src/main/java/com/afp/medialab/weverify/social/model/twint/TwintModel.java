@@ -7,6 +7,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 @Document(indexName = "twinttweets", type = "_doc")
 public class TwintModel {
@@ -18,7 +19,7 @@ public class TwintModel {
 
 	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
 	private Date date;
-	private String timezone, place, tweet, twittieTweet;
+	private String timezone, place, tweet;
 
 	public String[] getHashtags() {
 		return hashtags;
@@ -252,14 +253,6 @@ public class TwintModel {
 		this.wit = wit;
 	}
 
-	public String getTwittieTweet() {
-		return twittieTweet;
-	}
-
-	public void setTwittieTweet(String twittieTweet) {
-		this.twittieTweet = twittieTweet;
-	}
-
 
 	class ReplyTo {
 		private String user_id, username;
@@ -286,7 +279,7 @@ public class TwintModel {
 		Location,
 		UserID
 	}*/
-
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public static class WordsInTweet {
 		private String word;
 		private int nbOccurences;

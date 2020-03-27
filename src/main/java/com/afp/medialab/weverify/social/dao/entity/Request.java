@@ -62,15 +62,15 @@ public class Request implements Serializable {
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JsonBackReference
 	private CollectHistory collectHistory;
-	
+
 	@Column(name = "merge")
 	private Boolean merge = false;
 
 	public Request() {
 	}
 
-	public Request(SortedSet<String> keywordList, SortedSet<String> bannedWords, String language,
-			SortedSet<String> userList, Date since, Date until, String media) {
+	public Request(Set<String> keywordList, Set<String> bannedWords, String language, Set<String> userList, Date since,
+			Date until, String media) {
 		this.keywordList = keywordList;
 		this.bannedWords = bannedWords;
 		this.language = language;
@@ -81,13 +81,9 @@ public class Request implements Serializable {
 	}
 
 	public Request(CollectRequest collectRequest) {
-		this.keywordList = collectRequest.getKeywordList();
-		this.bannedWords = collectRequest.getBannedWords();
-		this.language = collectRequest.getLang();
-		this.userList = collectRequest.getUserList();
-		this.since = collectRequest.getFrom();
-		this.until = collectRequest.getUntil();
-		this.media = collectRequest.getMedia();
+		this(collectRequest.getKeywordList(), collectRequest.getBannedWords(), collectRequest.getLang(),
+				collectRequest.getUserList(), collectRequest.getFrom(), collectRequest.getUntil(),
+				collectRequest.getMedia());
 	}
 
 	public void update(CollectRequest collectRequest) {

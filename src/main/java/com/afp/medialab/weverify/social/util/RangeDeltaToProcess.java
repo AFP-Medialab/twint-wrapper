@@ -29,11 +29,12 @@ public class RangeDeltaToProcess {
 	public List<DateRange> rangeToProcess(List<DateRange> existingRange, DateRange requestRange) {
 
 		List<DateRange> dateRangeToProcess = new LinkedList<DateRange>();
+		
 		Date rqStartDate = requestRange.getStartDate();
 		Date rqEndDate = requestRange.getEndDate();
 		DateRange inter = null;
 		boolean sameRange = false;
-		existingRange.sort(Comparator.comparing(DateRange::getStartDate).thenComparing(DateRange::getEndDate));
+		existingRange = mergeExistingDateRange(existingRange);
 		for (DateRange dateRange : existingRange) {
 			Date startDate = dateRange.getStartDate();
 			Date endDate = dateRange.getEndDate();
@@ -134,6 +135,49 @@ public class RangeDeltaToProcess {
 			}
 		}
 		return machingRequests;
+	}
+
+	/**
+	 * Merge following dateRanges
+	 * @param existingRanges
+	 * @return
+	 */
+	public List<DateRange> mergeExistingDateRange(List<DateRange> existingRanges) {
+		existingRanges.sort(Comparator.comparing(DateRange::getStartDate).thenComparing(DateRange::getEndDate));
+		List<DateRange> mergeDateRanges = new LinkedList<DateRange>();
+		
+		DateRange mergeDateRange = null;
+		
+		for (DateRange dateRange : existingRanges) {
+			Date start = dateRange.getStartDate();
+			Date end = dateRange.getEndDate();
+			if (mergeDateRange == null) {
+				mergeDateRange = dateRange;
+				mergeDateRanges.add(dateRange);
+			} else {
+				Date prevStart = mergeDateRange.getStartDate();
+				Date prevEnd = mergeDateRange.getEndDate();
+
+				if (prevEnd.equals(start)) {
+					if(mergeDateRange.getEndDate().equals(start)) {
+						mergeDateRanges.remove(mergeDateRange);
+						DateRange mergeDateRange2 = new DateRange(prevStart, end);
+						mergeDateRange = mergeDateRange2;
+						
+					}else {
+						mergeDateRange = new DateRange(prevStart, end);
+					}
+					mergeDateRanges.add(mergeDateRange);
+				} else {
+					mergeDateRange = dateRange;
+					mergeDateRanges.add(dateRange);
+				}
+			}
+			
+		}
+//		if(!isMerge)
+//			mergeDateRanges.add(previousRange);
+		return mergeDateRanges;
 	}
 
 	/**

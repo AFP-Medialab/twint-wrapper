@@ -90,6 +90,7 @@ Full application with all components run with docker-compose
 
 FusionAuth executed with docker-compose use a setup sql script that embedded minimum configuration to add authorized users.
 This inialisation will be set at first docker-compose startup.
+Supported version is 1.15.* (tested with 1.15.2 & 1.15.5)
 
 Setup to grant users are:
 
