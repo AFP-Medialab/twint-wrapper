@@ -54,6 +54,9 @@ Test twint image:
 	$ docker-compose -f docker-compose-kibana.yml up -d
 
 
+Some linux system need to increase it virtual memory cf [https://www.elastic.co/guide/en/elasticsearch/reference/current/vm-max-map-count.html](https://www.elastic.co/guide/en/elasticsearch/reference/current/vm-max-map-count.html). If elasticsearch fails at startup:
+
+	sudo sysctl -w vm.max_map_count=262144
 
 ## Builds
 Default build build Spring-Boot application as jar file. Default profile is dev

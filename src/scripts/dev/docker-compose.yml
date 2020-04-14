@@ -58,7 +58,7 @@ services:
       - mysql
       - search
     environment:
-      DATABASE_URL: jdbc:mysql://mysql:3306/fusionauth
+      DATABASE_URL: jdbc:mysql://mysql:3306/fusionauth?serverTimezone=CET
       DATABASE_ROOT_USER: root
       DATABASE_ROOT_PASSWORD: devpass123
       DATABASE_USER: dev1
