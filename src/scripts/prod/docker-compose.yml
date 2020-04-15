@@ -48,7 +48,7 @@ services:
     ports:
       - 8282:8080
     environment:
-      MYSQL_URL: "jdbc:mysql://mysql:3306/twint-wrapper?serverTimeZone=CET&useSSL=false"
+      MYSQL_URL: "jdbc:mysql://mysql:3306/twint-wrapper?serverTimezone=CET&useSSL=false"
       ES_URL: elasticsearch:9200
       ES_HOST: elasticsearch
       FUSIONAUTH_URL: http://fusionauth:9011
@@ -102,7 +102,7 @@ services:
       - mysql
       - search
     environment:
-      DATABASE_URL: jdbc:mysql://mysql:3306/fusionauth
+      DATABASE_URL: jdbc:mysql://mysql:3306/fusionauth?serverTimezone=CET
       DATABASE_ROOT_USER: root
       DATABASE_ROOT_PASSWORD: devpass123
       DATABASE_USER: dev1
