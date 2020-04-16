@@ -308,6 +308,20 @@ public class CollectService {
 		ttg.callTwintMultiThreaded(collectHistory, newCollectRequest);
 	}
 
+	/**
+	 * Update existing request
+	 * @param collectHistory
+	 */
+	public void callTwint(CollectHistory collectHistory) {
+
+		List<Request> requests = collectHistory.getRequests();
+		for (Request request : requests) {
+			CollectRequest newCollectRequest = new CollectRequest(request);
+			ttg.callTwintMultiThreaded(collectHistory, newCollectRequest);
+		}
+
+	}
+
 	// New simplified methods
 
 	public Set<Request> requestContainsKeyWords(Set<String> keywords) {
@@ -343,6 +357,7 @@ public class CollectService {
 		return collectHistory;
 
 	}
+
 	/**
 	 * Create a new collecthistory
 	 * 
@@ -350,7 +365,7 @@ public class CollectService {
 	 */
 	public CollectHistory createNewCollectHistory(String sessid) {
 		CollectHistory collectHistory = new CollectHistory();
-		
+
 		collectHistory.setSession(sessid);
 		collectHistory.setProcessStart(Calendar.getInstance().getTime());
 		collectHistory.setStatus(Status.Pending);

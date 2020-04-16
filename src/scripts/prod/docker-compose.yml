@@ -38,7 +38,7 @@ services:
       - esnet
       
   twint-wrapper:
-    image: twint-wrapper:1.1.0
+    image: twint-wrapper:1.1.1
     container_name: twint-wrapper
     restart: on-failure
     depends_on:
@@ -54,6 +54,7 @@ services:
       FUSIONAUTH_URL: http://fusionauth:9011
       FUSIONAUTH_ISSUER: weverify.eu
       TWITTIE_URL: "http://twitie:8080/gate/process?annotations=:Person,:UserID,:Location,:Organization"
+      SLACK_URL: ${SLACK_URL}
       PROFILE: demo,default
     logging:
       driver: "json-file"

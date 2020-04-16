@@ -68,6 +68,7 @@ public class TwintThread {
 			result = callProcessUntilSuccess(request, collectHistory.getSession());
 		} catch (IOException e) {
 			e.printStackTrace();
+			Logger.error("Error calling twint process", e);
 		}
 		try {
 			Thread.sleep(2000);

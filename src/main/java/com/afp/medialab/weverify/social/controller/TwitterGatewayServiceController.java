@@ -230,10 +230,10 @@ public class TwitterGatewayServiceController {
 
         collectHistory.setStatus(Status.Pending);
 		// Request request = collectHistory.getRequest();
-		Request request = new Request();
         collectHistory.setProcessStart(new Date());
         collectService.save_collectHistory(collectHistory);
-		collectService.callTwintOnInterval(collectHistory, request, request.getSince(), request.getUntil());
+		collectService.callTwint(collectHistory);
+		
         return getStatusResponse(session);
     }
 }

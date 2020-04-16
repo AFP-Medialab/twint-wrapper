@@ -4,6 +4,7 @@ target/
 !**/src/main/**
 !**/src/test/**
 /src/main/resources/application-*
+/src/scripts/prod/.env
 
 ### STS ###
 .apt_generated

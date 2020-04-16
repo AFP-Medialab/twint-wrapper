@@ -74,6 +74,13 @@ public class ESOperations {
 		indexWordsObj(model);
 	}
 
+	/**
+	 * TODO to remove if not used
+	 * @param collectRequest
+	 * @param collectHistory
+	 * @return
+	 * @throws IOException
+	 */
 	public List<TwintModel> enrichWithTweetie(CollectRequest collectRequest, CollectHistory collectHistory)
 			throws IOException {
 		List<Request> requests = collectHistory.getRequests();
