@@ -16,9 +16,14 @@ import javax.validation.Valid;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -30,6 +35,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.server.ResponseStatusException;
@@ -97,10 +103,18 @@ public class JwtAuthenticationController {
 
 	@Value("${spring.profiles.active:}")
 	private String activeProfiles;
+	
+	@Value("${application.notification.slack}")
+	private String slackNotification;
+	
 	private boolean initialized = false;
 
 	private boolean devProfile = false;
-
+	
+	@Autowired
+	@Qualifier("ESRestTempate")
+	private RestTemplate restTemplate;
+	
 	/**
 	 * Constructor.
 	 */
@@ -198,6 +212,24 @@ public class JwtAuthenticationController {
 		if (!deactivateUserResponse.wasSuccessful()) {
 			Logger.warn("Service error deactivating user {}: {}", userEmail,
 					formatClientResponse(deactivateUserResponse));
+		}
+		//Notification
+		if(!slackNotification.equals("")) {
+			HttpHeaders headers = new HttpHeaders();
+			// set `content-type` header
+			headers.setContentType(MediaType.APPLICATION_JSON);
+			
+			Map<String, Object> map = new HashMap<>();
+			map.put("text", "new user register: " + user.email);
+			// build the request
+			HttpEntity<Map<String, Object>> entity = new HttpEntity<>(map, headers);
+			
+			// send POST request
+			ResponseEntity<String> response = restTemplate.postForEntity(slackNotification, entity, String.class);
+			if(!response.getStatusCode().equals(HttpStatus.OK))
+			{
+				Logger.warn("Failed sending notification");
+			}
 		}
 
 		return;

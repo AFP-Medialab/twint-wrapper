@@ -24,7 +24,9 @@ application:
     port: ${ES_PORT:9200}
   twittie:
     url: ${TWITTIE_URL:http://localhost:8081/gate/process?annotations=:Person,:UserID,:Location,:Organization}
-
+  notification:
+    slack: ${SLACK_URL:}
+  
 spring:
   jackson:
     time-zone: Europe/Paris

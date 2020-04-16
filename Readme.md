@@ -136,5 +136,9 @@ Add an access to your local FusionAuth by creating [an application password](htt
 * Copy paste the generated password to FusionAuth Email configuration. 
  
 
+## Slack notification
+It is possible to get notify to your slack account when a user registered.
+
+To add this feature just set the environment variable $SLACK_URL in the run time with your own slack URL.
 
 
