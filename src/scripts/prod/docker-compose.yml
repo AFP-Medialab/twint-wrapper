@@ -28,6 +28,7 @@ services:
         MYSQL_USER: dev1
         MYSQL_PASSWORD: dev1
         MYSQL_DATABASE: twint-wrapper
+        TZ: UTC
     container_name: mysql
     volumes:
       - mysqldata1:/var/lib/mysql
@@ -48,7 +49,7 @@ services:
     ports:
       - 8282:8080
     environment:
-      MYSQL_URL: "jdbc:mysql://mysql:3306/twint-wrapper?serverTimezone=CET&useSSL=false"
+      MYSQL_URL: "jdbc:mysql://mysql:3306/twint-wrapper?serverTimezone=UTC&useSSL=false"
       ES_URL: elasticsearch:9200
       ES_HOST: elasticsearch
       FUSIONAUTH_URL: http://fusionauth:9011
@@ -103,7 +104,7 @@ services:
       - mysql
       - search
     environment:
-      DATABASE_URL: jdbc:mysql://mysql:3306/fusionauth?serverTimezone=CET
+      DATABASE_URL: jdbc:mysql://mysql:3306/fusionauth?serverTimezone=UTC
       DATABASE_ROOT_USER: root
       DATABASE_ROOT_PASSWORD: devpass123
       DATABASE_USER: dev1

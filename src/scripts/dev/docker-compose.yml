@@ -27,7 +27,7 @@ services:
         MYSQL_USER: dev1
         MYSQL_PASSWORD: dev1
         MYSQL_DATABASE: twint-wrapper
-        TZ: Europe/Paris
+        TZ: UTC
     volumes:
       - mysqldata1:/var/lib/mysql
       - ./fusionauth-2020-weverify.sql:/docker-entrypoint-initdb.d/init.sql
@@ -58,7 +58,7 @@ services:
       - mysql
       - search
     environment:
-      DATABASE_URL: jdbc:mysql://mysql:3306/fusionauth?serverTimezone=CET
+      DATABASE_URL: jdbc:mysql://mysql:3306/fusionauth?serverTimezone=UTC
       DATABASE_ROOT_USER: root
       DATABASE_ROOT_PASSWORD: devpass123
       DATABASE_USER: dev1
