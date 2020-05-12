@@ -28,8 +28,10 @@ public class RangeDeltaToProcess {
 	 */
 	public List<DateRange> rangeToProcess(List<DateRange> existingRange, DateRange requestRange) {
 
+		if (requestRange == null)
+			return null;
 		List<DateRange> dateRangeToProcess = new LinkedList<DateRange>();
-		
+
 		Date rqStartDate = requestRange.getStartDate();
 		Date rqEndDate = requestRange.getEndDate();
 		DateRange inter = null;
@@ -139,15 +141,16 @@ public class RangeDeltaToProcess {
 
 	/**
 	 * Merge following dateRanges
+	 * 
 	 * @param existingRanges
 	 * @return
 	 */
 	public List<DateRange> mergeExistingDateRange(List<DateRange> existingRanges) {
 		existingRanges.sort(Comparator.comparing(DateRange::getStartDate).thenComparing(DateRange::getEndDate));
 		List<DateRange> mergeDateRanges = new LinkedList<DateRange>();
-		
+
 		DateRange mergeDateRange = null;
-		
+
 		for (DateRange dateRange : existingRanges) {
 			Date start = dateRange.getStartDate();
 			Date end = dateRange.getEndDate();
@@ -159,12 +162,12 @@ public class RangeDeltaToProcess {
 				Date prevEnd = mergeDateRange.getEndDate();
 
 				if (prevEnd.equals(start)) {
-					if(mergeDateRange.getEndDate().equals(start)) {
+					if (mergeDateRange.getEndDate().equals(start)) {
 						mergeDateRanges.remove(mergeDateRange);
 						DateRange mergeDateRange2 = new DateRange(prevStart, end);
 						mergeDateRange = mergeDateRange2;
-						
-					}else {
+
+					} else {
 						mergeDateRange = new DateRange(prevStart, end);
 					}
 					mergeDateRanges.add(mergeDateRange);
@@ -173,7 +176,7 @@ public class RangeDeltaToProcess {
 					mergeDateRanges.add(dateRange);
 				}
 			}
-			
+
 		}
 //		if(!isMerge)
 //			mergeDateRanges.add(previousRange);

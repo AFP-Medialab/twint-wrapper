@@ -42,6 +42,8 @@ public class CollectRequest {
 	private String media;
 
 	private Boolean verified = false;
+	
+	private Boolean disableTimeRange = false;
 
 	@RetweetHandlingConstrain
 	private String retweetsHandling;
@@ -59,6 +61,7 @@ public class CollectRequest {
 		this.media = collectRequest.media;
 		this.verified = collectRequest.verified;
 		this.retweetsHandling = collectRequest.retweetsHandling;
+		this.disableTimeRange = collectRequest.disableTimeRange;
 	}
 
 	public CollectRequest(Request request) {
@@ -140,6 +143,15 @@ public class CollectRequest {
 	public void setVerified(boolean verified) {
 		this.verified = verified;
 	}
+	
+	
+	public Boolean isDisableTimeRange() {
+		return disableTimeRange;
+	}
+
+	public void setDisableTimeRange(boolean disableTimeRange) {
+		this.disableTimeRange = disableTimeRange;
+	}
 
 	/**
 	 * @param overObject
@@ -183,7 +195,7 @@ public class CollectRequest {
 			return false;
 		if (this.keywordList != null && this.keywordList.size() == 0 && userList.size() == 0)
 			return false;
-		if (this.from == null || this.until == null)
+		if (!this.disableTimeRange && (this.from == null || this.until == null))
 			return false;
 		return true;
 	}

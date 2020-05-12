@@ -54,7 +54,11 @@ public class TwintThreadGroup {
 		ArrayList<CollectRequest> collectRequestList = new ArrayList<>();
 
 		for (CollectRequest collectRequest : collectRequests) {
-			ArrayList<CollectRequest> collectList = createListOfCollectRequest(collectRequest);
+			ArrayList<CollectRequest> collectList = null;
+			if (collectRequest.isDisableTimeRange())
+				collectList = simpleListOfCollect(collectRequest);
+			else
+				collectList = createListOfCollectRequest(collectRequest);
 			collectRequestList.addAll(collectList);
 		}
 
@@ -97,10 +101,19 @@ public class TwintThreadGroup {
 		return collectRequestList;
 	}
 
+	private ArrayList<CollectRequest> simpleListOfCollect(CollectRequest collectRequest) {
+		ArrayList<CollectRequest> collectRequestList = new ArrayList<>();
+		collectRequestList.add(collectRequest);
+		return collectRequestList;
+	}
+
 	@Async(value = "twintCallGroupTaskExecutor")
 	public void callTwintMultiThreaded(CollectHistory collectHistory, CollectRequest request) {
-
-		ArrayList<CollectRequest> collectRequestList = createListOfCollectRequest(request);
+		ArrayList<CollectRequest> collectRequestList = null;
+		if (request.isDisableTimeRange())
+			collectRequestList = simpleListOfCollect(request);
+		else
+			collectRequestList = createListOfCollectRequest(request);
 
 		callTwintThreads(collectRequestList, collectHistory);
 	}

@@ -63,7 +63,8 @@ public class RequestCacheManager {
 		if (previousMatch != null && !previousMatch.isEmpty()) {
 			// Requests exist in cache
 			// Try to extend with new dateRange if so
-			collectHistory = completeTimeRanges(collectHistory, collectRequest, previousMatch);
+			collectHistory = (collectRequest.isDisableTimeRange() ? reusePreviousRequest(previousMatch)
+					: completeTimeRanges(collectHistory, collectRequest, previousMatch));
 		} else {
 			runNewTwintRequest(collectHistory, collectRequest);
 			mergeRequest(similarRequests, collectRequest);
@@ -194,7 +195,8 @@ public class RequestCacheManager {
 	private Set<Request> similarInCache(CollectRequest collectRequest) {
 		Set<Request> requestSameKeyWords = collectService.requestContainsKeyWords(collectRequest.getKeywordList());
 		Set<Request> machingRequests = mergeCriteria(requestSameKeyWords);
-		machingRequests = rangeDeltaToProcess.requestfromDateRange(machingRequests, collectRequest);
+		if (!collectRequest.isDisableTimeRange())
+			machingRequests = rangeDeltaToProcess.requestfromDateRange(machingRequests, collectRequest);
 		return machingRequests;
 	}
 
@@ -234,6 +236,7 @@ public class RequestCacheManager {
 			DateRange dateRange = new DateRange(request.getSince(), request.getUntil());
 			existingDateRanges.add(dateRange);
 		}
+
 		List<DateRange> rangesToProcess = rangeDeltaToProcess.rangeToProcess(existingDateRanges, requestDateRange);
 		List<CollectRequest> requestsToPerform = new LinkedList<CollectRequest>();
 		// This is a new reques
@@ -247,14 +250,20 @@ public class RequestCacheManager {
 			ttg.callTwintMultiThreaded(collectHistory, requestsToPerform);
 
 		} else {
-			collectHistory = reusePreviousSessionId(requests);
-			// Request have been done already these elk
-			collectHistory.setStatus(Status.Done);
-			collectHistory.setMessage("Request already processed, no scrapping, see search engine");
-			collectHistory.setProcessEnd(Calendar.getInstance().getTime());
+			collectHistory = reusePreviousRequest(requests);
 		}
 
 		return collectHistory;
+	}
+
+	private CollectHistory reusePreviousRequest(Set<Request> requests) {
+		CollectHistory collectHistory = reusePreviousSessionId(requests);
+		// Request have been done already these elk
+		collectHistory.setStatus(Status.Done);
+		collectHistory.setMessage("Request already processed, no scrapping, see search engine");
+		collectHistory.setProcessEnd(Calendar.getInstance().getTime());
+		return collectHistory;
+
 	}
 
 	/**

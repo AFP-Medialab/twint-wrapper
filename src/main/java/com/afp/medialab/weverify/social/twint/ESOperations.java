@@ -76,6 +76,7 @@ public class ESOperations {
 
 	/**
 	 * TODO to remove if not used
+	 * 
 	 * @param collectRequest
 	 * @param collectHistory
 	 * @return
@@ -116,11 +117,14 @@ public class ESOperations {
 			QueryBuilder userQueryBuilder = new TermsQueryBuilder("username", users);
 			builder.must(userQueryBuilder);
 		}
-		String from = dateFormat.format(collectRequest.getFrom());
-		String until = dateFormat.format(collectRequest.getUntil());
-		Logger.debug("search from {} to {}", from, until);
+		if (!collectRequest.isDisableTimeRange()) {
+			String from = dateFormat.format(collectRequest.getFrom());
+			String until = dateFormat.format(collectRequest.getUntil());
+			Logger.debug("search from {} to {}", from, until);
 
-		builder.filter(rangeQuery("date").format("yyyy-MM-dd HH:mm:ss||yyyy-MM-dd||epoch_millis").gte(from).lte(until));
+			builder.filter(
+					rangeQuery("date").format("yyyy-MM-dd HH:mm:ss||yyyy-MM-dd||epoch_millis").gte(from).lte(until));
+		}
 		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(builder).withPageable(PageRequest.of(0, 10))
 				.build();
 		ScrolledPage<TwintModel> scroll = esOperation.startScroll(1000, searchQuery, TwintModel.class);

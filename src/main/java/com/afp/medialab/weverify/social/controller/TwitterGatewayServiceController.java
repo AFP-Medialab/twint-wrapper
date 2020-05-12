@@ -46,99 +46,97 @@ import io.swagger.annotations.ApiOperation;
 @Api(value = "Twitter scraping API")
 public class TwitterGatewayServiceController {
 
-    private static Logger Logger = LoggerFactory.getLogger(TwitterGatewayServiceController.class);
+	private static Logger Logger = LoggerFactory.getLogger(TwitterGatewayServiceController.class);
 
-    @Autowired
-    private CollectService collectService;
+	@Autowired
+	private CollectService collectService;
 
-    @Autowired
+	@Autowired
 	private RequestCacheManager cacheService;
 
-    @Value("${application.home.msg}")
-    private String homeMsg;
+	@Value("${application.home.msg}")
+	private String homeMsg;
 
-
-    @PreAuthorize("isAuthenticated()")
-    @RequestMapping(path = "/", method = RequestMethod.GET)
+	@PreAuthorize("isAuthenticated()")
+	@RequestMapping(path = "/", method = RequestMethod.GET)
 	public @ResponseBody String home() {
-        return homeMsg;
-    }
+		return homeMsg;
+	}
 
-    
-    @ApiOperation(value = "Trigger a Twitter Scraping")
-    @PreAuthorize("isAuthenticated()")
-    @RequestMapping(path = "/collect", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+	@ApiOperation(value = "Trigger a Twitter Scraping")
+	@PreAuthorize("isAuthenticated()")
+	@RequestMapping(path = "/collect", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
 	public @ResponseBody CollectResponse collect(@RequestBody @Valid CollectRequest collectRequest,
 			BindingResult result) {
 
-        if (!collectRequest.isValid())
+		if (!collectRequest.isValid())
 			return new CollectResponse(null, Status.Error,
 					"and_list or user_list must be given, from and until are mandatory", null);
 
-        Logger.debug(result.getAllErrors().toString());
-        if (result.hasErrors()) {
-            String str = "";
-            for (ObjectError r : result.getAllErrors()) {
-                str += r.getDefaultMessage() + "; ";
-            }
-            Logger.info(str);
-            return new CollectResponse(null, Status.Error, str, null);
-        }
+		Logger.debug(result.getAllErrors().toString());
+		if (result.hasErrors()) {
+			String str = "";
+			for (ObjectError r : result.getAllErrors()) {
+				str += r.getDefaultMessage() + "; ";
+			}
+			Logger.info(str);
+			return new CollectResponse(null, Status.Error, str, null);
+		}
 
-        Set<String> and_list = collectRequest.getKeywordList();
-        Set<String> not_ist = collectRequest.getBannedWords();
-        if (and_list != null)
-            Logger.debug("and_list : " + and_list.toString());
-        if (not_ist != null)
-            Logger.debug("not_list : " + not_ist.toString());
-        Logger.debug("from : " + collectRequest.getFrom().toString());
-        Logger.debug("until : " + collectRequest.getUntil().toString());
-        Logger.debug("language : " + collectRequest.getLang());
-        Logger.debug("user : " + collectRequest.getUserList());
-        Logger.debug("verified : " + collectRequest.isVerified());
-        Logger.debug("Retweets : " + collectRequest.getRetweetsHandling());
-        Logger.debug("Media : " + collectRequest.getMedia());
+		Set<String> and_list = collectRequest.getKeywordList();
+		Set<String> not_ist = collectRequest.getBannedWords();
+		if (and_list != null)
+			Logger.debug("and_list : " + and_list.toString());
+		if (not_ist != null)
+			Logger.debug("not_list : " + not_ist.toString());
+		if (!collectRequest.isDisableTimeRange()) {
+			Logger.debug("from : {}", collectRequest.getFrom().toString());
+			Logger.debug("until : {}", collectRequest.getUntil().toString());
+		}
+		Logger.debug("language : " + collectRequest.getLang());
+		Logger.debug("user : " + collectRequest.getUserList());
+		Logger.debug("verified : " + collectRequest.isVerified());
+		Logger.debug("Retweets : " + collectRequest.getRetweetsHandling());
+		Logger.debug("Media : " + collectRequest.getMedia());
+		Logger.debug("disableTimeRange : " + collectRequest.isDisableTimeRange());
 
 		return cacheService.useCache(collectRequest);
-    }
+	}
 
-
-    @ApiOperation(value = "Trigger a status check")
-    @PreAuthorize("isAuthenticated()")
-    @RequestMapping(path = "/status", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+	@ApiOperation(value = "Trigger a status check")
+	@PreAuthorize("isAuthenticated()")
+	@RequestMapping(path = "/status", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
 	public @ResponseBody StatusResponse status(@RequestBody StatusRequest statusRequest) {
-        Logger.debug("POST status " + statusRequest.getSession());
-        return getStatusResponse(statusRequest.getSession());
-    }
+		Logger.debug("POST status " + statusRequest.getSession());
+		return getStatusResponse(statusRequest.getSession());
+	}
 
-
-    @ApiOperation(value = "Trigger a status check")
-    @PreAuthorize("isAuthenticated()")
-    @RequestMapping(path = "/status/{id}", method = RequestMethod.GET)
+	@ApiOperation(value = "Trigger a status check")
+	@PreAuthorize("isAuthenticated()")
+	@RequestMapping(path = "/status/{id}", method = RequestMethod.GET)
 	public @ResponseBody StatusResponse status(@PathVariable("id") String id) {
-        Logger.debug("GET status " + id);
-        return getStatusResponse(id);
-    }
+		Logger.debug("GET status " + id);
+		return getStatusResponse(id);
+	}
 
-
-    /**
-     * @param session we want the status from.
-     * @return StatusResponse of the session.
-     * @func Returns the status response of a given session.
-     */
-    private StatusResponse getStatusResponse(String session) {
-        CollectHistory collectHistory = collectService.getCollectInfo(session);
+	/**
+	 * @param session we want the status from.
+	 * @return StatusResponse of the session.
+	 * @func Returns the status response of a given session.
+	 */
+	private StatusResponse getStatusResponse(String session) {
+		CollectHistory collectHistory = collectService.getCollectInfo(session);
 		if (collectHistory == null)
 			throw new NotFoundException();
 
 		List<Request> requests = collectHistory.getRequests();
 		List<CollectRequest> collectRequests = new LinkedList<CollectRequest>();
-        for (Request request : requests) {
+		for (Request request : requests) {
 			CollectRequest collectRequest = new CollectRequest(request);
 			collectRequests.add(collectRequest);
-    }
+		}
 
-        if (collectHistory.getStatus() != Status.Done)
+		if (collectHistory.getStatus() != Status.Done)
 			return new StatusResponse(collectHistory.getSession(), collectHistory.getProcessStart(),
 					collectHistory.getProcessEnd(), collectHistory.getStatus(), collectRequests, null, null);
 		else
@@ -147,93 +145,92 @@ public class TwitterGatewayServiceController {
 					collectHistory.getCount(), collectHistory.getMessage());
 	}
 
-    @PreAuthorize("isAuthenticated()")
-    @RequestMapping(value = "/collect-history", method = RequestMethod.GET)
+	@PreAuthorize("isAuthenticated()")
+	@RequestMapping(value = "/collect-history", method = RequestMethod.GET)
 	public @ResponseBody HistoryResponse collectHistory(
 			@RequestParam(value = "limit", required = false, defaultValue = "5") int limit,
-                                   @RequestParam(value = "asc", required = false, defaultValue = "false") boolean asc,
-                                   @RequestParam(value = "desc", required = false, defaultValue = "false") boolean desc,
-                                   @RequestParam(value = "status", required = false) String status) {
-        List<CollectHistory> last;
+			@RequestParam(value = "asc", required = false, defaultValue = "false") boolean asc,
+			@RequestParam(value = "desc", required = false, defaultValue = "false") boolean desc,
+			@RequestParam(value = "status", required = false) String status) {
+		List<CollectHistory> last;
 
-        Logger.info("GET collect-history :  " + status);
+		Logger.info("GET collect-history :  " + status);
 
-        if (status == null) {
-            if (!asc && !desc)
-                last = collectService.getLasts(limit, true);
-            else if (asc)
-                last = collectService.getLasts(limit, !asc);
-            else
-                last = collectService.getLasts(limit, desc);
-        } else {
-            if (!asc && !desc)
-                last = collectService.getByStatus(status, limit, true);
-            else if (asc)
-                last = collectService.getByStatus(status, limit, !asc);
-            else
-                last = collectService.getByStatus(status, limit, desc);
+		if (status == null) {
+			if (!asc && !desc)
+				last = collectService.getLasts(limit, true);
+			else if (asc)
+				last = collectService.getLasts(limit, !asc);
+			else
+				last = collectService.getLasts(limit, desc);
+		} else {
+			if (!asc && !desc)
+				last = collectService.getByStatus(status, limit, true);
+			else if (asc)
+				last = collectService.getByStatus(status, limit, !asc);
+			else
+				last = collectService.getByStatus(status, limit, desc);
 
+		}
+		return new HistoryResponse(last);
+	}
 
-        }
-        return new HistoryResponse(last);
-    }
-
-    @ApiOperation(value = "Get the requests history")
-    @PreAuthorize("isAuthenticated()")
-    @RequestMapping(path = "/collect-history", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+	@ApiOperation(value = "Get the requests history")
+	@PreAuthorize("isAuthenticated()")
+	@RequestMapping(path = "/collect-history", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
 	public @ResponseBody HistoryResponse status(@RequestBody @Valid HistoryRequest historyRequest) {
-        Logger.info("POST collect-history : " + historyRequest.toString());
+		Logger.info("POST collect-history : " + historyRequest.toString());
 		List<CollectHistory> collectHistoryList = collectService.getHistory(historyRequest.getLimit(),
 				historyRequest.getStatus(),
-                (historyRequest.getSort() == null ? false : historyRequest.getSort().equals("desc")),
-                historyRequest.getProcessStart(), historyRequest.getProcessTo());
-        return new HistoryResponse(collectHistoryList);
-    }
+				(historyRequest.getSort() == null ? false : historyRequest.getSort().equals("desc")),
+				historyRequest.getProcessStart(), historyRequest.getProcessTo());
+		return new HistoryResponse(collectHistoryList);
+	}
 
-    @ApiOperation(value = "Update an old request")
-    @PreAuthorize("isAuthenticated()")
-    @RequestMapping(path = "/collect-update/{id}", method = RequestMethod.GET)
+	@ApiOperation(value = "Update an old request")
+	@PreAuthorize("isAuthenticated()")
+	@RequestMapping(path = "/collect-update/{id}", method = RequestMethod.GET)
 	public @ResponseBody StatusResponse collectUpdate(@PathVariable("id") String id)
 			throws ExecutionException, InterruptedException, IOException {
-        return collectUpdateFunction(id);
-    }
+		return collectUpdateFunction(id);
+	}
 
-    @ApiOperation(value = "Update an old request")
-    @PreAuthorize("isAuthenticated()")
-    @RequestMapping(path = "/collect-update", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+	@ApiOperation(value = "Update an old request")
+	@PreAuthorize("isAuthenticated()")
+	@RequestMapping(path = "/collect-update", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
 	public @ResponseBody StatusResponse collectUpdate(@RequestBody @Valid CollectUpdateRequest collectUpdateRequest)
 			throws ExecutionException, InterruptedException, IOException {
-        String id = collectUpdateRequest.getSession();
-        return collectUpdateFunction(id);
-    }
+		String id = collectUpdateRequest.getSession();
+		return collectUpdateFunction(id);
+	}
 
-    /**
-     * @param session
-     * @return Status response or the corresponding session
-     * @throws ExecutionException
-     * @throws InterruptedException
+	/**
+	 * @param session
+	 * @return Status response or the corresponding session
+	 * @throws ExecutionException
+	 * @throws InterruptedException
 	 * @func Calls Twint on the time interval of a session. The result replaces the
 	 *       old ones un elastic search.
-     */
-    private StatusResponse collectUpdateFunction(String session) throws ExecutionException, InterruptedException {
-        Logger.info("Collect-Update " + session);
+	 */
+	private StatusResponse collectUpdateFunction(String session) throws ExecutionException, InterruptedException {
+		Logger.info("Collect-Update " + session);
 
-        CollectHistory collectHistory = collectService.getCollectInfo(session);
+		CollectHistory collectHistory = collectService.getCollectInfo(session);
 		if (collectHistory == null)
 			throw new NotFoundException();
 
-        if (collectHistory.getStatus() != Status.Done) {
-            StatusResponse res = getStatusResponse(session);
-            res.setMessage("This session is already updating");
-            return res;
-        }
+		if (collectHistory.getStatus() != Status.Done) {
+			StatusResponse res = getStatusResponse(session);
+			res.setMessage("This session is already updating");
+			return res;
+		}
 
-        collectHistory.setStatus(Status.Pending);
+		collectHistory.setStatus(Status.Pending);
 		// Request request = collectHistory.getRequest();
-        collectHistory.setProcessStart(new Date());
-        collectService.save_collectHistory(collectHistory);
+		collectHistory.setProcessStart(new Date());
+		collectService.save_collectHistory(collectHistory);
 		collectService.callTwint(collectHistory);
-		
-        return getStatusResponse(session);
-    }
+
+		return getStatusResponse(session);
+	}
 }
