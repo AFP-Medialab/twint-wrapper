@@ -1,17 +1,15 @@
 package com.afp.medialab.weverify.social.twint;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-
-import org.apache.http.HttpHost;
-import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.elasticsearch.client.ClientConfiguration;
+import org.springframework.data.elasticsearch.client.RestClients;
 import org.springframework.data.elasticsearch.config.AbstractElasticsearchConfiguration;
+import org.springframework.http.HttpHeaders;
 import org.springframework.web.client.RestTemplate;
 
 @Configuration
@@ -25,12 +23,6 @@ public class ESConfiguration extends AbstractElasticsearchConfiguration {
 	@Value("${application.elasticsearch.port}")
 	private String esPort;
 
-	@Value("${application.elasticsearch.url}")
-	private String esURL;
-	
-//	@Value("${application.elasticsearch.cluster}")
-//	private String esClusterName;
-
 	@Bean("ESRestTempate")
 	public RestTemplate getRestTemplate() {
 		return new RestTemplate();
@@ -38,16 +30,14 @@ public class ESConfiguration extends AbstractElasticsearchConfiguration {
 
 	@Override
 	public RestHighLevelClient elasticsearchClient() {
-		RestHighLevelClient client = null;
-		Logger.debug("host:" + esHost + "port:" + esPort);
-		try {
-			client = new RestHighLevelClient(
-					RestClient.builder(new HttpHost(InetAddress.getByName(esHost), Integer.valueOf(esPort))));
-		} catch (UnknownHostException e) {
-			Logger.error("unknow host: " + esHost);
-			throw new IllegalArgumentException("unknow host", e);
-		}
-		return client;
+
+		Logger.info("host: {}, port: {}", esHost, esPort);
+		HttpHeaders httpHeaders = new HttpHeaders();
+		httpHeaders.add("Host", esHost);
+		String esURL = esHost + ":" + esPort;
+		final ClientConfiguration clientConfiguration = ClientConfiguration.builder().connectedTo(esURL)
+				.withDefaultHeaders(httpHeaders).build();
+		return RestClients.create(clientConfiguration).rest();
 	}
 
 }

@@ -22,6 +22,7 @@ application:
     url: ${ES_URL:elasticsearch:9200}
     host: ${ES_HOST:localhost}
     port: ${ES_PORT:9200}
+    
   twittie:
     url: ${TWITTIE_URL:http://localhost:8081/gate/process?annotations=:Person,:UserID,:Location,:Organization}
   notification:

@@ -37,6 +37,7 @@ import com.afp.medialab.weverify.social.model.NotFoundException;
 import com.afp.medialab.weverify.social.model.Status;
 import com.afp.medialab.weverify.social.model.StatusRequest;
 import com.afp.medialab.weverify.social.model.StatusResponse;
+import com.afp.medialab.weverify.social.twint.TwintThreadGroup;
 import com.afp.medialab.weverify.social.util.RequestCacheManager;
 
 import io.swagger.annotations.Api;
@@ -53,6 +54,9 @@ public class TwitterGatewayServiceController {
 
 	@Autowired
 	private RequestCacheManager cacheService;
+	
+	@Autowired
+	private TwintThreadGroup ttg;
 
 	@Value("${application.home.msg}")
 	private String homeMsg;
@@ -229,8 +233,22 @@ public class TwitterGatewayServiceController {
 		// Request request = collectHistory.getRequest();
 		collectHistory.setProcessStart(new Date());
 		collectService.save_collectHistory(collectHistory);
-		collectService.callTwint(collectHistory);
+		callTwint(collectHistory);
 
 		return getStatusResponse(session);
+	}
+	
+	/**
+	 * Update existing request
+	 * @param collectHistory
+	 */
+	private void callTwint(CollectHistory collectHistory) {
+
+		List<Request> requests = collectHistory.getRequests();
+		for (Request request : requests) {
+			CollectRequest newCollectRequest = new CollectRequest(request);
+			ttg.callTwintMultiThreaded(collectHistory, newCollectRequest);
+		}
+
 	}
 }

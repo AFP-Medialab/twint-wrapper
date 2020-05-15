@@ -27,15 +27,15 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.RestTemplate;
 
-import com.afp.medialab.weverify.social.model.twint.TwintModel;
 import com.afp.medialab.weverify.social.model.twint.TwittieResponse;
+import com.afp.medialab.weverify.social.model.twint.WordsInTweet;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Configuration
 /**
  * Call Tweetie service
- * Count number of word occurences with entity type if detecte by tweetie
+ * Count number of word occurrences with entity type if detected by Tweetie
  * @author Bertrand Goupil
  *
  */
@@ -103,7 +103,7 @@ public class TweetsPostProcess {
 	}
 
 	/**
-	 * Call Twittie Gate webservice
+	 * Call Tweetie Gate webservice
 	 * 
 	 * @return
 	 * @throws IOException
@@ -168,7 +168,7 @@ public class TweetsPostProcess {
 		return tweeties;
 	}
 
-	public List<TwintModel.WordsInTweet> buildWit(String tweet, String search)
+	public List<WordsInTweet> buildWit(String tweet, String search)
 			throws InterruptedException, ParseException, IOException {
 
 		tweet = StringUtils.normalizeSpace(tweet);
@@ -207,10 +207,10 @@ public class TweetsPostProcess {
 					occurences.put(word, occurences.get(word) + 1);
 		});
 
-		List<TwintModel.WordsInTweet> wit = new ArrayList<>();
+		List<WordsInTweet> wit = new ArrayList<>();
 
 		occurences.forEach((word, occ) -> {
-			TwintModel.WordsInTweet w = new TwintModel.WordsInTweet();
+			WordsInTweet w = new WordsInTweet();
 			w.setWord(word);
 			w.setNbOccurences(occ);
 			w.setEntity((tokenJSON.get(word) != null) ? tokenJSON.get(word) : null);

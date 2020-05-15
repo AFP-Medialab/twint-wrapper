@@ -21,7 +21,6 @@ import com.afp.medialab.weverify.social.dao.repository.CollectInterface;
 import com.afp.medialab.weverify.social.dao.repository.RequestInterface;
 import com.afp.medialab.weverify.social.model.CollectRequest;
 import com.afp.medialab.weverify.social.model.Status;
-import com.afp.medialab.weverify.social.twint.TwintThreadGroup;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -35,9 +34,6 @@ public class CollectService {
 
 	@Autowired
 	private RequestInterface requestInterface;
-
-	@Autowired
-	private TwintThreadGroup ttg;
 
 	public CollectRequest stringToCollectRequest(String query) {
 		ObjectMapper mapper = new ObjectMapper();
@@ -294,34 +290,7 @@ public class CollectService {
 		return matching_users;
 	}
 
-	/**
-	 * @param from
-	 * @param until
-	 * @return
-	 * @func callTwintOnInterval overload with only one date interval. call Twint on
-	 *       the interval and append the result to the elastic search session
-	 */
-	public void callTwintOnInterval(CollectHistory collectHistory, Request request, Date from, Date until) {
-		CollectRequest newCollectRequest = new CollectRequest(request);
-		newCollectRequest.setFrom(from);
-		newCollectRequest.setUntil(until);
-		ttg.callTwintMultiThreaded(collectHistory, newCollectRequest);
-	}
-
-	/**
-	 * Update existing request
-	 * @param collectHistory
-	 */
-	public void callTwint(CollectHistory collectHistory) {
-
-		List<Request> requests = collectHistory.getRequests();
-		for (Request request : requests) {
-			CollectRequest newCollectRequest = new CollectRequest(request);
-			ttg.callTwintMultiThreaded(collectHistory, newCollectRequest);
-		}
-
-	}
-
+	
 	// New simplified methods
 
 	public Set<Request> requestContainsKeyWords(Set<String> keywords) {

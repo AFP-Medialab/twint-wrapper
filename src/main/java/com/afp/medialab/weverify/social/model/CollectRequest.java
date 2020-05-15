@@ -197,6 +197,8 @@ public class CollectRequest {
 			return false;
 		if (!this.disableTimeRange && (this.from == null || this.until == null))
 			return false;
+		if(!this.disableTimeRange && (from.after(until)))
+			return false;
 		return true;
 	}
 

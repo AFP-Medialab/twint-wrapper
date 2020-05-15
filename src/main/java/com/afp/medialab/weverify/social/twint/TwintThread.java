@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.afp.medialab.weverify.social.dao.entity.CollectHistory;
@@ -27,7 +27,7 @@ import com.afp.medialab.weverify.social.model.twint.TwintModel;
  *
  * @author Medialab
  */
-@Service("twintThread")
+@Component("twintThread")
 public class TwintThread {
 
 	private static final Logger Logger = LoggerFactory.getLogger(TwintThread.class);
@@ -70,14 +70,15 @@ public class TwintThread {
 			e.printStackTrace();
 			Logger.error("Error calling twint process", e);
 		}
-		try {
-			Thread.sleep(2000);
-			List<TwintModel> tms = esOperation.enrichWithTweetie(request);
-			esOperation.indexWordsObj(tms);
-		} catch (IOException | InterruptedException e) {
-			Logger.error("error with tweeetie", e);
+		if (result > 0) {
+			try {
+				Thread.sleep(2000);
+				List<TwintModel> tms = esOperation.enrichWithTweetie(request);
+				esOperation.indexWordsObj(tms);
+			} catch (IOException | InterruptedException e) {
+				Logger.error("error with tweeetie", e);
+			}
 		}
-
 		// update db to say this thread is finished
 		collectHistory.setFinished_threads(collectHistory.getFinished_threads() + 1);
 		Integer old_count = collectHistory.getCount();
@@ -115,7 +116,6 @@ public class TwintThread {
 
 	private ProcessBuilder createProcessBuilder(CollectRequest request, String session) {
 		boolean isDocker = isDockerCommand(twintCall);
-
 		String twintRequest = TwintRequestGenerator.getInstance().generateRequest(request, session, isDocker, esURL);
 
 		ProcessBuilder processBuilder = new ProcessBuilder("/bin/bash", "-c", twintCall + twintRequest);
@@ -178,7 +178,7 @@ public class TwintThread {
 			nb_tweets = callTwintProcess(request, session);
 			if (nb_tweets == -1) {
 				Logger.info("Error reprocessing ");
-				Date collected_to = esOperation.findWhereIndexingStopped(request, session);
+				Date collected_to = esOperation.findWhereIndexingStopped(request);
 				if (collected_to != null) {
 					request.setUntil(collected_to);
 				}
