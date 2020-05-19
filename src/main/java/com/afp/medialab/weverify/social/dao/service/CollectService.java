@@ -84,13 +84,6 @@ public class CollectService {
 		return false;
 	}
 
-//	public void updateCollectQuery(String session, CollectRequest collectRequest) {
-//		CollectHistory collectHistory = collectInterface.findCollectHistoryBySession(session);
-//		Request request = collectHistory.getRequest();
-//		request.update(collectRequest);
-//		requestInterface.save(request);
-//	}
-
 	public void updateCollectProcessEnd(String session, Date date) {
 		collectInterface.updateCollectProcessEnd(session, date);
 	}

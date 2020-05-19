@@ -27,8 +27,17 @@ application:
     url: ${TWITTIE_URL:http://localhost:8081/gate/process?annotations=:Person,:UserID,:Location,:Organization}
   notification:
     slack: ${SLACK_URL:}
+  actuator:
+    user: ${ACTUATOR_USER:actuator}
+    #password is generate with GeneratePassword class default is "actuator"
+    passwd: ${ACTUATOR_PASSWORD:{bcrypt}$2a$10$haLsRQkZdhF1FtzV4iXFi.MiPOlDKN.i4FaWrjitA3eDFwoWeuMa2}
   
+
 spring:
+  application:
+    name: twint-wrapper
+    admin:
+      enabled: true
   jackson:
     time-zone: Europe/Paris
     deserialization:
@@ -55,7 +64,32 @@ spring:
 
 command:
   twint: docker run --rm --network dev_esnet -i twint:2.1.4
- 
+
+management:
+ # server:
+  #  port: 8111
+  endpoints:
+   enabled-by-default: false
+   web:
+      exposure:
+        include:
+        - health
+        - info
+        - loggers
+      base-path: /manage
+      
+  endpoint:
+    health:
+      enabled: true
+      show-details: when-authorized
+      show-components: when-authorized
+    info:
+      enabled: true
+    loggers:
+      enabled: true
+  info:
+    git:
+      mode: full  
 ---
 spring:
   profiles: dev

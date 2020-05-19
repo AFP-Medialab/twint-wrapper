@@ -14,8 +14,6 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import javax.transaction.Transactional;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,7 +53,6 @@ public class RequestCacheManager {
 	 * @func Verifies if the request has already been done. If not creates a new
 	 *       session and gives a CollectResponse accordingly.
 	 */
-	@Transactional
 	public CollectResponse useCache(CollectRequest collectRequest) {
 		// Get registered request for this new search
 		// If exist exactly the same request ?
