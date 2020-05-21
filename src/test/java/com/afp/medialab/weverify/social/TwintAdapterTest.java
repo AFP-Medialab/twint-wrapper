@@ -28,7 +28,7 @@ public class TwintAdapterTest {
 		
 		String tweet = "Jake Tapper of Fake News CNN @cnn just got destroyed in his interview with Stephen Miller of the Trump Administration. Watch the hatred and unfairness of this CNN flunky!";
 		
-		List<WordsInTweet> wit = twintModelAdapter.buildWit(tweet, "Fake News");
+		List<WordsInTweet> wit = twintModelAdapter.buildWit(tweet);
 		ObjectMapper mapper = new ObjectMapper();
 		String b = "{\"wit\": " + mapper.writeValueAsString(wit) + "}";
 		System.out.println(b);

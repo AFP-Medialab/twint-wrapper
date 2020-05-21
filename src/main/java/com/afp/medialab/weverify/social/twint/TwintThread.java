@@ -73,7 +73,7 @@ public class TwintThread {
 		if (result > 0) {
 			try {
 				Thread.sleep(2000);
-				List<TwintModel> tms = esOperation.enrichWithTweetie(request);
+				List<TwintModel> tms = esOperation.enrichWithTweetie(collectHistory.getSession());
 				esOperation.indexWordsObj(tms);
 			} catch (IOException | InterruptedException e) {
 				Logger.error("error with tweeetie", e);
@@ -116,7 +116,8 @@ public class TwintThread {
 
 	private ProcessBuilder createProcessBuilder(CollectRequest request, String session) {
 		boolean isDocker = isDockerCommand(twintCall);
-		String twintRequest = TwintRequestGenerator.getInstance().generateRequest(request, session, isDocker, esURL);
+		//String twintRequest = TwintRequestGenerator.getInstance().generateRequest(request, session, isDocker, esURL);
+		String twintRequest = TwintPlusRequestBuilder.getInstance().generateRequest(request, session, isDocker, esURL);
 
 		ProcessBuilder processBuilder = new ProcessBuilder("/bin/bash", "-c", twintCall + twintRequest);
 		processBuilder.environment().put("PATH", "/usr/bin:/usr/local/bin:/bin");
@@ -131,24 +132,24 @@ public class TwintThread {
 		String LoggerString;
 
 		Boolean error_occurred = false;
-
+		Integer nb_tweets = -1;
 		while ((LoggerString = stdError.readLine()) != null) {
 
-			Logger.error(LoggerString);
-			// error_occurred = true;
-		}
-
-		Integer nb_tweets = -1;
-		while ((LoggerString = stdInput.readLine()) != null) {
-
-			if (LoggerString.contains("Successfully collected")) {
-				String str = LoggerString.split("Successfully collected ")[1].split(" ")[0];
-				if (str.equals("all"))
-					str = LoggerString.split("Successfully collected ")[1].split(" ")[1];
+			
+			if (LoggerString.contains("Tweets collected")) {
+				String str = LoggerString.split("Tweets collected: ")[1].split(" ")[0];
+				str = str.substring(0, str.length() -2);
 				nb_tweets = Integer.parseInt(str);
 				Logger.info("Successfully collected: " + nb_tweets + " " + got);
 
 			}
+			// error_occurred = true;
+		}
+
+		
+		while ((LoggerString = stdInput.readLine()) != null) {
+			Logger.error(LoggerString);
+			
 		}
 		stdInput.close();
 		stdError.close();

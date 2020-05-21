@@ -70,7 +70,7 @@ public class ElasticSearchQueryTest {
 	// @Test
 	public void addWit() throws IOException, InterruptedException {
 		String sessid = "e759073c-dd59-4b6e-be67-4419b2ead383";
-		esOperations.enrichWithTweetie(sessid, "2018-10-05", "2018-12-13");
+		esOperations.enrichWithTweetie(sessid);
 		esOperation.refresh(TwintModel.class);
 
 		// esOperations.getModels(sessid, "2018-10-05","2018-12-13").forEach(model ->

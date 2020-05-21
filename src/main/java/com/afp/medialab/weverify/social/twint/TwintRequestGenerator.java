@@ -10,7 +10,7 @@ import com.afp.medialab.weverify.social.model.CollectRequest;
 
 /**
  * Generate twint command with elasticsearch
- *
+ * @deprecated
  * @author Medialab
  */
 public class TwintRequestGenerator {

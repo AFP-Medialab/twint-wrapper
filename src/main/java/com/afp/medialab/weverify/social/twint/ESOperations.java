@@ -1,13 +1,11 @@
 package com.afp.medialab.weverify.social.twint;
 
-import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
 import static org.elasticsearch.index.query.QueryBuilders.existsQuery;
-import static org.elasticsearch.index.query.QueryBuilders.matchPhraseQuery;
 import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
 import static org.elasticsearch.index.query.QueryBuilders.rangeQuery;
 
 import java.io.IOException;
-import java.text.SimpleDateFormat;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedList;
@@ -51,21 +49,22 @@ public class ESOperations {
 	@Autowired
 	private TweetsPostProcess twintModelAdapter;
 
-	private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+	//private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
 	private static Logger Logger = LoggerFactory.getLogger(ESOperations.class);
 
 	/**
 	 * Search query with essid
 	 * 
-	 * @deprecated
 	 * @param essid
 	 * @param start
 	 * @param end
 	 * @throws IOException
 	 */
-	public void enrichWithTweetie(String essid, String start, String end) throws IOException {
-		QueryBuilder builder = boolQuery().must(matchQuery("essid", essid));
+	public List<TwintModel> enrichWithTweetie(String essid) throws IOException {
+		BoolQueryBuilder builder = QueryBuilders.boolQuery();
+		builder.must(matchQuery("essid", essid));
+		builder.mustNot(existsQuery("wit"));
 		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(builder).withPageable(PageRequest.of(0, 10))
 				.build();
 		ScrolledPage<TwintModel> scroll = esOperation.startScroll(1000, searchQuery, TwintModel.class);
@@ -76,13 +75,13 @@ public class ESOperations {
 			scrollId = scroll.getScrollId();
 			scroll = esOperation.continueScroll(scrollId, 1000, TwintModel.class);
 		}
-		indexWordsObj(model);
+		return model;
 	}
 
 	/**
 	 * Get Twint request from ES that match with the current collectRequest and with
 	 * tweets without wit fields.
-	 * 
+	 * @deprecated
 	 * @param collectRequest
 	 * @return
 	 * @throws IOException
@@ -110,22 +109,25 @@ public class ESOperations {
 	 * @return
 	 */
 	private BoolQueryBuilder searchQueryBuilder(CollectRequest collectRequest) {
-		String keywordQuery = TwintRequestGenerator.getInstance().generateSearch(collectRequest);
+		//String keywordQuery = TwintRequestGenerator.getInstance().generateSearch(collectRequest);
 		BoolQueryBuilder builder = QueryBuilders.boolQuery();
-		builder.must(matchPhraseQuery("search", keywordQuery));
+		//builder.must(matchPhraseQuery("search", keywordQuery));
 		builder.mustNot(existsQuery("wit"));
 		Set<String> users = collectRequest.getUserList();
 		if (users != null && !users.isEmpty()) {
-			QueryBuilder userQueryBuilder = new TermsQueryBuilder("username", users);
+			QueryBuilder userQueryBuilder = new TermsQueryBuilder("screen_name", users);
 			builder.must(userQueryBuilder);
 		}
 		if (!collectRequest.isDisableTimeRange()) {
-			String from = dateFormat.format(collectRequest.getFrom());
-			String until = dateFormat.format(collectRequest.getUntil());
-			Logger.debug("search from {} to {}", from, until);
+			long fromEpoch = collectRequest.getFrom().toInstant().getEpochSecond();
+			long untilEpoch = collectRequest.getUntil().toInstant().getEpochSecond();
+			//String from = dateFormat.format(collectRequest.getFrom());
+			//String until = dateFormat.format(collectRequest.getUntil());
+			//Logger.debug("search from {} to {}", from, until);
+			Logger.debug("search from {} to {}", fromEpoch, untilEpoch);
 
 			builder.filter(
-					rangeQuery("date").format("yyyy-MM-dd HH:mm:ss||yyyy-MM-dd||epoch_millis").gte(from).lte(until));
+					rangeQuery("datetimestamp").format("epoch_second").gte(fromEpoch).lte(untilEpoch));
 		}
 		return builder;
 	}
@@ -143,7 +145,7 @@ public class ESOperations {
 		QueryBuilder builder = searchQueryBuilder(request);
 
 		SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(builder).build()
-				.addSort(Sort.by("date").ascending()).setPageable(PageRequest.of(0, 1));
+				.addSort(Sort.by("datetimestamp").ascending()).setPageable(PageRequest.of(0, 1));
 		final List<TwintModel> hits = esOperation.queryForList(searchQuery, TwintModel.class);
 
 		if (hits.size() < 1) {
@@ -151,7 +153,10 @@ public class ESOperations {
 			return null;
 		}
 		TwintModel twintModel = hits.get(0);
-		return twintModel.getDate();
+		long datetimestamp = twintModel.getDatetimestamp();
+		Instant instant = Instant.ofEpochSecond(datetimestamp);
+		Date date = Date.from(instant);
+		return date;
 
 	}
 
@@ -172,7 +177,7 @@ public class ESOperations {
 			try {
 				allNull = false;
 				// Logger.debug("Builtin wit : " + i++ + "/" + tms.size());
-				List<WordsInTweet> wit = twintModelAdapter.buildWit(tm.getTweet(), tm.getSearch());
+				List<WordsInTweet> wit = twintModelAdapter.buildWit(tm.getFull_text());
 
 				ObjectMapper mapper = new ObjectMapper();
 				String b = "{\"wit\": " + mapper.writeValueAsString(wit) + "}";

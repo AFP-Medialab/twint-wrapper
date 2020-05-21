@@ -168,7 +168,7 @@ public class TweetsPostProcess {
 		return tweeties;
 	}
 
-	public List<WordsInTweet> buildWit(String tweet, String search)
+	public List<WordsInTweet> buildWit(String tweet)
 			throws InterruptedException, ParseException, IOException {
 
 		tweet = StringUtils.normalizeSpace(tweet);
@@ -185,9 +185,9 @@ public class TweetsPostProcess {
 		String[] langs = new String[] { "fr", "en" };
 
 		List<String> stopLang = stopwords.get(getTweetLang(tweet, langs));
-		List<String> stopGlob = stopwords.get("glob");
+		//List<String> stopGlob = stopwords.get("glob");
 
-		stopGlob.addAll(Arrays.asList(search.replaceAll("#", "").split(" ")));
+		//stopGlob.addAll(Arrays.asList(search.replaceAll("#", "").split(" ")));
 		// String tweet = tm.getTweet();
 
 		for (String regExp : regExps) {
@@ -200,7 +200,8 @@ public class TweetsPostProcess {
 
 		words.stream().forEach((word) -> {
 
-			if (!stopLang.contains(word) && !stopGlob.contains(word) && !word.equals(" "))
+			//if (!stopLang.contains(word) && !stopGlob.contains(word) && !word.equals(" "))
+			if (!stopLang.contains(word) && !word.equals(" "))
 				if (occurences.get(word) == null)
 					occurences.put(word, 1);
 				else
