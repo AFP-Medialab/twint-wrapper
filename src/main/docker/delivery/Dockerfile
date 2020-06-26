@@ -1,8 +1,7 @@
-FROM twintplus:0.2 as base
+FROM twintplus:0.3 as base
 
 # install openjre:8
-RUN mkdir -p /usr/share/man/man1 && apt install software-properties-common -y && apt update && wget -qO - https://adoptopenjdk.jfrog.io/adoptopenjdk/api/gpg/key/public | apt-key add -\
-	&& add-apt-repository --yes https://adoptopenjdk.jfrog.io/adoptopenjdk/deb/ && apt update && apt install adoptopenjdk-8-hotspot -y
+RUN mkdir -p /usr/share/man/man1 && apt install openjdk-11-jre -y && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 FROM base
 

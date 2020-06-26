@@ -25,6 +25,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
+import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import com.afp.medialab.weverify.social.model.twint.TwittieResponse;
@@ -34,8 +35,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Configuration
 /**
- * Call Tweetie service
- * Count number of word occurrences with entity type if detected by Tweetie
+ * Call Tweetie service Count number of word occurrences with entity type if
+ * detected by Tweetie
+ * 
  * @author Bertrand Goupil
  *
  */
@@ -115,8 +117,12 @@ public class TweetsPostProcess {
 		try {
 			response = restTemplate.postForEntity(twitieURL, tweet, String.class);
 
-		} catch (Exception e) {
-			Logger.error("FAILED CALLING TWITTIE");
+		} catch (HttpServerErrorException ex) {
+			Logger.error("FAILED CALLING TWITTIE {}" , ex.getRawStatusCode());
+			return null;
+		}
+		catch (Exception e) {
+			Logger.error("FAILED CALLING TWITTIE - Twittie is down");
 			twittieDown = true;
 			return null;
 		}
@@ -168,10 +174,11 @@ public class TweetsPostProcess {
 		return tweeties;
 	}
 
-	public List<WordsInTweet> buildWit(String tweet)
-			throws InterruptedException, ParseException, IOException {
-
+	public List<WordsInTweet> buildWit(String tweet) throws InterruptedException, ParseException, IOException {
+		List<WordsInTweet> wit = new ArrayList<>();
 		tweet = StringUtils.normalizeSpace(tweet);
+		if (tweet.isEmpty())
+			return wit;
 		List<Tweetie> tweeties;
 		Map<String, String> tokenJSON = new HashMap<>();
 		if (!twittieDown) {
@@ -185,9 +192,9 @@ public class TweetsPostProcess {
 		String[] langs = new String[] { "fr", "en" };
 
 		List<String> stopLang = stopwords.get(getTweetLang(tweet, langs));
-		//List<String> stopGlob = stopwords.get("glob");
+		// List<String> stopGlob = stopwords.get("glob");
 
-		//stopGlob.addAll(Arrays.asList(search.replaceAll("#", "").split(" ")));
+		// stopGlob.addAll(Arrays.asList(search.replaceAll("#", "").split(" ")));
 		// String tweet = tm.getTweet();
 
 		for (String regExp : regExps) {
@@ -200,15 +207,14 @@ public class TweetsPostProcess {
 
 		words.stream().forEach((word) -> {
 
-			//if (!stopLang.contains(word) && !stopGlob.contains(word) && !word.equals(" "))
+			// if (!stopLang.contains(word) && !stopGlob.contains(word) && !word.equals("
+			// "))
 			if (!stopLang.contains(word) && !word.equals(" "))
 				if (occurences.get(word) == null)
 					occurences.put(word, 1);
 				else
 					occurences.put(word, occurences.get(word) + 1);
 		});
-
-		List<WordsInTweet> wit = new ArrayList<>();
 
 		occurences.forEach((word, occ) -> {
 			WordsInTweet w = new WordsInTweet();

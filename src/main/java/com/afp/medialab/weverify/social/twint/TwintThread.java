@@ -74,7 +74,7 @@ public class TwintThread {
 			try {
 				Thread.sleep(2000);
 				List<TwintModel> tms = esOperation.enrichWithTweetie(collectHistory.getSession());
-				esOperation.indexWordsObj(tms);
+				esOperation.indexWordsSubList(tms);
 			} catch (IOException | InterruptedException e) {
 				Logger.error("error with tweeetie", e);
 			}

@@ -15,6 +15,7 @@ import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 @EnableWebSecurity
 /**
  * Set 2 security level for operation access and Actuator
+ * 
  * @author bertrand
  *
  */
@@ -28,8 +29,7 @@ public class MultiSecurityConfig {
 
 	@Bean
 	public UserDetailsService userDetailsService() throws Exception {
-		UserDetails user = User.withUsername(actuatorUser).password(actuatorPassword)
-				.roles("ACTUATOR").build();
+		UserDetails user = User.withUsername(actuatorUser).password(actuatorPassword).roles("ACTUATOR").build();
 		InMemoryUserDetailsManager manager = new InMemoryUserDetailsManager();
 		manager.createUser(user);
 		return manager;
@@ -38,6 +38,7 @@ public class MultiSecurityConfig {
 	@Configuration
 	/**
 	 * Fusion Auth OAuth2 token
+	 * 
 	 * @author Bertrand Goupil
 	 *
 	 */
@@ -61,13 +62,15 @@ public class MultiSecurityConfig {
 	@Order(1)
 	/**
 	 * Actuator Basic Auth
+	 * 
 	 * @author Bertrand Goupil
 	 *
 	 */
 	public static class ActuatorSecurityConfig extends WebSecurityConfigurerAdapter {
 		@Override
 		protected void configure(HttpSecurity http) throws Exception {
-			http.antMatcher("/manage/**").authorizeRequests().anyRequest().hasRole("ACTUATOR").and().httpBasic();
+			http.csrf().disable().antMatcher("/manage/**").authorizeRequests().anyRequest().hasRole("ACTUATOR").and()
+					.httpBasic();
 		}
 	}
 

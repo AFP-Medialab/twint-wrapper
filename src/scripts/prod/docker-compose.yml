@@ -39,7 +39,7 @@ services:
       - esnet
       
   twint-wrapper:
-    image: twint-wrapper:2.0.0
+    image: twint-wrapper:2.0.2.1
     container_name: twint-wrapper
     restart: on-failure
     depends_on:

@@ -29,6 +29,7 @@ public class ESConfiguration extends AbstractElasticsearchConfiguration {
 	}
 
 	@Override
+	@Bean
 	public RestHighLevelClient elasticsearchClient() {
 
 		Logger.info("host: {}, port: {}", esHost, esPort);
