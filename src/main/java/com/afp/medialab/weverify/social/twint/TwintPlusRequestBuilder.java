@@ -81,6 +81,9 @@ public class TwintPlusRequestBuilder {
 			else if (collectRequest.getMedia().equals("video"))
 				sb.append(" filter:native_video");
 		}
+		if(collectRequest.isVerified()) {
+			sb.append(" filter:verified");
+		}
 		// users
 		if (collectRequest.getUserList() != null && !collectRequest.getUserList().isEmpty()) {
 			// hasUser = true;
