@@ -63,7 +63,7 @@ spring:
     show-sql: true
 
 command:
-  twint: docker run --rm --network dev_esnet -i twintplus:0.3
+  twint: docker run --rm --network dev_esnet -i twintplus:0.4
 
 management:
  # server:

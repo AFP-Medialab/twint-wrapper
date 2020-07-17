@@ -43,6 +43,8 @@ public class CollectRequest {
 
 	private Boolean verified = false;
 	
+	private Boolean cached = true;
+	
 	private Boolean disableTimeRange = false;
 
 	@RetweetHandlingConstrain
@@ -62,6 +64,7 @@ public class CollectRequest {
 		this.verified = collectRequest.verified;
 		this.retweetsHandling = collectRequest.retweetsHandling;
 		this.disableTimeRange = collectRequest.disableTimeRange;
+		this.cached = collectRequest.cached;
 	}
 
 	public CollectRequest(Request request) {
@@ -151,6 +154,14 @@ public class CollectRequest {
 
 	public void setDisableTimeRange(boolean disableTimeRange) {
 		this.disableTimeRange = disableTimeRange;
+	}
+
+	public Boolean isCached() {
+		return cached;
+	}
+	
+	public void setCached(boolean cached) {
+		this.cached = cached;
 	}
 
 	/**

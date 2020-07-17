@@ -31,7 +31,7 @@ import com.afp.medialab.weverify.social.twint.TwintThreadGroup;
 public class RequestCacheManager {
 
 	private static Logger Logger = LoggerFactory.getLogger(RequestCacheManager.class);
-
+	
 	@Autowired
 	private CollectService collectService;
 
@@ -60,7 +60,7 @@ public class RequestCacheManager {
 		CollectHistory collectHistory = collectService.createNewCollectHistory();
 		Set<Request> similarRequests = similarInCache(collectRequest);
 		Set<Request> previousMatch = exactRequests(similarRequests, collectRequest);
-		if (previousMatch != null && !previousMatch.isEmpty()) {
+		if ((previousMatch != null && !previousMatch.isEmpty()) && collectRequest.isCached()) {
 			// Requests exist in cache
 			// Try to extend with new dateRange if so
 			collectHistory = (collectRequest.isDisableTimeRange() ? reusePreviousRequest(previousMatch)

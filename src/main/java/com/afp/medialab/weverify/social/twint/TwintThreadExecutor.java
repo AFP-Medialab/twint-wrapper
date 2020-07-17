@@ -35,6 +35,17 @@ public class TwintThreadExecutor {
       executor.initialize();
       return executor;
    }
+   @Bean(name = "twittieCallTaskExecutor")
+   public TaskExecutor twittieCallTaskExecutor() {
+
+      ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+      executor.setCorePoolSize(nbCoreThreads);
+      executor.setMaxPoolSize(nbMaxThreads);
+      executor.setQueueCapacity(nbQueueThreads);
+      executor.setThreadNamePrefix("twittie-");
+      executor.initialize();
+      return executor;
+   }
    
    @Bean(name = "twintCallGroupTaskExecutor")
    public TaskExecutor twintCallGroutTaskExecutor() {

@@ -5,7 +5,6 @@ import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
 import static org.elasticsearch.index.query.QueryBuilders.rangeQuery;
 
 import java.io.IOException;
-import java.util.List;
 
 import org.elasticsearch.index.query.QueryBuilder;
 import org.junit.Test;
@@ -64,9 +63,9 @@ public class ElasticSearchQueryTest {
 		CollectRequest collectRequest = objectMapper.readValue(donalTrumpQuery, CollectRequest.class);
 
 		//List<TwintModel> models = esOperations.enrichWithTweetie(collectRequest);
-		List<TwintModel> models = esOperations.enrichWithTweetie(essid);
-		esOperations.indexWordsSubList(models);
-		System.out.println("ok " + models.size());
+		esOperations.enrichWithTweetie(essid);
+		
+		//System.out.println("ok " + models.size());
 
 	}
 

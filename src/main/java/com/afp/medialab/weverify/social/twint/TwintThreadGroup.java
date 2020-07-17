@@ -2,6 +2,7 @@ package com.afp.medialab.weverify.social.twint;
 
 import static java.lang.Math.toIntExact;
 
+import java.io.IOException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -42,6 +43,9 @@ public class TwintThreadGroup {
 	@Autowired
 	@Qualifier("twintThread")
 	private TwintThread tt;
+	
+	@Autowired
+	private ESOperations esOperation;
 
 	private Date addDuration(Date date, Duration duration) {
 		Calendar calendar = Calendar.getInstance();
@@ -137,6 +141,29 @@ public class TwintThreadGroup {
 			result.add(tt.callTwint(collectHistory, collectRequest));
 		}
 		CompletableFuture.allOf(result.toArray(new CompletableFuture<?>[result.size()])).join();
+		int finished_threads = collectHistory.getFinished_threads();
+		int successful_threads = collectHistory.getSuccessful_threads();
+		int total_threads = collectHistory.getTotal_threads();
+		if (finished_threads == total_threads) {
+			if (successful_threads == finished_threads) {
+				collectHistory.setStatus(Status.CountingWords);
+				collectService.save_collectHistory(collectHistory);
+				try {
+					esOperation.enrichWithTweetie(collectHistory.getSession());
+				} catch (IOException e) {
+					Logger.error("error with tweeetie", e);
+				}
+				collectHistory.setStatus(Status.Done);
+				collectHistory.setMessage("Finished successfully");
+				collectHistory.setProcessEnd(Calendar.getInstance().getTime());
+				collectService.save_collectHistory(collectHistory);
+			}else {
+				collectHistory.setStatus(Status.Error);
+				collectHistory.setMessage("Parts of this search could not be found");
+				collectHistory.setProcessEnd(Calendar.getInstance().getTime());
+				collectService.save_collectHistory(collectHistory);
+			}
+		}
 	}
 
 }

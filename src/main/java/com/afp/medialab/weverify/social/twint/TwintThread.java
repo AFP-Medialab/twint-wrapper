@@ -3,9 +3,7 @@ package com.afp.medialab.weverify.social.twint;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.Calendar;
 import java.util.Date;
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 import org.slf4j.Logger;
@@ -19,8 +17,6 @@ import org.springframework.transaction.annotation.Transactional;
 import com.afp.medialab.weverify.social.dao.entity.CollectHistory;
 import com.afp.medialab.weverify.social.dao.service.CollectService;
 import com.afp.medialab.weverify.social.model.CollectRequest;
-import com.afp.medialab.weverify.social.model.Status;
-import com.afp.medialab.weverify.social.model.twint.TwintModel;
 
 /**
  * Run twint command in a asynchronous thread
@@ -28,6 +24,7 @@ import com.afp.medialab.weverify.social.model.twint.TwintModel;
  * @author Medialab
  */
 @Component("twintThread")
+@Transactional
 public class TwintThread {
 
 	private static final Logger Logger = LoggerFactory.getLogger(TwintThread.class);
@@ -43,9 +40,9 @@ public class TwintThread {
 
 	@Autowired
 	private ESOperations esOperation;
-
+	
 	@Autowired
-	CollectService collectService;
+	private CollectService collectService;
 
 	// private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd
 	// HH:mm:ss");
@@ -60,7 +57,7 @@ public class TwintThread {
 	}
 
 	@Async(value = "twintCallTaskExecutor")
-	@Transactional
+	//@Transactional
 	public CompletableFuture<Integer> callTwint(CollectHistory collectHistory, CollectRequest request) {
 
 		Integer result = null;
@@ -70,16 +67,6 @@ public class TwintThread {
 			e.printStackTrace();
 			Logger.error("Error calling twint process", e);
 		}
-		if (result > 0) {
-			try {
-				Thread.sleep(2000);
-				List<TwintModel> tms = esOperation.enrichWithTweetie(collectHistory.getSession());
-				esOperation.indexWordsSubList(tms);
-			} catch (IOException | InterruptedException e) {
-				Logger.error("error with tweeetie", e);
-			}
-		}
-		// update db to say this thread is finished
 		collectHistory.setFinished_threads(collectHistory.getFinished_threads() + 1);
 		Integer old_count = collectHistory.getCount();
 		if (old_count == null || old_count == -1)
@@ -92,31 +79,16 @@ public class TwintThread {
 			collectHistory.setSuccessful_threads(collectHistory.getSuccessful_threads() + 1);
 			collectService.save_collectHistory(collectHistory);
 		}
-
-		int finished_threads = collectHistory.getFinished_threads();
-		int successful_threads = collectHistory.getSuccessful_threads();
-		int total_threads = collectHistory.getTotal_threads();
-		Logger.debug("FINISH THREAD {}, SUCCCESS {}, TOTAL THREAD {}", finished_threads, successful_threads,
-				total_threads);
-		if (finished_threads == total_threads) {
-
-			collectHistory.setStatus(Status.Done);
-			collectHistory.setProcessEnd(Calendar.getInstance().getTime());
-			if (successful_threads == finished_threads) {
-				collectHistory.setMessage("Finished successfully");
-			} else {
-				collectHistory.setStatus(Status.Error);
-				collectHistory.setMessage("Parts of this search could not be found");
-			}
-			collectService.save_collectHistory(collectHistory);
-		}
-//		}
+		
 		return CompletableFuture.completedFuture(result);
 	}
 
+
 	private ProcessBuilder createProcessBuilder(CollectRequest request, String session) {
 		boolean isDocker = isDockerCommand(twintCall);
-		//String twintRequest = TwintRequestGenerator.getInstance().generateRequest(request, session, isDocker, esURL);
+		// String twintRequest =
+		// TwintRequestGenerator.getInstance().generateRequest(request, session,
+		// isDocker, esURL);
 		String twintRequest = TwintPlusRequestBuilder.getInstance().generateRequest(request, session, isDocker, esURL);
 
 		ProcessBuilder processBuilder = new ProcessBuilder("/bin/bash", "-c", twintCall + twintRequest);
@@ -135,10 +107,9 @@ public class TwintThread {
 		Integer nb_tweets = -1;
 		while ((LoggerString = stdError.readLine()) != null) {
 
-			
 			if (LoggerString.contains("Tweets collected")) {
 				String str = LoggerString.split("Tweets collected: ")[1].split(" ")[0];
-				str = str.substring(0, str.length() -2);
+				str = str.substring(0, str.length() - 2);
 				nb_tweets = Integer.parseInt(str);
 				Logger.info("Successfully collected: " + nb_tweets + " " + got);
 
@@ -146,10 +117,9 @@ public class TwintThread {
 			// error_occurred = true;
 		}
 
-		
 		while ((LoggerString = stdInput.readLine()) != null) {
 			Logger.error(LoggerString);
-			
+
 		}
 		stdInput.close();
 		stdError.close();

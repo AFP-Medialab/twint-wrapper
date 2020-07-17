@@ -7,17 +7,15 @@ import static org.elasticsearch.index.query.QueryBuilders.rangeQuery;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Future;
 
 import javax.transaction.Transactional;
 
-import org.elasticsearch.action.bulk.BulkRequest;
-import org.elasticsearch.action.update.UpdateRequest;
-import org.elasticsearch.client.RequestOptions;
-import org.elasticsearch.client.RestHighLevelClient;
-import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
@@ -33,28 +31,23 @@ import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.data.elasticsearch.core.SearchHitsIterator;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import com.afp.medialab.weverify.social.model.CollectRequest;
 import com.afp.medialab.weverify.social.model.twint.TwintModel;
-import com.afp.medialab.weverify.social.model.twint.WordsInTweet;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
-@Component
+@Service
 @Transactional
 public class ESOperations {
 
 	@Autowired
 	private ElasticsearchOperations esOperation;
-
+	
 	@Autowired
-	RestHighLevelClient highLevelClient;
-
-	@Autowired
-	private TweetsPostProcess twintModelAdapter;
+	private TwittieProcessing twittieProcessing;
 
 	// bulk number of request
-	private int bulkLimit = 5000;
+	private int bulkLimit = 1000;
 
 	// private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd
 	// HH:mm:ss");
@@ -69,7 +62,7 @@ public class ESOperations {
 	 * @param end
 	 * @throws IOException
 	 */
-	public List<TwintModel> enrichWithTweetie(String essid) throws IOException {
+	public void enrichWithTweetie(String essid) throws IOException {
 		BoolQueryBuilder builder = QueryBuilders.boolQuery();
 		builder.must(matchQuery("essid", essid));
 		builder.mustNot(existsQuery("wit"));
@@ -81,7 +74,7 @@ public class ESOperations {
 			model.add(stream.next().getContent());
 		}
 		stream.close();
-		return model;
+		indexWordsSubList(model);
 	}
 
 	/**
@@ -173,10 +166,14 @@ public class ESOperations {
 	 * @param tms
 	 * @throws IOException
 	 */
-	public void indexWordsSubList(List<TwintModel> tms) throws IOException {
+	private void indexWordsSubList(List<TwintModel> tms) throws IOException {
+		if (tms.isEmpty())
+			return;
 		int listSize = tms.size();
 		Logger.debug("List size {}", listSize);
 		int nbSubList = listSize / bulkLimit;
+		Collection<Future<String>> results = new ArrayList<>();
+		Logger.debug("Nb List {}", nbSubList);
 		for (int i = 0; i <= nbSubList; i++) {
 			int fromIndex = i * bulkLimit;
 			int toIndex = fromIndex + bulkLimit;
@@ -186,55 +183,12 @@ public class ESOperations {
 			Logger.debug("index from {} to {}", fromIndex, toIndex);
 			List<TwintModel> subList = tms.subList(fromIndex, toIndex);
 			Logger.debug("sublist size {}", subList.size());
-			indexWordsObj(subList);
+			results.add(twittieProcessing.indexWordsObj(subList));
 		}
+		CompletableFuture.allOf(results.toArray(new CompletableFuture<?>[results.size()])).join();
+		
 	}
 
-	/**
-	 * Add Twitie data
-	 * 
-	 * @param tms Indexed document
-	 * @throws IOException
-	 */
-	public void indexWordsObj(List<TwintModel> tms) throws IOException {
-
-		int i = 0;
-		Logger.info("call Twittie WS for {} extracted tweets", tms.size());
-		BulkRequest bulkRequest = new BulkRequest();
-
-		for (TwintModel tm : tms) {
-
-			try {
-
-				// Logger.debug("Builtin wit : " + i++ + "/" + tms.size());
-				List<WordsInTweet> wit = twintModelAdapter.buildWit(tm.getFull_text());
-
-				ObjectMapper mapper = new ObjectMapper();
-				String b = "{\"wit\": " + mapper.writeValueAsString(wit) + "}";
-
-				UpdateRequest updateRequest = new UpdateRequest("tsnatweets", tm.getId());
-				updateRequest.doc(b, XContentType.JSON);
-
-				bulkRequest.add(updateRequest);
-				i++;
-			} catch (Exception e) {
-				Logger.error("Error processing this tweet: {} with error : {}", tm.getId(), e.getMessage());
-				// e.printStackTrace();
-			}
-		}
-		Logger.debug("{}/{} process  tweets ", i, tms.size());
-		// SocketTimeoutException
-		bulkQuery(bulkRequest);
-		Logger.debug("Update success");
-
-	}
-
-	private void bulkQuery(BulkRequest bulkRequest) {
-		try {
-			highLevelClient.bulk(bulkRequest, RequestOptions.DEFAULT);
-		} catch (IOException e) {
-			Logger.error("Error in Bulk request {} {}", e.getMessage(), e.getCause());
-		}
-	}
+	
 
 }
