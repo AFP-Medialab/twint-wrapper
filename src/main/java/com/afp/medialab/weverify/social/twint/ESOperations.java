@@ -14,6 +14,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import javax.transaction.Transactional;
 
 import org.elasticsearch.action.update.UpdateRequest;
@@ -164,13 +167,13 @@ public class ESOperations {
 	public void indexWordsObj(List<TwintModel> tms) throws IOException {
 		List<UpdateQuery> updateQueries = new LinkedList<UpdateQuery>();
 
-		int i = 0;
-		boolean allNull = true;
+		AtomicInteger i = new AtomicInteger();
+		AtomicBoolean allNull = new AtomicBoolean(true);
 		Logger.info("call Twittie WS for {} extracted tweets", tms.size());
-		for (TwintModel tm : tms) {
+		tms.parallelStream().forEach((tm) -> {
 
 			try {
-				allNull = false;
+				allNull.set(false);
 				// Logger.debug("Builtin wit : " + i++ + "/" + tms.size());
 				List<WordsInTweet> wit = twintModelAdapter.buildWit(tm.getTweet(), tm.getSearch());
 
@@ -186,15 +189,15 @@ public class ESOperations {
 				updateQuery.setUpdateRequest(updateRequest);
 				updateQueries.add(updateQuery);
 
-				i++;
+				i.incrementAndGet();
 			} catch (Exception e) {
 				Logger.error("Error processing this tweet: {} with error : {}", tm.getId(), e.getMessage());
 				// e.printStackTrace();
 			}
-		}
+		});
 
-		Logger.debug("{}/{} process  tweets ", i, tms.size());
-		if (!allNull)
+		Logger.debug("{}/{} process  tweets ", i.intValue(), tms.size());
+		if (!allNull.get())
 			esOperation.bulkUpdate(updateQueries, BulkOptions.defaultOptions());
 
 	}
