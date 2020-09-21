@@ -12,6 +12,9 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import javax.annotation.PostConstruct;
 import javax.transaction.Transactional;
 
@@ -114,14 +117,16 @@ public class ESOperations {
 
     public void indexWordsObj(List<TwintModel> tms, CollectHistory collectHistory) throws IOException {
         BulkRequest requests = new BulkRequest();
-        int i = 0;
-        boolean allNull = true;
-        for (TwintModel tm : tms) {
+
+        AtomicInteger i = new AtomicInteger();
+        AtomicBoolean allNull = new AtomicBoolean(true);
+
+        tms.parallelStream().forEach((tm) -> {
 
             if (tm.getWit() == null) {
                 try {
-                    allNull = false;
-                    Logger.info("Builtin wit : " + i++ + "/" + tms.size());
+                    allNull.set(false);
+                    Logger.info("Builtin wit : " + i.getAndIncrement() + "/" + tms.size());
                     twintModelAdapter.buildWit(tm);
 
 
@@ -145,11 +150,10 @@ public class ESOperations {
                     e.printStackTrace();
                 }
             }
-        }
+        });
 
-        if (!allNull)
+        if (!allNull.get())
             esConfiguration.elasticsearchClient().bulk(requests, RequestOptions.DEFAULT);
-
     }
 
 }
