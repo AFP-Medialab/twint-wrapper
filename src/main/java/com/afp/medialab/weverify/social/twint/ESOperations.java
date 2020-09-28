@@ -93,6 +93,9 @@ public class ESOperations {
 											stream.getTotalHits(),
 											Spliterator.IMMUTABLE | Spliterator.CONCURRENT);
 
+			// create an ObjectMapper for conversion to JSON
+			final ObjectMapper mapper = new ObjectMapper();
+
 			// now we work our way through all the hits allowing the JVM to work
 			// out how many threads we should use given where it's being run etc.
 			StreamSupport.stream(it,true).forEach(hit -> {
@@ -106,7 +109,6 @@ public class ESOperations {
 					List<WordsInTweet> wit = twintModelAdapter.buildWit(tm.getFull_text());
 
 					// convert the result of running TwitIE into a JSON version
-					ObjectMapper mapper = new ObjectMapper();
 					String b = "{\"wit\": " + mapper.writeValueAsString(wit) + "}";
 
 					// build a request to update the Tweet with the info from TwitIE
