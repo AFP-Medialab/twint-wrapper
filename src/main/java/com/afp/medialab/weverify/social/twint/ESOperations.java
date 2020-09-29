@@ -13,13 +13,15 @@ import java.util.List;
 import java.util.Set;
 import java.util.Spliterator;
 import java.util.Spliterators;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Future;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.StreamSupport;
 
 import javax.transaction.Transactional;
 
+import com.afp.medialab.weverify.social.util.AlwaysBlockingSynchronousQueue;
+import org.elasticsearch.action.DocWriteRequest;
+import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
@@ -27,12 +29,14 @@ import org.elasticsearch.index.query.TermsQueryBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.data.elasticsearch.core.SearchHitsIterator;
+import org.springframework.data.elasticsearch.core.query.BulkOptions;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.stereotype.Service;
@@ -61,6 +65,9 @@ public class ESOperations {
 	@Autowired
 	RestHighLevelClient highLevelClient;
 
+	@Value("${application.twitie.threads:8}")
+	private int twitieThreads;
+
 	private static Logger Logger = LoggerFactory.getLogger(ESOperations.class);
 
 	/**
@@ -85,47 +92,86 @@ public class ESOperations {
 		// use a try with resources to ensure the iterator is closed no matter what
 		try (SearchHitsIterator<TwintModel> stream = esOperation.searchForStream(searchQuery, TwintModel.class)) {
 
-			// create a Spliterator over the normal ES iterator so we can work on the
-			// elements in parallel. Specifying the size ensures that the data is split
-			// sensibly across multiple threads and we can start calling TwitIE while
-			// we are still pulling results from ES		
-			Spliterator<SearchHit<TwintModel>> it = Spliterators.spliterator(stream,
-											stream.getTotalHits(),
-											Spliterator.IMMUTABLE | Spliterator.CONCURRENT);
-
 			// create an ObjectMapper for conversion to JSON
 			final ObjectMapper mapper = new ObjectMapper();
 
-			// now we work our way through all the hits allowing the JVM to work
-			// out how many threads we should use given where it's being run etc.
-			StreamSupport.stream(it,true).forEach(hit -> {
+			// dedicated thread to send the results to Elastic in batches
+			ArrayBlockingQueue<UpdateRequest> q = new ArrayBlockingQueue<>(2000);
+			UpdateRequest doneSignal = new UpdateRequest(null, null); // marker
+			Thread queueConsumer = new Thread(() -> {
+				List<DocWriteRequest<?>> requests = new ArrayList<>();
+				UpdateRequest r = null;
+				try {
+					while((r = q.take()) != doneSignal) {
+						requests.add(r);
+						if(requests.size() >= 1000) {
+							try {
+								highLevelClient.bulk(new BulkRequest("tsnatweets").add(requests), RequestOptions.DEFAULT);
+								successful.addAndGet(requests.size());
+							} catch(Exception e) {
+								Logger.error("Error sending updates to Elastic", e);
+							}
+							requests.clear();
+						}
+					}
+				} catch(InterruptedException e) {
+					// finished
+				}
+				if(requests.size() > 0) {
+					try {
+						highLevelClient.bulk(new BulkRequest("tsnatweets").add(requests), RequestOptions.DEFAULT);
+						successful.addAndGet(requests.size());
+					} catch(Exception e) {
+						Logger.error("Error sending updates to Elastic", e);
+					}
+				}
+			});
+			queueConsumer.start();
 
+			// thread pool to call TwitIE - AlwaysBlockingSynchronousQueue ensures that we don't fetch
+			// tweets from Elastic faster than the TwitIE service can process them, which should avoid
+			// timing out the scroller
+			ExecutorService twitieExecutor = new ThreadPoolExecutor(twitieThreads, twitieThreads, 0L,
+							TimeUnit.MILLISECONDS, new AlwaysBlockingSynchronousQueue());
+
+			// now we work our way through all the hits
+			stream.forEachRemaining(hit -> {
 				// get the TwintModel object out of the ES search result hit
 				TwintModel tm = hit.getContent();
 
-				try {
-					// this is the time consuming bit that eventually runs TwitIE
-					// but now we are using multiple threads this should be a bit quicker
-					List<WordsInTweet> wit = twintModelAdapter.buildWit(tm.getFull_text());
+				twitieExecutor.execute(() -> {
+					try {
+						// this is the time consuming bit that eventually runs TwitIE
+						// but now we are using multiple threads this should be a bit quicker
+						List<WordsInTweet> wit = twintModelAdapter.buildWit(tm.getFull_text());
 
-					// convert the result of running TwitIE into a JSON version
-					String b = "{\"wit\": " + mapper.writeValueAsString(wit) + "}";
+						// convert the result of running TwitIE into a JSON version
+						String b = "{\"wit\": " + mapper.writeValueAsString(wit) + "}";
 
-					// build a request to update the Tweet with the info from TwitIE
-					UpdateRequest updateRequest = new UpdateRequest("tsnatweets", tm.getId());
-					updateRequest.doc(b, XContentType.JSON);
+						// build a request to update the Tweet with the info from TwitIE
+						UpdateRequest updateRequest = new UpdateRequest("tsnatweets", tm.getId());
+						updateRequest.doc(b, XContentType.JSON);
 
-					// pass the update to ES
-					highLevelClient.update(updateRequest, RequestOptions.DEFAULT);
-					
-					// if we've got this far we've successfully processed the tweet
-					// and stored the result so update the counter
-					successful.incrementAndGet();			
-				} catch (Exception e) {
-					Logger.error("Error processing this tweet: {} with error : {}", tm.getId(), e.getMessage());
-				}
-
+						// pass the update to ES
+						q.add(updateRequest);
+					} catch(Exception e) {
+						Logger.error("Error processing this tweet: {} with error : {}", tm.getId(), e.getMessage());
+					}
+				});
 			});
+
+			twitieExecutor.shutdown();
+			try {
+				twitieExecutor.awaitTermination(10, TimeUnit.MINUTES);
+			} catch(InterruptedException e) {
+				Logger.warn("Interrupted while waiting for TwitIE executor to finish", e);
+			}
+			q.add(doneSignal);
+			try {
+				queueConsumer.join(10000);
+			} catch(InterruptedException e) {
+				Logger.warn("Interrupted waiting for TwitIE consumer to finish", e);
+			}
 
 			// and we are back to single threaded processing so let's log how
 			// many of the tweets we pulled from ES that we managed to process
