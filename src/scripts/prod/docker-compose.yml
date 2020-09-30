@@ -39,7 +39,7 @@ services:
       - esnet
       
   twint-wrapper:
-    image: twint-wrapper:2.0.4
+    image: twint-wrapper:2.0.5
     container_name: twint-wrapper
     restart: on-failure
     depends_on:
@@ -55,7 +55,8 @@ services:
       ES_PORT: 9200
       FUSIONAUTH_URL: http://fusionauth:9011
       FUSIONAUTH_ISSUER: weverify.eu
-      TWITTIE_URL: "http://twitie:8080/gate/process?annotations=:Person,:UserID,:Location,:Organization"
+      TWITIE_URL: "http://twitie:8080/gate/process?annotations=:Person,:UserID,:Location,:Organization"
+      TWITIE_THREADS: 10
       SLACK_URL: ${SLACK_URL}
       ACTUATOR_PASSWORD: ${ACTUATOR_PASSWORD}
       PROFILE: demo,default

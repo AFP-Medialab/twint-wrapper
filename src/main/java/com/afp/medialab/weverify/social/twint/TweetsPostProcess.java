@@ -28,7 +28,7 @@ import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
-import com.afp.medialab.weverify.social.model.twint.TwittieResponse;
+import com.afp.medialab.weverify.social.model.twint.TwitieResponse;
 import com.afp.medialab.weverify.social.model.twint.WordsInTweet;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -49,7 +49,7 @@ public class TweetsPostProcess {
 	@Qualifier("ESRestTempate")
 	private RestTemplate restTemplate;
 
-	@Value("${application.twittie.url}")
+	@Value("${application.twitie.url}")
 	private String twitieURL;
 
 	private Map<String, List<String>> stopwords;
@@ -61,7 +61,7 @@ public class TweetsPostProcess {
 	@Value("classpath:regexp.txt")
 	private Resource regexResource;
 
-	private boolean twittieDown = false;
+	private boolean twitieDown = false;
 
 	@SuppressWarnings("unchecked")
 	@PostConstruct
@@ -110,7 +110,7 @@ public class TweetsPostProcess {
 	 * @return
 	 * @throws IOException
 	 */
-	private List<Tweetie> callTwittie(String tweet) throws IOException {
+	private List<Tweetie> callTwitie(String tweet) throws IOException {
 
 		// HTTPConnexion Timeout
 		ResponseEntity<String> response = null;
@@ -118,24 +118,24 @@ public class TweetsPostProcess {
 			response = restTemplate.postForEntity(twitieURL, tweet, String.class);
 
 		} catch (HttpServerErrorException ex) {
-			Logger.error("FAILED CALLING TWITTIE {}" , ex.getRawStatusCode());
+			Logger.error("Fail calling TwitIE {}" , ex.getRawStatusCode());
 			return null;
 		}
 		catch (Exception e) {
-			Logger.error("FAILED CALLING TWITTIE - Twittie is down");
-			twittieDown = true;
+			Logger.error("Fail calling TwitIE - TwitIE is down");
+			twitieDown = true;
 			return null;
 		}
-		// Logger.debug("SUCCESSFULLY CALLED TWITTIE");
+		// Logger.debug("SUCCESSFULLY CALLED TwitIE");
 		ObjectMapper mapper = new ObjectMapper();
 
 		JsonNode root = mapper.readTree(response.getBody());
 		JsonNode annotations = root.get("response").get("annotations");
 
-		TwittieResponse twittieResponse = mapper.treeToValue(annotations, TwittieResponse.class);
+		TwitieResponse twitieResponse = mapper.treeToValue(annotations, TwitieResponse.class);
 		List<Tweetie> tweeties = new LinkedList<Tweetie>();
 
-		twittieResponse.getPerson().forEach(p -> {
+		twitieResponse.getPerson().forEach(p -> {
 			String per = p.getFeatures().getString();
 			String n_per = per.toLowerCase().replaceAll(" |/.", "_");
 			Tweetie tweetie = new Tweetie(per, n_per, "Person");
@@ -144,7 +144,7 @@ public class TweetsPostProcess {
 
 			// tokenJSON.put(n_per, "Person");
 		});
-		twittieResponse.getUserID().forEach(p -> {
+		twitieResponse.getUserID().forEach(p -> {
 			String feat = "@" + p.getFeatures().getString();
 			// String norm = p.getFeatures().getString().toLowerCase().replaceAll("@", "");
 			String norm = "@" + p.getFeatures().getString().toLowerCase();
@@ -154,7 +154,7 @@ public class TweetsPostProcess {
 			tweeties.add(tweetie);
 			// tokenJSON.put("@" + p.getFeatures().getString().toLowerCase(), "UserID");
 		});
-		twittieResponse.getLocation().forEach(p -> {
+		twitieResponse.getLocation().forEach(p -> {
 			String per = p.getFeatures().getString();
 			String n_per = per.toLowerCase().replaceAll(" |/.", "_");
 			Tweetie tweetie = new Tweetie(per, n_per, "Location");
@@ -162,7 +162,7 @@ public class TweetsPostProcess {
 			// tweet = tweet.replaceAll(per, n_per);
 			// tokenJSON.put(n_per, "Location");
 		});
-		twittieResponse.getOrganization().forEach(p -> {
+		twitieResponse.getOrganization().forEach(p -> {
 			String per = p.getFeatures().getString();
 			String n_per = per.toLowerCase().replaceAll(" |/.", "_");
 			Tweetie tweetie = new Tweetie(per, n_per, "Organization");
@@ -181,8 +181,8 @@ public class TweetsPostProcess {
 			return wit;
 		List<Tweetie> tweeties;
 		Map<String, String> tokenJSON = new HashMap<>();
-		if (!twittieDown) {
-			tweeties = callTwittie(tweet);
+		if (!twitieDown) {
+			tweeties = callTwitie(tweet);
 			for (Tweetie tweetie : tweeties) {
 				tweet = tweet.replaceAll(tweetie.getFeature(), tweetie.getNormalized());
 				tokenJSON.put(tweetie.getNormalized(), tweetie.getEntity());

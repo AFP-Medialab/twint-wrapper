@@ -5,49 +5,49 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
-@JsonDeserialize(using = TwittieDeserializer.class)
-public class TwittieResponse {
+@JsonDeserialize(using = TwitieDeserializer.class)
+public class TwitieResponse {
 
-    private List<TwittieEntityJson<Person>> person;
-    private List<TwittieEntityJson<UserID>> userID;
-    private List<TwittieEntityJson<Location>> location;
-    private List<TwittieEntityJson<Organization>> organization;
+    private List<TwitieEntityJson<Person>> person;
+    private List<TwitieEntityJson<UserID>> userID;
+    private List<TwitieEntityJson<Location>> location;
+    private List<TwitieEntityJson<Organization>> organization;
 
     //<editor-fold desc="GETTERS & SETTERS">
-    public List<TwittieEntityJson<Person>> getPerson() {
+    public List<TwitieEntityJson<Person>> getPerson() {
         return person;
     }
 
-    public void setPerson(List<TwittieEntityJson<Person>> person) {
+    public void setPerson(List<TwitieEntityJson<Person>> person) {
         this.person = person;
     }
 
-    public List<TwittieEntityJson<UserID>> getUserID() {
+    public List<TwitieEntityJson<UserID>> getUserID() {
         return userID;
     }
 
-    public void setUserID(List<TwittieEntityJson<UserID>> userID) {
+    public void setUserID(List<TwitieEntityJson<UserID>> userID) {
         this.userID = userID;
     }
 
-    public List<TwittieEntityJson<Location>> getLocation() {
+    public List<TwitieEntityJson<Location>> getLocation() {
         return location;
     }
 
-    public void setLocation(List<TwittieEntityJson<Location>> location) {
+    public void setLocation(List<TwitieEntityJson<Location>> location) {
         this.location = location;
     }
 
-    public List<TwittieEntityJson<Organization>> getOrganization() {
+    public List<TwitieEntityJson<Organization>> getOrganization() {
         return organization;
     }
 
-    public void setOrganization(List<TwittieEntityJson<Organization>> organization) {
+    public void setOrganization(List<TwitieEntityJson<Organization>> organization) {
         this.organization = organization;
     }
     //</editor-fold>
 
-    public static  class TwittieEntityJson<T extends TwittieFeatures> {
+    public static  class TwitieEntityJson<T extends TwitieFeatures> {
         private int start;
         private int end;
         private T features;
@@ -80,7 +80,7 @@ public class TwittieResponse {
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
-    abstract public static class TwittieFeatures {
+    abstract public static class TwitieFeatures {
         private String string;
 
         //<editor-fold desc="GETTERS & SETTERS">
@@ -97,7 +97,7 @@ public class TwittieResponse {
     }
 
 
-    public static class Person extends TwittieFeatures{
+    public static class Person extends TwitieFeatures{
         private String gender;
         private String firstName;
         private String surname;
@@ -139,7 +139,7 @@ public class TwittieResponse {
         //</editor-fold>
     }
 
-    public static class UserID extends TwittieFeatures {
+    public static class UserID extends TwitieFeatures {
         private String user;
 
 
@@ -157,7 +157,7 @@ public class TwittieResponse {
         //</editor-fold>
     }
 
-    public static class Location extends TwittieFeatures {
+    public static class Location extends TwitieFeatures {
         private String locType;
 
 
@@ -173,7 +173,7 @@ public class TwittieResponse {
         //</editor-fold>
     }
 
-    public static class Organization extends TwittieFeatures {
+    public static class Organization extends TwitieFeatures {
         private String orgType;
 
         //<editor-fold desc="GETTERS & SETTERS">

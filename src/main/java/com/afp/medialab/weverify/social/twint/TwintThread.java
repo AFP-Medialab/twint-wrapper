@@ -111,7 +111,7 @@ public class TwintThread {
 				String str = LoggerString.split("Tweets collected: ")[1].split(" ")[0];
 				str = str.substring(0, str.length() - 2);
 				nb_tweets = Integer.parseInt(str);
-				Logger.info("Successfully collected: " + nb_tweets + " " + got);
+				Logger.debug("Successfully collected: " + nb_tweets + " " + got);
 
 			}
 			// error_occurred = true;

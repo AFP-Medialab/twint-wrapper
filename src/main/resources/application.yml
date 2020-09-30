@@ -23,8 +23,12 @@ application:
     host: ${ES_HOST:localhost}
     port: ${ES_PORT:9200}
     
-  twittie:
-    url: ${TWITTIE_URL:http://localhost:8081/gate/process?annotations=:Person,:UserID,:Location,:Organization}
+  twitie:
+    url: ${TWITIE_URL:http://localhost:8081/gate/process?annotations=:Person,:UserID,:Location,:Organization}
+    threads: ${TWITIE_THREADS:8}
+    es:
+      pagesize: ${TWITIE_ES_PAGESIZE:100}
+      bulksize: ${TWITIE_ES_BULKSIZE:5000}
   notification:
     slack: ${SLACK_URL:}
   actuator:
@@ -63,7 +67,7 @@ spring:
     show-sql: true
 
 command:
-  twint: docker run --rm --network dev_esnet -i twintplus:0.4
+  twint: docker run --rm --network dev_esnet -i twintplus:0.5
 
 management:
  # server:
