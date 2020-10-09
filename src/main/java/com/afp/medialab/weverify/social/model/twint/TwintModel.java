@@ -17,6 +17,8 @@ public class TwintModel {
 	
 	private String full_text;
 	
+	private String lang;
+	
 	@Field(name = "wit", type = FieldType.Nested, includeInParent = true)
 	private List<WordsInTweet> wit;
 
@@ -50,6 +52,14 @@ public class TwintModel {
 
 	public void setDatetimestamp(long datetimestamp) {
 		this.datetimestamp = datetimestamp;
+	}
+
+	public String getLang() {
+		return lang;
+	}
+
+	public void setLang(String lang) {
+		this.lang = lang;
 	}
 
 	

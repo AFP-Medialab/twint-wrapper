@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -28,10 +29,14 @@ import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
+import com.afp.medialab.weverify.social.model.twint.TwintModel;
 import com.afp.medialab.weverify.social.model.twint.TwitieResponse;
 import com.afp.medialab.weverify.social.model.twint.WordsInTweet;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import eu.elg.model.Markup;
+import eu.elg.model.requests.TextRequest;
 
 @Configuration
 /**
@@ -110,18 +115,20 @@ public class TweetsPostProcess {
 	 * @return
 	 * @throws IOException
 	 */
-	private List<Tweetie> callTwitie(String tweet) throws IOException {
-
+	private List<Tweetie> callTwitie(TwintModel twintModel) throws IOException {
+		String tweet = StringUtils.normalizeSpace(twintModel.getFull_text());
+		TextRequest req = new TextRequest().withContent(tweet)
+				.withMarkup(new Markup().withFeature("lang", twintModel.getLang())).withParams(Collections.singletonMap(
+						"annotations", Arrays.asList(":Person", ":UserID", ":Location", ":Organization")));
 		// HTTPConnexion Timeout
 		ResponseEntity<String> response = null;
 		try {
-			response = restTemplate.postForEntity(twitieURL, tweet, String.class);
+			response = restTemplate.postForEntity(twitieURL, req, String.class);
 
 		} catch (HttpServerErrorException ex) {
-			Logger.error("Fail calling TwitIE {}" , ex.getRawStatusCode());
+			Logger.error("Fail calling TwitIE {}", ex.getRawStatusCode());
 			return null;
-		}
-		catch (Exception e) {
+		} catch (Exception e) {
 			Logger.error("Fail calling TwitIE - TwitIE is down");
 			twitieDown = true;
 			return null;
@@ -174,15 +181,15 @@ public class TweetsPostProcess {
 		return tweeties;
 	}
 
-	public List<WordsInTweet> buildWit(String tweet) throws InterruptedException, ParseException, IOException {
+	public List<WordsInTweet> buildWit(TwintModel twintModel) throws InterruptedException, ParseException, IOException {
 		List<WordsInTweet> wit = new ArrayList<>();
-		tweet = StringUtils.normalizeSpace(tweet);
+		String tweet = StringUtils.normalizeSpace(twintModel.getFull_text());
 		if (tweet.isEmpty())
 			return wit;
 		List<Tweetie> tweeties;
 		Map<String, String> tokenJSON = new HashMap<>();
 		if (!twitieDown) {
-			tweeties = callTwitie(tweet);
+			tweeties = callTwitie(twintModel);
 			for (Tweetie tweetie : tweeties) {
 				tweet = tweet.replaceAll(tweetie.getFeature(), tweetie.getNormalized());
 				tokenJSON.put(tweetie.getNormalized(), tweetie.getEntity());

@@ -11,7 +11,7 @@
 	</parent>
 	<groupId>com.afp.medialab.weverify.social</groupId>
 	<artifactId>twint-wrapper</artifactId>
-	<version>2.0.5-SNAPSHOT</version>
+	<version>2.0.6-SNAPSHOT</version>
 	<name>twint-wrapper</name>
 	<description>Twitter scraper wrapper</description>
 
@@ -19,7 +19,12 @@
 		<java.version>11</java.version>
 		<docker-maven-plugin>0.33.0</docker-maven-plugin>
 	</properties>
-
+	<repositories>
+		<repository>
+			<id>Gate-Repository</id>
+			<url>http://repo.gate.ac.uk/content/groups/public</url>
+		</repository>
+	</repositories>
 	<dependencies>
 		<dependency>
 			<groupId>com.googlecode.json-simple</groupId>
@@ -87,11 +92,6 @@
 			<artifactId>spring-boot-configuration-processor</artifactId>
 			<optional>true</optional>
 		</dependency>
-		<!-- <dependency> -->
-		<!-- <groupId>io.fusionauth</groupId> -->
-		<!-- <artifactId>fusionauth-spring-security</artifactId> -->
-		<!-- <version>1.0.4</version> -->
-		<!-- </dependency> -->
 		<dependency>
 			<groupId>io.fusionauth</groupId>
 			<artifactId>fusionauth-java-client</artifactId>
@@ -106,10 +106,6 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-security</artifactId>
 		</dependency>
-		<!-- <dependency> -->
-		<!-- <groupId>org.springframework.security</groupId> -->
-		<!-- <artifactId>spring-security-config</artifactId> -->
-		<!-- </dependency> -->
 		<dependency>
 			<groupId>org.springframework.security</groupId>
 			<artifactId>
@@ -124,6 +120,11 @@
 			<groupId>javax.interceptor</groupId>
 			<artifactId>javax.interceptor-api</artifactId>
 			<version>1.2</version>
+		</dependency>
+		<dependency>
+			<groupId>eu.european-language-grid</groupId>
+			<artifactId>elg-java-bindings</artifactId>
+			<version>0.4</version>
 		</dependency>
 	</dependencies>
 	<profiles>
@@ -155,7 +156,7 @@
 			<properties>
 				<docker.path>src/main/docker/delivery</docker.path>
 				<docker.image.name>twint-wrapper</docker.image.name>
-				<docker.image.tag>2.0.5</docker.image.tag>
+				<docker.image.tag>2.0.6</docker.image.tag>
 			</properties>
 			<build>
 				<plugins>

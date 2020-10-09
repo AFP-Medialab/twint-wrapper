@@ -149,7 +149,7 @@ public class ESOperations {
 					try {
 						// this is the time consuming bit that eventually runs TwitIE
 						// but now we are using multiple threads this should be a bit quicker
-						List<WordsInTweet> wit = twintModelAdapter.buildWit(tm.getFull_text());
+						List<WordsInTweet> wit = twintModelAdapter.buildWit(tm);
 
 						// convert the result of running TwitIE into a JSON version
 						String b = "{\"wit\": " + mapper.writeValueAsString(wit) + "}";

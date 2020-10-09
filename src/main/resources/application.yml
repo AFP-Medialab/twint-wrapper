@@ -24,7 +24,7 @@ application:
     port: ${ES_PORT:9200}
     
   twitie:
-    url: ${TWITIE_URL:http://localhost:8081/gate/process?annotations=:Person,:UserID,:Location,:Organization}
+    url: ${TWITIE_URL:http://localhost:8081/process}
     threads: ${TWITIE_THREADS:8}
     es:
       pagesize: ${TWITIE_ES_PAGESIZE:100}
