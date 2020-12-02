@@ -141,4 +141,43 @@ It is possible to get notify to your slack account when a user registered.
 
 To add this feature just set the environment variable $SLACK_URL in the run time with your own slack URL.
 
+## Twitie configuration
+There is 2 Twitie version. Application is supporting both.
+Differences between the two version is about request format and endPoint calls. Response format is the same.
+### Twitie Legacy
+Legacy Twitie version that support only English
+
+* URL: <DOMAIN>/gate/process?annotations=:Person,:UserID,:Location,:Organization
+* Body format: String
+* Content-Type: text/plain
+
+### Twitie Spacy (Default local use)
+Spacy base Twitie version. Can support following langues (de, el, en, es, fr, it, pt) default is english
+
+* URL: <DOMAIN>/process
+* Body format: json
+* Content-Type: application/json
+
+Example request:
+
+```json
+{
+    "type":"text",
+    "content": "The Wall Street Journal always “forgets” to mention that the ratings for the White House Press 
+    Briefings are “through the roof” (Monday Night Football, Bachelor Finale, according to @nytimes) & is only way 
+    for me to escape the Fake News & get my views across. WSJ is Fake News!",
+    "features": {
+        "lang":"en"
+    }
+}
+
+```
+
+### Properties list for Twitie
+
+* TWITIE_IS_SPACY (true): set which version of Twitie to used
+* TWITIE_URL (http://localhost:8081/process): Twitie service endPoint URL
+* TWITIE_THREADS (8): number of threads used to process tweets with Twitie
+* TWITIE_ES_PAGESIZE (100): ES request size result for Twitie processing 
+* TWITIE_ES_BULKSIZE (5000): ES update bulk size after Twitie processing
 

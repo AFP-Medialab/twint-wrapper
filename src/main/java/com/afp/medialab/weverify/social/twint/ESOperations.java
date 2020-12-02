@@ -91,6 +91,8 @@ public class ESOperations {
 		// Tweets
 		// from within the code running on multiple threads
 		AtomicInteger successful = new AtomicInteger();
+		//set twitie service up
+		twintModelAdapter.setTwitieServiceUp(true);
 
 		// use a try with resources to ensure the iterator is closed no matter what
 		try (SearchHitsIterator<TwintModel> stream = esOperation.searchForStream(searchQuery, TwintModel.class)) {

@@ -6,7 +6,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -21,11 +20,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.client.SimpleClientHttpRequestFactory;
+import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
@@ -35,10 +32,7 @@ import com.afp.medialab.weverify.social.model.twint.WordsInTweet;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import eu.elg.model.Markup;
-import eu.elg.model.requests.TextRequest;
-
-@Configuration
+@Service
 /**
  * Call Tweetie service Count number of word occurrences with entity type if
  * detected by Tweetie
@@ -49,6 +43,9 @@ import eu.elg.model.requests.TextRequest;
 public class TweetsPostProcess {
 
 	private static org.slf4j.Logger Logger = LoggerFactory.getLogger(TweetsPostProcess.class);
+	
+	@Autowired
+	private ITwitieProcess itwitieProcess;
 
 	@Autowired
 	@Qualifier("ESRestTempate")
@@ -66,7 +63,11 @@ public class TweetsPostProcess {
 	@Value("classpath:regexp.txt")
 	private Resource regexResource;
 
-	private boolean twitieDown = false;
+	private boolean twitieServiceUp = true;	
+
+	public void setTwitieServiceUp(boolean twitieServiceUp) {
+		this.twitieServiceUp = twitieServiceUp;
+	}
 
 	@SuppressWarnings("unchecked")
 	@PostConstruct
@@ -116,10 +117,7 @@ public class TweetsPostProcess {
 	 * @throws IOException
 	 */
 	private List<Tweetie> callTwitie(TwintModel twintModel) throws IOException {
-		String tweet = StringUtils.normalizeSpace(twintModel.getFull_text());
-		TextRequest req = new TextRequest().withContent(tweet)
-				.withMarkup(new Markup().withFeature("lang", twintModel.getLang())).withParams(Collections.singletonMap(
-						"annotations", Arrays.asList(":Person", ":UserID", ":Location", ":Organization")));
+		Object req = itwitieProcess.buildTwitieRequest(twintModel);
 		// HTTPConnexion Timeout
 		ResponseEntity<String> response = null;
 		try {
@@ -130,7 +128,7 @@ public class TweetsPostProcess {
 			return null;
 		} catch (Exception e) {
 			Logger.error("Fail calling TwitIE - TwitIE is down");
-			twitieDown = true;
+			twitieServiceUp = false;
 			return null;
 		}
 		// Logger.debug("SUCCESSFULLY CALLED TwitIE");
@@ -188,7 +186,7 @@ public class TweetsPostProcess {
 			return wit;
 		List<Tweetie> tweeties;
 		Map<String, String> tokenJSON = new HashMap<>();
-		if (!twitieDown) {
+		if (twitieServiceUp) {
 			tweeties = callTwitie(twintModel);
 			for (Tweetie tweetie : tweeties) {
 				tweet = tweet.replaceAll(tweetie.getFeature(), tweetie.getNormalized());
@@ -234,18 +232,8 @@ public class TweetsPostProcess {
 
 		return wit;
 	}
-
-	@Bean
-	public RestTemplate restTemplate() {
-		SimpleClientHttpRequestFactory clientHttpRequestFactory = new SimpleClientHttpRequestFactory();
-		// Connect timeout
-		clientHttpRequestFactory.setConnectTimeout(5_000);
-
-		// Read timeout
-		clientHttpRequestFactory.setReadTimeout(10_000);
-		return new RestTemplate(clientHttpRequestFactory);
-	}
 }
+
 
 class Tweetie {
 	private String feature;

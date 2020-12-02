@@ -1,0 +1,15 @@
+version: '3.7'
+  
+services:
+  weverify-twitie-old:
+    container_name: twitie-old
+    image: registry.gitlab.com/european-language-grid/usfd/gate-ie-tools/twitie-snapshot:latest
+    restart: always
+    ports:
+      - 8084:8080
+    environment:
+      ELG_CONCURRENCY: 4
+    
+    
+    
+  

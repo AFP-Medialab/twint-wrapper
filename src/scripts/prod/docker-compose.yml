@@ -29,7 +29,6 @@ services:
         MYSQL_PASSWORD: dev1
         MYSQL_DATABASE: twint-wrapper
         TZ: UTC
-    container_name: mysql
     volumes:
       - mysqldata1:/var/lib/mysql
       - ./fusionauth-2020-weverify.sql:/docker-entrypoint-initdb.d/init.sql
@@ -39,7 +38,7 @@ services:
       - esnet
       
   twint-wrapper:
-    image: twint-wrapper:2.0.5
+    image: twint-wrapper:2.0.6
     container_name: twint-wrapper
     restart: on-failure
     depends_on:
@@ -55,6 +54,7 @@ services:
       ES_PORT: 9200
       FUSIONAUTH_URL: http://fusionauth:9011
       FUSIONAUTH_ISSUER: weverify.eu
+      TWITIE_IS_SPACY: "false"
       TWITIE_URL: "http://twitie:8080/gate/process?annotations=:Person,:UserID,:Location,:Organization"
       TWITIE_THREADS: 10
       SLACK_URL: ${SLACK_URL}
@@ -63,7 +63,6 @@ services:
     logging:
       driver: "json-file"
       options:
-        max-size: "200k"
         max-size: "200k"
         labels: "twint-wrapper"
   

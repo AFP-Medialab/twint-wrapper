@@ -24,6 +24,7 @@ application:
     port: ${ES_PORT:9200}
     
   twitie:
+    isSpacyVersion: ${TWITIE_IS_SPACY:true}
     url: ${TWITIE_URL:http://localhost:8081/process}
     threads: ${TWITIE_THREADS:8}
     es:
@@ -67,7 +68,7 @@ spring:
     show-sql: true
 
 command:
-  twint: docker run --rm --network dev_esnet -i twintplus:0.5
+  twint: docker run --rm --network dev_esnet -i twintplus:0.6
 
 management:
  # server:
