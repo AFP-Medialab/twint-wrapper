@@ -9,6 +9,8 @@ logging:
 application:
   home:
     msg: Service is Up
+  twint:
+    limit: ${TWINT_LIMIT:30000}
   twintcall:
     nb-core-threads: 24
     nb-max-threads: 80
@@ -68,7 +70,7 @@ spring:
     show-sql: true
 
 command:
-  twint: docker run --rm --network dev_esnet -i twintplus:0.6
+  twint: docker run --rm --network dev_esnet -i twintplus:0.7
 
 management:
  # server:

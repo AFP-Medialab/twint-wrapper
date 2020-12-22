@@ -37,7 +37,7 @@ public class TwintThread {
 
 	@Value("${application.twintcall.twint_thread_nb_restart_on_error}")
 	private Long restart_time;
-
+	
 	@Autowired
 	private ESOperations esOperation;
 	
@@ -58,11 +58,11 @@ public class TwintThread {
 
 	@Async(value = "twintCallTaskExecutor")
 	//@Transactional
-	public CompletableFuture<Integer> callTwint(CollectHistory collectHistory, CollectRequest request) {
+	public CompletableFuture<Integer> callTwint(CollectHistory collectHistory, CollectRequest request, int limit) {
 
 		Integer result = null;
 		try {
-			result = callProcessUntilSuccess(request, collectHistory.getSession());
+			result = callProcessUntilSuccess(request, collectHistory.getSession(), limit);
 		} catch (IOException e) {
 			e.printStackTrace();
 			Logger.error("Error calling twint process", e);
@@ -84,12 +84,12 @@ public class TwintThread {
 	}
 
 
-	private ProcessBuilder createProcessBuilder(CollectRequest request, String session) {
+	private ProcessBuilder createProcessBuilder(CollectRequest request, String session, int limit) {
 		boolean isDocker = isDockerCommand(twintCall);
 		// String twintRequest =
 		// TwintRequestGenerator.getInstance().generateRequest(request, session,
 		// isDocker, esURL);
-		String twintRequest = TwintPlusRequestBuilder.getInstance().generateRequest(request, session, isDocker, esURL);
+		String twintRequest = TwintPlusRequestBuilder.getInstance().generateRequest(request, session, isDocker, esURL, limit);
 
 		ProcessBuilder processBuilder = new ProcessBuilder("/bin/bash", "-c", twintCall + twintRequest);
 		processBuilder.environment().put("PATH", "/usr/bin:/usr/local/bin:/bin");
@@ -128,10 +128,10 @@ public class TwintThread {
 		return nb_tweets;
 	}
 
-	private Integer callTwintProcess(CollectRequest request, String session) {
+	private Integer callTwintProcess(CollectRequest request, String session, int limit) {
 
 		Integer result = -1;
-		ProcessBuilder processBuilder = createProcessBuilder(request, session);
+		ProcessBuilder processBuilder = createProcessBuilder(request, session, limit);
 		try {
 			result = callProcess(processBuilder, "tweets");
 		} catch (IOException e) {
@@ -140,13 +140,13 @@ public class TwintThread {
 		return result;
 	}
 
-	private Integer callProcessUntilSuccess(CollectRequest request, String session) throws IOException {
+	private Integer callProcessUntilSuccess(CollectRequest request, String session, int limit) throws IOException {
 		// could add a request subdivision on error
 		Integer nb_tweets = -1;
 		for (int i = 0; i < restart_time && nb_tweets == -1; i++) {
 			Logger.info("Call Process Until success");
 
-			nb_tweets = callTwintProcess(request, session);
+			nb_tweets = callTwintProcess(request, session, limit);
 			if (nb_tweets == -1) {
 				Logger.info("Error reprocessing ");
 				Date collected_to = esOperation.findWhereIndexingStopped(request);

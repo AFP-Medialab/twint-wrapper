@@ -39,6 +39,9 @@ public class TwintThreadGroup {
 
 	@Autowired
 	CollectService collectService;
+	
+	@Value("${application.twint.limit}")
+	private int scrappingLimit;
 
 	@Autowired
 	@Qualifier("twintThread")
@@ -131,14 +134,16 @@ public class TwintThreadGroup {
 	}
 
 	private void callTwintThreads(ArrayList<CollectRequest> collectRequestList, CollectHistory collectHistory) {
-		collectHistory.setTotal_threads(collectHistory.getTotal_threads() + collectRequestList.size());
+		int collectRqListSize = collectRequestList.size();
+		int limit = (int) Math.ceil(scrappingLimit/collectRqListSize);
+		collectHistory.setTotal_threads(collectHistory.getTotal_threads() + collectRqListSize);
 		collectHistory.setStatus(Status.Running);
 		collectService.save_collectHistory(collectHistory);
 		ArrayList<CompletableFuture<Integer>> result = new ArrayList<>();
 
 		Logger.debug("launch thread group");
 		for (CollectRequest collectRequest : collectRequestList) {
-			result.add(tt.callTwint(collectHistory, collectRequest));
+			result.add(tt.callTwint(collectHistory, collectRequest, limit));
 		}
 		CompletableFuture.allOf(result.toArray(new CompletableFuture<?>[result.size()])).join();
 		int finished_threads = collectHistory.getFinished_threads();

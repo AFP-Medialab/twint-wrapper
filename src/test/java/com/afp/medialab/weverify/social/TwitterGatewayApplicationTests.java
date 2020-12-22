@@ -31,7 +31,7 @@ public class TwitterGatewayApplicationTests {
 				"}";
 		ObjectMapper mapper = new ObjectMapper();
 		CollectRequest cr = mapper.readValue(collect, CollectRequest.class);
-		String request = TwintPlusRequestBuilder.getInstance().generateRequest(cr, "123", true, "host.docker.internal:9200");
+		String request = TwintPlusRequestBuilder.getInstance().generateRequest(cr, "123", true, "host.docker.internal:9200", 20000);
 		System.out.println(request);
 		//this.mvc.perform(get("/")).andExpect(status().isOk());
 //		this.mvc.perform(post("/collect").contentType(MediaType.APPLICATION_JSON_VALUE)

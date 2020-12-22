@@ -27,7 +27,7 @@ public class TwintPlusRequestBuilder {
 		return INSTANCE;
 	}
 
-	public String generateRequest(CollectRequest cr, String id, boolean isDocker, String esURL) {
+	public String generateRequest(CollectRequest cr, String id, boolean isDocker, String esURL, int limit) {
 		SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 		//boolean hasUser = false;
 		StringBuffer cmdBuff = new StringBuffer();
@@ -46,7 +46,9 @@ public class TwintPlusRequestBuilder {
 			cmdBuff.append(" --until '" + untilStr + "'");
 		}
 		cmdBuff.append(" -ee " + esURL + " -es --index-name tsna");
-		cmdBuff.append(" --essid " + id +"");
+		cmdBuff.append(" --essid " + id);
+		if(limit > 0)
+			cmdBuff.append("  --limit "+ limit);
 		String twintPlusCmd = cmdBuff.toString();
 		if (isDocker)
 			twintPlusCmd = " \"" + twintPlusCmd + "\"";

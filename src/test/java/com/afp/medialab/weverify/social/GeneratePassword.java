@@ -15,8 +15,10 @@ public class GeneratePassword {
 		 // outputs {bcrypt}$2a$10$dXJ3SW6G7P50lGmMkkmwe.20cQQubK3.HZWzG3YB1tlRy.fqvM/BG
 		 // remember the password that is printed out and use in the next step
 		 System.out.println(encoder.encode(args[0]));
-		 int result = 123233 / 5000;
+		 int result = (int) Math.ceil(123233 / 5000);
 		 System.out.println(result);
+		 
+		 
 
 	}
 
