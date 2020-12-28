@@ -2,6 +2,7 @@ package com.afp.medialab.weverify.social.util;
 
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -10,6 +11,7 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -24,7 +26,9 @@ import com.afp.medialab.weverify.social.dao.entity.Request;
 import com.afp.medialab.weverify.social.dao.service.CollectService;
 import com.afp.medialab.weverify.social.model.CollectRequest;
 import com.afp.medialab.weverify.social.model.CollectResponse;
+import com.afp.medialab.weverify.social.model.NotFoundException;
 import com.afp.medialab.weverify.social.model.Status;
+import com.afp.medialab.weverify.social.model.StatusResponse;
 import com.afp.medialab.weverify.social.twint.TwintThreadGroup;
 
 @Component
@@ -40,6 +44,9 @@ public class RequestCacheManager {
 
 	@Autowired
 	private TwintThreadGroup ttg;
+	
+	@Autowired
+	private UserPropertiesManager userPropertiesManager;
 
 	public String getRecordedSessionId(CollectRequest collectRequest) {
 		String sessionId = null;
@@ -56,10 +63,15 @@ public class RequestCacheManager {
 	public CollectResponse useCache(CollectRequest collectRequest) {
 		// Get registered request for this new search
 		// If exist exactly the same request ?
-
 		CollectHistory collectHistory = collectService.createNewCollectHistory();
 		Set<Request> similarRequests = similarInCache(collectRequest);
 		Set<Request> previousMatch = exactRequests(similarRequests, collectRequest);
+		boolean isAllowOverride = userPropertiesManager.isAllowOverrideCache();
+		
+		if(!isAllowOverride && !collectRequest.isCached()) {
+			//user is not allow to override the cache => cache is set to true
+			collectRequest.setCached(true);
+		}
 		if ((previousMatch != null && !previousMatch.isEmpty()) && collectRequest.isCached()) {
 			// Requests exist in cache
 			// Try to extend with new dateRange if so
@@ -247,7 +259,8 @@ public class RequestCacheManager {
 				requestsToPerform.add(request);
 			}
 			collectService.save_collectHistory(collectHistory);
-			ttg.callTwintMultiThreaded(collectHistory, requestsToPerform);
+			int scrappingLimit = userPropertiesManager.getLimitFromUserRole();
+			ttg.callTwintMultiThreaded(collectHistory, requestsToPerform, scrappingLimit);
 
 		} else {
 			collectHistory = reusePreviousRequest(requests);
@@ -292,7 +305,79 @@ public class RequestCacheManager {
 		Request request = new Request(collectRequest);
 		collectHistory.addRequest(request);
 		collectService.save_collectHistory(collectHistory);
-		ttg.callTwintMultiThreaded(collectHistory, collectRequest);
+		int scrappingLimit = userPropertiesManager.getLimitFromUserRole();
+		ttg.callTwintMultiThreaded(collectHistory, collectRequest, scrappingLimit);
+	}
+	
+	/**
+	 * @param session
+	 * @return Status response or the corresponding session
+	 * @throws ExecutionException
+	 * @throws InterruptedException
+	 * @func Calls Twint on the time interval of a session. The result replaces the
+	 *       old ones un elastic search.
+	 */
+	public StatusResponse collectUpdateFunction(String session) throws ExecutionException, InterruptedException {
+		Logger.info("Collect-Update " + session);
+
+		CollectHistory collectHistory = collectService.getCollectInfo(session);
+		if (collectHistory == null)
+			throw new NotFoundException();
+
+		if (collectHistory.getStatus() != Status.Done) {
+			StatusResponse res = getStatusResponse(session);
+			res.setMessage("This session is already updating");
+			return res;
+		}
+
+		collectHistory.setStatus(Status.Pending);
+		// Request request = collectHistory.getRequest();
+		collectHistory.setProcessStart(new Date());
+		collectService.save_collectHistory(collectHistory);
+		callTwint(collectHistory);
+
+		return getStatusResponse(session);
+	}
+	
+	/**
+	 * Update existing request
+	 * @param collectHistory
+	 */
+	private void callTwint(CollectHistory collectHistory) {
+
+		List<Request> requests = collectHistory.getRequests();
+		int scrappingLimit = userPropertiesManager.getLimitFromUserRole();
+		for (Request request : requests) {
+			CollectRequest newCollectRequest = new CollectRequest(request);
+			ttg.callTwintMultiThreaded(collectHistory, newCollectRequest, scrappingLimit);
+		}
+
+	}
+	
+	/**
+	 * @param session we want the status from.
+	 * @return StatusResponse of the session.
+	 * @func Returns the status response of a given session.
+	 */
+	public StatusResponse getStatusResponse(String session) {
+		CollectHistory collectHistory = collectService.getCollectInfo(session);
+		if (collectHistory == null)
+			throw new NotFoundException();
+
+		List<Request> requests = collectHistory.getRequests();
+		List<CollectRequest> collectRequests = new LinkedList<CollectRequest>();
+		for (Request request : requests) {
+			CollectRequest collectRequest = new CollectRequest(request);
+			collectRequests.add(collectRequest);
+		}
+
+		if (collectHistory.getStatus() != Status.Done)
+			return new StatusResponse(collectHistory.getSession(), collectHistory.getProcessStart(),
+					collectHistory.getProcessEnd(), collectHistory.getStatus(), collectRequests, null, null);
+		else
+			return new StatusResponse(collectHistory.getSession(), collectHistory.getProcessStart(),
+					collectHistory.getProcessEnd(), collectHistory.getStatus(), collectRequests,
+					collectHistory.getCount(), collectHistory.getMessage());
 	}
 
 }

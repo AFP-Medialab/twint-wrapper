@@ -38,7 +38,7 @@ services:
       - esnet
       
   twint-wrapper:
-    image: twint-wrapper:2.0.7
+    image: twint-wrapper:2.0.8
     container_name: twint-wrapper
     restart: on-failure
     depends_on:
@@ -82,38 +82,20 @@ services:
         max-size: "1m"
         max-file: "3"
         labels: "twitie-log"
-
-
-  search:
-    image: docker.elastic.co/elasticsearch/elasticsearch:6.3.1
-    environment:
-      - cluster.name=fusionauth
-      - bootstrap.memory_lock=true
-      - "ES_JAVA_OPTS=-Xms256m -Xmx256m"
-    networks:
-      - esnet
-    restart: unless-stopped
-    ulimits:
-      memlock:
-        soft: -1
-        hard: -1
-    volumes:
-      - es_fusion_data:/usr/share/elasticsearch/data
      
   fusionauth:
     image: fusionauth/fusionauth-app:latest
     depends_on:
-      - mysql
-      - search
+      - mysql      
     environment:
       DATABASE_URL: jdbc:mysql://mysql:3306/fusionauth?serverTimezone=UTC
-      DATABASE_ROOT_USER: root
+      DATABASE_ROOT_USERNAME: root
       DATABASE_ROOT_PASSWORD: devpass123
-      DATABASE_USER: dev1
+      DATABASE_USERNAME: dev1
       DATABASE_PASSWORD: dev1
-      FUSIONAUTH_MEMORY: 256M
-      FUSIONAUTH_SEARCH_SERVERS: http://search:9200
-      FUSIONAUTH_URL: http://fusionauth:9011
+      FUSIONAUTH_APP_MEMORY: 256M
+      SEARCH_TYPE: database
+      FUSIONAUTH_APP_URL: http://fusionauth:9011
     networks:
      - esnet
     restart: unless-stopped
@@ -127,8 +109,7 @@ volumes:
   esdata1: {}
   mysqldata1: {}
   fa_config: {}
-  es_fusion_data: {}
-  
+ 
 networks:
   esnet:
   

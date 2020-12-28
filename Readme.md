@@ -25,19 +25,22 @@ Target build is a Docker image that combine Twint docker image and the java Spri
 
 ![architecture](doc/twint-wrapper-components.png)
 
-### Twint Docker build
+### TwintPlus Docker build
 
-Twint is the only scraper that is supported. It must be build as a docker image as a prerequisite to any new development.
-Project pom.xml defined the build of twint bases on a commit 81f6c2c516a231136fbd821bd6a53d7959965fee of twint project.
-Dockerfile that build twint image is located src/main/docker/twint
+TwintPlus is the scraper that is supported. It must be build as a docker image as a prerequisite to any new development.
 
-To build twint image with maven run:
-
-	mvn docker:build -P twint-docker
 
 Test twint image:
 
-	docker run --rm -it twint:2.1.4 "twint -s '#pactemondialsurlesmigrations' --since '2018-12-01 00:00:00' --until '2018-12-15 00:00:00' -l fr --count"
+	docker run --rm -it twintplus "tplus -cq %23deepfake --since 2020-05-01 --until 2020-05-19 -ee elasticsearch:9200 -es --index-name tsna --limit 10000"
+	
+#### Env variable for TwintPlus
+ There is several profiles that allow to increase or decrease scraping limits. The following results can be override with environment values:
+ 
+ * TWINT_LIMIT_DEFAULT (15k)
+ * TWINT_LIMIT_MIN (15k)
+ * TWINT_LIMIT_DEFAULT (30k)
+ * TWINT_LIMIT_MAX (60k)
  
 ## How to develop
 

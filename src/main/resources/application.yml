@@ -10,7 +10,12 @@ application:
   home:
     msg: Service is Up
   twint:
-    limit: ${TWINT_LIMIT:30000}
+    limit: 
+      default: ${TWINT_LIMIT_DEFAULT:15000}
+      min: ${TWINT_LIMIT_MIN:15000}
+      medium: ${TWINT_LIMIT_DEFAULT:30000}
+      max: ${TWINT_LIMIT_MAX:60000}
+    
   twintcall:
     nb-core-threads: 24
     nb-max-threads: 80

@@ -39,9 +39,6 @@ public class TwintThreadGroup {
 
 	@Autowired
 	CollectService collectService;
-	
-	@Value("${application.twint.limit}")
-	private int scrappingLimit;
 
 	@Autowired
 	@Qualifier("twintThread")
@@ -115,25 +112,25 @@ public class TwintThreadGroup {
 	}
 
 	@Async(value = "twintCallGroupTaskExecutor")
-	public void callTwintMultiThreaded(CollectHistory collectHistory, CollectRequest request) {
+	public void callTwintMultiThreaded(CollectHistory collectHistory, CollectRequest request, int scrappingLimit) {
 		ArrayList<CollectRequest> collectRequestList = null;
 		if (request.isDisableTimeRange())
 			collectRequestList = simpleListOfCollect(request);
 		else
 			collectRequestList = createListOfCollectRequest(request);
 
-		callTwintThreads(collectRequestList, collectHistory);
+		callTwintThreads(collectRequestList, collectHistory, scrappingLimit);
 	}
 
 	@Async(value = "twintCallGroupTaskExecutor")
-	public void callTwintMultiThreaded(CollectHistory collectHistory, List<CollectRequest> collectRequest) {
+	public void callTwintMultiThreaded(CollectHistory collectHistory, List<CollectRequest> collectRequest, int scrappingLimit) {
 
 		ArrayList<CollectRequest> collectRequestList = createListOfCollectRequest(collectRequest);
-		callTwintThreads(collectRequestList, collectHistory);
+		callTwintThreads(collectRequestList, collectHistory, scrappingLimit);
 
 	}
 
-	private void callTwintThreads(ArrayList<CollectRequest> collectRequestList, CollectHistory collectHistory) {
+	private void callTwintThreads(ArrayList<CollectRequest> collectRequestList, CollectHistory collectHistory, int scrappingLimit) {
 		int collectRqListSize = collectRequestList.size();
 		int limit = (int) Math.ceil(scrappingLimit/collectRqListSize);
 		collectHistory.setTotal_threads(collectHistory.getTotal_threads() + collectRqListSize);

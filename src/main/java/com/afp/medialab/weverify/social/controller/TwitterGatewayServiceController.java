@@ -1,8 +1,6 @@
 package com.afp.medialab.weverify.social.controller;
 
 import java.io.IOException;
-import java.util.Date;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
@@ -26,18 +24,15 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.afp.medialab.weverify.social.dao.entity.CollectHistory;
-import com.afp.medialab.weverify.social.dao.entity.Request;
 import com.afp.medialab.weverify.social.dao.service.CollectService;
 import com.afp.medialab.weverify.social.model.CollectRequest;
 import com.afp.medialab.weverify.social.model.CollectResponse;
 import com.afp.medialab.weverify.social.model.CollectUpdateRequest;
 import com.afp.medialab.weverify.social.model.HistoryRequest;
 import com.afp.medialab.weverify.social.model.HistoryResponse;
-import com.afp.medialab.weverify.social.model.NotFoundException;
 import com.afp.medialab.weverify.social.model.Status;
 import com.afp.medialab.weverify.social.model.StatusRequest;
 import com.afp.medialab.weverify.social.model.StatusResponse;
-import com.afp.medialab.weverify.social.twint.TwintThreadGroup;
 import com.afp.medialab.weverify.social.util.RequestCacheManager;
 
 import io.swagger.annotations.Api;
@@ -53,11 +48,8 @@ public class TwitterGatewayServiceController {
 	private CollectService collectService;
 
 	@Autowired
-	private RequestCacheManager cacheService;
+	private RequestCacheManager requestService;
 	
-	@Autowired
-	private TwintThreadGroup ttg;
-
 	@Value("${application.home.msg}")
 	private String homeMsg;
 
@@ -104,7 +96,7 @@ public class TwitterGatewayServiceController {
 		Logger.debug("Media : " + collectRequest.getMedia());
 		Logger.debug("disableTimeRange : " + collectRequest.isDisableTimeRange());
 
-		return cacheService.useCache(collectRequest);
+		return requestService.useCache(collectRequest);
 	}
 
 	@ApiOperation(value = "Trigger a status check")
@@ -112,7 +104,7 @@ public class TwitterGatewayServiceController {
 	@RequestMapping(path = "/status", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
 	public @ResponseBody StatusResponse status(@RequestBody StatusRequest statusRequest) {
 		Logger.debug("POST status " + statusRequest.getSession());
-		return getStatusResponse(statusRequest.getSession());
+		return requestService.getStatusResponse(statusRequest.getSession());
 	}
 
 	@ApiOperation(value = "Trigger a status check")
@@ -120,34 +112,9 @@ public class TwitterGatewayServiceController {
 	@RequestMapping(path = "/status/{id}", method = RequestMethod.GET)
 	public @ResponseBody StatusResponse status(@PathVariable("id") String id) {
 		Logger.debug("GET status " + id);
-		return getStatusResponse(id);
+		return requestService.getStatusResponse(id);
 	}
 
-	/**
-	 * @param session we want the status from.
-	 * @return StatusResponse of the session.
-	 * @func Returns the status response of a given session.
-	 */
-	private StatusResponse getStatusResponse(String session) {
-		CollectHistory collectHistory = collectService.getCollectInfo(session);
-		if (collectHistory == null)
-			throw new NotFoundException();
-
-		List<Request> requests = collectHistory.getRequests();
-		List<CollectRequest> collectRequests = new LinkedList<CollectRequest>();
-		for (Request request : requests) {
-			CollectRequest collectRequest = new CollectRequest(request);
-			collectRequests.add(collectRequest);
-		}
-
-		if (collectHistory.getStatus() != Status.Done)
-			return new StatusResponse(collectHistory.getSession(), collectHistory.getProcessStart(),
-					collectHistory.getProcessEnd(), collectHistory.getStatus(), collectRequests, null, null);
-		else
-			return new StatusResponse(collectHistory.getSession(), collectHistory.getProcessStart(),
-					collectHistory.getProcessEnd(), collectHistory.getStatus(), collectRequests,
-					collectHistory.getCount(), collectHistory.getMessage());
-	}
 
 	@PreAuthorize("isAuthenticated()")
 	@RequestMapping(value = "/collect-history", method = RequestMethod.GET)
@@ -196,7 +163,7 @@ public class TwitterGatewayServiceController {
 	@RequestMapping(path = "/collect-update/{id}", method = RequestMethod.GET)
 	public @ResponseBody StatusResponse collectUpdate(@PathVariable("id") String id)
 			throws ExecutionException, InterruptedException, IOException {
-		return collectUpdateFunction(id);
+		return requestService.collectUpdateFunction(id);
 	}
 
 	@ApiOperation(value = "Update an old request")
@@ -205,50 +172,8 @@ public class TwitterGatewayServiceController {
 	public @ResponseBody StatusResponse collectUpdate(@RequestBody @Valid CollectUpdateRequest collectUpdateRequest)
 			throws ExecutionException, InterruptedException, IOException {
 		String id = collectUpdateRequest.getSession();
-		return collectUpdateFunction(id);
+		return requestService.collectUpdateFunction(id);
 	}
 
-	/**
-	 * @param session
-	 * @return Status response or the corresponding session
-	 * @throws ExecutionException
-	 * @throws InterruptedException
-	 * @func Calls Twint on the time interval of a session. The result replaces the
-	 *       old ones un elastic search.
-	 */
-	private StatusResponse collectUpdateFunction(String session) throws ExecutionException, InterruptedException {
-		Logger.info("Collect-Update " + session);
-
-		CollectHistory collectHistory = collectService.getCollectInfo(session);
-		if (collectHistory == null)
-			throw new NotFoundException();
-
-		if (collectHistory.getStatus() != Status.Done) {
-			StatusResponse res = getStatusResponse(session);
-			res.setMessage("This session is already updating");
-			return res;
-		}
-
-		collectHistory.setStatus(Status.Pending);
-		// Request request = collectHistory.getRequest();
-		collectHistory.setProcessStart(new Date());
-		collectService.save_collectHistory(collectHistory);
-		callTwint(collectHistory);
-
-		return getStatusResponse(session);
-	}
 	
-	/**
-	 * Update existing request
-	 * @param collectHistory
-	 */
-	private void callTwint(CollectHistory collectHistory) {
-
-		List<Request> requests = collectHistory.getRequests();
-		for (Request request : requests) {
-			CollectRequest newCollectRequest = new CollectRequest(request);
-			ttg.callTwintMultiThreaded(collectHistory, newCollectRequest);
-		}
-
-	}
 }
