@@ -27,7 +27,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
-import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -82,7 +81,7 @@ import io.swagger.annotations.ApiResponses;
 @RestController
 @CrossOrigin
 @RequestMapping(path = "/api/v1/auth")
-@Api(description = "User authentication API.")
+@Api("User authentication API.")
 public class JwtAuthenticationController {
 
 	private static Logger Logger = LoggerFactory.getLogger(JwtAuthenticationController.class);
@@ -452,6 +451,7 @@ public class JwtAuthenticationController {
 		// Convert response data
 		JwtLoginResponse loginResponse = new JwtLoginResponse();
 		loginResponse.token = respContent.token;
+		loginResponse.refreshToken = respContent.refreshToken;
 		loginResponse.user = FusionAuthDataConverter.toJwtUser(respContent.user, this.twintApplicationId);
 
 		// Add refresh token as a secure http only cookie
@@ -475,7 +475,7 @@ public class JwtAuthenticationController {
 			@ApiResponse(code = 401,
 					message = "Invalid or expired refresh token, refresh has been refused, user is logged out."),
 			@ApiResponse(code = 500, message = "An internal error occured during request processing.") })
-	public JwtRefreshTokenResponse refreshToken(@CookieValue(name = "refresh_token") String refreshToken) {
+	public JwtRefreshTokenResponse refreshToken(@RequestBody String refreshToken) {
 		Logger.debug("Refresh token for {}", refreshToken);
 
 		RefreshRequest refreshRequest = new RefreshRequest();
