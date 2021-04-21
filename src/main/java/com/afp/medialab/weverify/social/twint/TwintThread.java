@@ -113,12 +113,14 @@ public class TwintThread {
 				nb_tweets = Integer.parseInt(str);
 				Logger.debug("Successfully collected: " + nb_tweets + " " + got);
 
+			} else if(!LoggerString.trim().isEmpty()){
+				Logger.error(LoggerString);
 			}
 			// error_occurred = true;
 		}
 
 		while ((LoggerString = stdInput.readLine()) != null) {
-			Logger.error(LoggerString);
+			Logger.info(LoggerString);
 
 		}
 		stdInput.close();

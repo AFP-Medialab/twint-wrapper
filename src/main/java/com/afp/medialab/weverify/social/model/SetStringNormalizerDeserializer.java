@@ -9,6 +9,9 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -18,6 +21,8 @@ import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.fasterxml.jackson.databind.node.TextNode;
 
 public class SetStringNormalizerDeserializer extends StdDeserializer<Set<String>> {
+
+	private static Logger Logger = LoggerFactory.getLogger(SetStringNormalizerDeserializer.class);
 
 	public SetStringNormalizerDeserializer() {
 		this(null);
@@ -50,12 +55,16 @@ public class SetStringNormalizerDeserializer extends StdDeserializer<Set<String>
 			if (nod instanceof TextNode) {
 				String text = ((TextNode) nod).asText();
 				text = text.replaceAll(regex, " ");
-				text = text.toLowerCase().trim();
+				Logger.debug("text :" + text);
 				String[] token = text.split("\\s+");
 				List<String> tokens = Arrays.asList(token);
 
-				elements.addAll(tokens.stream().filter(tk -> stopWords.stream().noneMatch(tk::equals))
-						.collect(Collectors.toList()));
+				elements.addAll(tokens.stream().filter(tk -> stopWords.stream().noneMatch(tk::equals)).map(tk -> {
+					if (tk.startsWith("http://") || tk.startsWith("https://")) {
+						return tk;
+					} else
+						return tk.toLowerCase();
+				}).distinct().collect(Collectors.toList()));
 
 			}
 		}
